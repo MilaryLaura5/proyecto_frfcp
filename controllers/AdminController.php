@@ -27,21 +27,21 @@ class AdminController {
 
             // Validaciones básicas
             if (empty($nombre) || empty($fecha_inicio) || empty($fecha_fin)) {
-                header('Location: index.php?page=admin_crear_concurso&error=vacios');
+                header('Location: index.php?page=admin_gestion_concursos&error=vacios');
                 exit;
             }
 
             if ($fecha_inicio >= $fecha_fin) {
-                header('Location: index.php?page=admin_crear_concurso&error=fechas');
+                header('Location: index.php?page=admin_gestion_concursos&error=fechas');
                 exit;
             }
 
             // Intentar registrar el concurso
             if (Concurso::crear($nombre, $fecha_inicio, $fecha_fin)) {
-                header('Location: index.php?page=admin_crear_concurso&success=1');
+                header('Location: index.php?page=admin_gestion_concursos&success=1');
                 exit;
             } else {
-                header('Location: index.php?page=admin_crear_concurso&error=db');
+                header('Location: index.php?page=admin_gestion_concursos&error=db');
                 exit;
             }
         }
