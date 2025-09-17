@@ -28,6 +28,7 @@ if ($page === 'login') {
     // Aquí irán las vistas protegidas (dashboard, evaluación, etc.)
     switch ($page) {
         case 'admin_dashboard':
+            require __DIR__ . '/views/admin/dashboard.php';
             echo "<h3>Bienvenido, Administrador " . $_SESSION['user']['nombre'] . "</h3>";
             echo "<a href='index.php?page=logout'>Cerrar sesión</a>";
             break;
