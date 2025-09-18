@@ -153,12 +153,10 @@ class AdminController
         require_once __DIR__ . '/../views/admin/gestion_series.php';
     }
 
-    //SERIES
+    // SERIES
     public function crearSerie()
     {
         redirect_if_not_admin();
-
-        require_once __DIR__ . '/../models/Serie.php';
 
         if ($_POST) {
             $numero_serie = (int)$_POST['numero_serie'];
@@ -182,12 +180,12 @@ class AdminController
     public function mostrarFormularioEditarSerie()
     {
         redirect_if_not_admin();
-        require_once __DIR__ . '/../views/admin/gestion_series.php';
     }
 
     public function actualizarSerie()
     {
         redirect_if_not_admin();
+
         if ($_POST) {
             $id = (int)$_POST['id_serie'];
             $numero_serie = (int)$_POST['numero_serie'];
@@ -206,8 +204,9 @@ class AdminController
     public function eliminarSerie()
     {
         redirect_if_not_admin();
-        require_once __DIR__ . '/../models/Serie.php';
+
         $id = $_GET['id'] ?? null;
+
         if ($id && Serie::eliminar($id)) {
             header('Location: index.php?page=admin_gestion_series&success=eliminado');
         } else {

@@ -127,53 +127,143 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_serie') {
         </div>
 
         <!-- Listado -->
+        <!-- Listado organizado por tipo de danza -->
+        <!-- Listado con acordeones por tipo de danza -->
         <div class="card shadow-sm">
             <div class="card-header bg-white">
-                <h5><i class="bi bi-list-ul"></i> Series Registradas</h5>
+                <h5><i class="bi bi-list-ul"></i> Series por Tipo de Danza</h5>
             </div>
-            <div class="card-body p-0">
-                <?php if (count($series) > 0): ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Nombre</th>
-                                    <th>Tipo</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($series as $idx => $s): ?>
-                                    <tr>
-                                        <td><?= $s['numero_serie'] ?></td>
-                                        <td><?= htmlspecialchars($s['nombre_serie']) ?></td>
-                                        <td>
-                                            <span class="badge bg-primary">
-                                                <?= ucfirst(str_replace('_', ' ', $s['nombre_tipo'])) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a href="index.php?page=admin_editar_serie&id=<?= $s['id_serie'] ?>"
-                                                class="btn btn-sm btn-warning me-1" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a href="index.php?page=admin_eliminar_serie&id=<?= $s['id_serie'] ?>"
-                                                class="btn btn-sm btn-danger" title="Eliminar"
-                                                onclick="return confirm('¿Eliminar esta serie?');">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+            <div class="card-body">
+
+                <div class="accordion" id="seriesAccordion">
+
+                    <!-- TRAJE ORIGINARIO -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOriginarios">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#originarios" aria-expanded="true" aria-controls="originarios">
+                                🎭 TRAJES ORIGINARIOS
+                            </button>
+                        </h2>
+                        <div id="originarios" class="accordion-collapse collapse show" data-bs-parent="#seriesAccordion">
+                            <div class="accordion-body">
+                                <?php $series = Serie::listarPorTipo(1); ?>
+                                <?php if (count($series) > 0): ?>
+                                    <ul class="list-group">
+                                        <?php foreach ($series as $s): ?>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <strong><?= $s['numero_serie'] ?></strong> - <?= htmlspecialchars($s['nombre_serie']) ?>
+                                                </span>
+                                                <span>
+                                                    <a href="index.php?page=admin_editar_serie&id=<?= $s['id_serie'] ?>"
+                                                        class="btn btn-sm btn-warning me-1"
+                                                        title="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="index.php?page=admin_eliminar_serie&id=<?= $s['id_serie'] ?>"
+                                                        class="btn btn-sm btn-danger"
+                                                        title="Eliminar"
+                                                        onclick="return confirm('¿Eliminar esta serie?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                </span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php else: ?>
+                                    <p class="text-muted mb-0">No hay series registradas.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
-                <?php else: ?>
-                    <p class="text-muted text-center py-4 m-0">No hay series registradas aún.</p>
-                <?php endif; ?>
+
+                    <!-- TRAJES DE LUCES -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingLuces">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#luces" aria-expanded="false" aria-controls="luces">
+                                ✨ TRAJES DE LUCES
+                            </button>
+                        </h2>
+                        <div id="luces" class="accordion-collapse collapse" data-bs-parent="#seriesAccordion">
+                            <div class="accordion-body">
+                                <?php $series = Serie::listarPorTipo(2); ?>
+                                <?php if (count($series) > 0): ?>
+                                    <ul class="list-group">
+                                        <?php foreach ($series as $s): ?>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <strong><?= $s['numero_serie'] ?></strong> - <?= htmlspecialchars($s['nombre_serie']) ?>
+                                                </span>
+                                                <span>
+                                                    <a href="index.php?page=admin_editar_serie&id=<?= $s['id_serie'] ?>"
+                                                        class="btn btn-sm btn-warning me-1"
+                                                        title="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="index.php?page=admin_eliminar_serie&id=<?= $s['id_serie'] ?>"
+                                                        class="btn btn-sm btn-danger"
+                                                        title="Eliminar"
+                                                        onclick="return confirm('¿Eliminar esta serie?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                </span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php else: ?>
+                                    <p class="text-muted mb-0">No hay series registradas.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SIKURIS -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingSikuris">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sikuris" aria-expanded="false" aria-controls="sikuris">
+                                🎶 SIKURIS
+                            </button>
+                        </h2>
+                        <div id="sikuris" class="accordion-collapse collapse" data-bs-parent="#seriesAccordion">
+                            <div class="accordion-body">
+                                <?php $series = Serie::listarPorTipo(3); ?>
+                                <?php if (count($series) > 0): ?>
+                                    <ul class="list-group">
+                                        <?php foreach ($series as $s): ?>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <strong><?= $s['numero_serie'] ?></strong> - <?= htmlspecialchars($s['nombre_serie']) ?>
+                                                </span>
+                                                <span>
+                                                    <a href="index.php?page=admin_editar_serie&id=<?= $s['id_serie'] ?>"
+                                                        class="btn btn-sm btn-warning me-1"
+                                                        title="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="index.php?page=admin_eliminar_serie&id=<?= $s['id_serie'] ?>"
+                                                        class="btn btn-sm btn-danger"
+                                                        title="Eliminar"
+                                                        onclick="return confirm('¿Eliminar esta serie?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                </span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php else: ?>
+                                    <p class="text-muted mb-0">No hay series registradas.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                </div> <!-- Fin del acordeón -->
+
             </div>
         </div>
+
+
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
