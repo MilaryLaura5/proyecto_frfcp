@@ -30,18 +30,16 @@ if ($page === 'login') {
     require_once __DIR__ . '/controllers/AuthController.php';
     $controller = new AuthController();
     $controller->showLogin();
-
 } elseif ($page === 'login_submit') {
     require_once __DIR__ . '/controllers/AuthController.php';
     $controller = new AuthController();
     $controller->login();
-
 } elseif ($page === 'logout') {
     require_once __DIR__ . '/controllers/AuthController.php';
     $controller = new AuthController();
     $controller->logout();
 
-// Rutas protegidas (requieren inicio de sesión)
+    // Rutas protegidas (requieren inicio de sesión)
 } else {
     // Verificar autenticación
     if (!isset($_SESSION['user'])) {
@@ -108,11 +106,45 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->cerrarConcurso();
             break;
-            
+
+        case 'admin_tipos_danza':
+            require_once __DIR__ . '/views/admin/gestion_tipos_danza.php';
+            break;
+
+        //SERIES
+        case 'admin_gestion_series':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarSeries();
+            break;
+
+        case 'admin_crear_serie_submit':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->crearSerie();
+            break;
+
+        case 'admin_editar_serie':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->mostrarFormularioEditarSerie();
+            break;
+
+        case 'admin_actualizar_serie':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->actualizarSerie();
+            break;
+
+        case 'admin_eliminar_serie':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->eliminarSerie();
+            break;
+
         default:
             // Cualquier página no definida redirige al login
             header('Location: index.php?page=login');
             exit;
     }
 }
-?>

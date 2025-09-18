@@ -1,13 +1,17 @@
-    <?php
+<?php
 // controllers/AdminController.php
 
 require_once __DIR__ . '/../models/Concurso.php';
 require_once __DIR__ . '/../helpers/auth.php';
+require_once __DIR__ . '/../models/Serie.php';
+require_once __DIR__ . '/../models/TipoDanza.php';
 
-class AdminController {
+class AdminController
+{
 
     // Mostrar formulario para crear concurso
-    public function mostrarFormularioCrearConcurso() {
+    public function mostrarFormularioCrearConcurso()
+    {
         redirect_if_not_admin();
 
         $editando = false;
@@ -17,7 +21,8 @@ class AdminController {
     }
 
     // Procesar el formulario
-    public function crearConcurso() {
+    public function crearConcurso()
+    {
         redirect_if_not_admin();
 
         if ($_POST) {
@@ -48,7 +53,8 @@ class AdminController {
     }
 
     //Mostrar formulario de edición
-    public function mostrarFormularioEditarConcurso() {
+    public function mostrarFormularioEditarConcurso()
+    {
         redirect_if_not_admin();
 
         $id = $_GET['id'] ?? null;
@@ -58,14 +64,15 @@ class AdminController {
             exit;
         }
         $editando = true;
-        $page = 'admin_editar_concurso'; 
+        $page = 'admin_editar_concurso';
 
         require_once __DIR__ . '/../views/admin/gestion_concursos.php';
     }
 
 
     //Procesar edición
-    public function actualizarConcurso() {
+    public function actualizarConcurso()
+    {
         redirect_if_not_admin();
         if ($_POST) {
             $id = $_POST['id_concurso'];
@@ -93,7 +100,8 @@ class AdminController {
     }
 
     //Eliminar concurso
-    public function eliminarConcurso() {
+    public function eliminarConcurso()
+    {
         redirect_if_not_admin();
         $id = $_GET['id'] ?? null;
 
@@ -110,7 +118,8 @@ class AdminController {
         exit;
     }
 
-    public function activarConcurso() {
+    public function activarConcurso()
+    {
         redirect_if_not_admin();
         $id = $_GET['id'] ?? null;
         if ($id && Concurso::activar($id)) {
@@ -121,7 +130,8 @@ class AdminController {
         exit;
     }
 
-    public function cerrarConcurso() {
+    public function cerrarConcurso()
+    {
         redirect_if_not_admin();
         $id = $_GET['id'] ?? null;
         if (!$id) {
@@ -136,5 +146,73 @@ class AdminController {
         }
         exit;
     }
+
+    public function gestionarSeries()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../views/admin/gestion_series.php';
+    }
+
+    //SERIES
+    public function crearSerie()
+    {
+        redirect_if_not_admin();
+
+        require_once __DIR__ . '/../models/Serie.php';
+
+        if ($_POST) {
+            $numero_serie = (int)$_POST['numero_serie'];
+            $nombre_serie = trim($_POST['nombre_serie']);
+            $id_tipo = (int)$_POST['id_tipo'];
+
+            if (empty($nombre_serie) || $numero_serie <= 0 || $id_tipo <= 0) {
+                header('Location: index.php?page=admin_gestion_series&error=vacios');
+                exit;
+            }
+
+            if (Serie::crear($numero_serie, $nombre_serie, $id_tipo)) {
+                header('Location: index.php?page=admin_gestion_series&success=1');
+            } else {
+                header('Location: index.php?page=admin_gestion_series&error=db');
+            }
+            exit;
+        }
+    }
+
+    public function mostrarFormularioEditarSerie()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../views/admin/gestion_series.php';
+    }
+
+    public function actualizarSerie()
+    {
+        redirect_if_not_admin();
+        if ($_POST) {
+            $id = (int)$_POST['id_serie'];
+            $numero_serie = (int)$_POST['numero_serie'];
+            $nombre_serie = trim($_POST['nombre_serie']);
+            $id_tipo = (int)$_POST['id_tipo'];
+
+            if (Serie::editar($id, $numero_serie, $nombre_serie, $id_tipo)) {
+                header('Location: index.php?page=admin_gestion_series&success=editado');
+            } else {
+                header('Location: index.php?page=admin_gestion_series&error=db');
+            }
+            exit;
+        }
+    }
+
+    public function eliminarSerie()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/Serie.php';
+        $id = $_GET['id'] ?? null;
+        if ($id && Serie::eliminar($id)) {
+            header('Location: index.php?page=admin_gestion_series&success=eliminado');
+        } else {
+            header('Location: index.php?page=admin_gestion_series&error=db');
+        }
+        exit;
+    }
 }
-?>
