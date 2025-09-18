@@ -243,8 +243,14 @@ if (isset($_GET['id']) && $page === 'admin_editar_concurso') {
                                                     <i class="bi bi-check-all"></i>
                                                 </button>
                                             <?php endif; ?>
-                                        </td>
 
+                                            <!-- 🔵 Botón para gestionar conjuntos -->
+                                            <a href="index.php?page=admin_gestion_conjuntos&id_concurso=<?= (int)$c['id_concurso'] ?>"
+                                                class="btn btn-sm btn-info"
+                                                title="Gestionar conjuntos de este concurso">
+                                                <i class="bi bi-people"></i>
+                                            </a>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
 

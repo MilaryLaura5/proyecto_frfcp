@@ -126,8 +126,6 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_serie') {
             </div>
         </div>
 
-        <!-- Listado -->
-        <!-- Listado organizado por tipo de danza -->
         <!-- Listado con acordeones por tipo de danza -->
         <div class="card shadow-sm">
             <div class="card-header bg-white">
@@ -141,7 +139,7 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_serie') {
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingOriginarios">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#originarios" aria-expanded="true" aria-controls="originarios">
-                                🎭 TRAJES ORIGINARIOS
+                                TRAJES ORIGINARIOS
                             </button>
                         </h2>
                         <div id="originarios" class="accordion-collapse collapse show" data-bs-parent="#seriesAccordion">
@@ -181,7 +179,7 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_serie') {
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingLuces">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#luces" aria-expanded="false" aria-controls="luces">
-                                ✨ TRAJES DE LUCES
+                                TRAJES DE LUCES
                             </button>
                         </h2>
                         <div id="luces" class="accordion-collapse collapse" data-bs-parent="#seriesAccordion">
@@ -221,7 +219,7 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_serie') {
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingSikuris">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sikuris" aria-expanded="false" aria-controls="sikuris">
-                                🎶 SIKURIS
+                                SIKURIS
                             </button>
                         </h2>
                         <div id="sikuris" class="accordion-collapse collapse" data-bs-parent="#seriesAccordion">
