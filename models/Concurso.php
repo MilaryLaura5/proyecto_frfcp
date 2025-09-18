@@ -47,5 +47,20 @@ class Concurso {
         $stmt = $pdo->prepare($sql);
         return $stmt->execute([$id]);
     }
+
+    public static function activar($id) {
+        global $pdo;
+        $sql = "UPDATE Concurso SET estado = 'Activo' WHERE id_concurso = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([$id]);
+    }
+
+    public static function cerrar ($id) {
+        global $pdo;
+        $sql = "UPDATE Concurso SET estado = 'Cerrado' WHERE id_concurso = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([$id]);
+    }
+
 }
 ?>

@@ -97,6 +97,18 @@ if ($page === 'login') {
             echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
             break;
 
+        case 'admin_activar_concurso':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->activarConcurso();
+            break;
+
+        case 'admin_cerrar_concurso':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->cerrarConcurso();
+            break;
+            
         default:
             // Cualquier página no definida redirige al login
             header('Location: index.php?page=login');

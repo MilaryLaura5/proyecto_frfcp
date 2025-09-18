@@ -109,5 +109,32 @@ class AdminController {
         }
         exit;
     }
+
+    public function activarConcurso() {
+        redirect_if_not_admin();
+        $id = $_GET['id'] ?? null;
+        if ($id && Concurso::activar($id)) {
+            header('Location: index.php?page=admin_gestion_concursos&success=activado');
+        } else {
+            header('Location: index.php?page=admin_gestion_concursos&error=no_activado');
+        }
+        exit;
+    }
+
+    public function cerrarConcurso() {
+        redirect_if_not_admin();
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: index.php?page=admin_gestion_concursos&error=no_id');
+            exit;
+        }
+
+        if (Concurso::cerrar($id)) {
+            header('Location: index.php?page=admin_gestion_concursos&success=cerrado');
+        } else {
+            header('Location: index.php?page=admin_gestion_concursos&error=db');
+        }
+        exit;
+    }
 }
 ?>
