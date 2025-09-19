@@ -2,9 +2,11 @@
 // models/Concurso.php
 require_once __DIR__ . '/../config/database.php';
 
-class Concurso {
-    
-    public static function crear($nombre, $fecha_inicio, $fecha_fin) {
+class Concurso
+{
+
+    public static function crear($nombre, $fecha_inicio, $fecha_fin)
+    {
         global $pdo;
         $sql = "INSERT INTO Concurso (nombre, fecha_inicio, fecha_fin, estado) 
                 VALUES (?, ?, ?, 'Pendiente')";
@@ -12,14 +14,16 @@ class Concurso {
         return $stmt->execute([$nombre, $fecha_inicio, $fecha_fin]);
     }
 
-    public static function listar() {
+    public static function listar()
+    {
         global $pdo;
         $sql = "SELECT * FROM Concurso ORDER BY fecha_inicio DESC";
         $stmt = $pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public static function obtenerPorId($id) {
+    public static function obtenerPorId($id)
+    {
         global $pdo;
         $sql = "SELECT * FROM Concurso WHERE id_concurso = ?";
         $stmt = $pdo->prepare($sql);
@@ -27,7 +31,8 @@ class Concurso {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public static function editar($id, $nombre, $fecha_inicio, $fecha_fin) {
+    public static function editar($id, $nombre, $fecha_inicio, $fecha_fin)
+    {
         global $pdo;
         $sql = "UPDATE Concurso SET nombre = ?, fecha_inicio = ?, fecha_fin = ?, estado = 'Pendiente' 
                 WHERE id_concurso = ?";
@@ -35,7 +40,8 @@ class Concurso {
         return $stmt->execute([$nombre, $fecha_inicio, $fecha_fin, $id]);
     }
 
-    public static function eliminar($id) {
+    public static function eliminar($id)
+    {
         global $pdo;
         // Primero verifica que no tenga calificaciones asociadas
         $check = $pdo->prepare("SELECT COUNT(*) FROM Calificacion WHERE id_concurso = ?");
@@ -48,19 +54,19 @@ class Concurso {
         return $stmt->execute([$id]);
     }
 
-    public static function activar($id) {
+    public static function activar($id)
+    {
         global $pdo;
         $sql = "UPDATE Concurso SET estado = 'Activo' WHERE id_concurso = ?";
         $stmt = $pdo->prepare($sql);
         return $stmt->execute([$id]);
     }
 
-    public static function cerrar ($id) {
+    public static function cerrar($id)
+    {
         global $pdo;
         $sql = "UPDATE Concurso SET estado = 'Cerrado' WHERE id_concurso = ?";
         $stmt = $pdo->prepare($sql);
         return $stmt->execute([$id]);
     }
-
 }
-?>

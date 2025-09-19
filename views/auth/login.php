@@ -1,16 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Inicio de Sesión - FRFCP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f0f2f5; }
-        .login-container { max-width: 400px; margin: 100px auto; }
-        .logo { text-align: center; margin-bottom: 30px; }
-        .logo img { width: 80px; }
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            width: 80px;
+        }
     </style>
 </head>
+
 <body>
     <div class="login-container">
         <div class="logo">
@@ -25,11 +40,17 @@
 
                 <?php if (isset($error)): ?>
                     <div class="alert alert-danger alert-sm">
-                        <?php 
+                        <?php
                         switch ($error):
-                            case 'invalido': echo "Correo o contraseña incorrectos."; break;
-                            case 'vacios': echo "Por favor, completa todos los campos."; break;
-                            case 'rol': echo "Rol no permitido."; break;
+                            case 'invalido':
+                                echo "Usuario o contraseña incorrectos.";
+                                break;
+                            case 'vacios':
+                                echo "Por favor, completa todos los campos.";
+                                break;
+                            case 'rol':
+                                echo "Rol no permitido.";
+                                break;
                         endswitch;
                         ?>
                     </div>
@@ -37,8 +58,8 @@
 
                 <form method="POST" action="index.php?page=login_submit">
                     <div class="mb-3">
-                        <label for="correo" class="form-label">Correo</label>
-                        <input type="email" class="form-control" id="correo" name="correo" required>
+                        <label for="text" class="form-label">Usuario</label>
+                        <input type="text" class="form-control" id="usuario" name="usuario" required>
                     </div>
                     <div class="mb-3">
                         <label for="contraseña" class="form-label">Contraseña</label>
@@ -54,4 +75,5 @@
         </p>
     </div>
 </body>
+
 </html>

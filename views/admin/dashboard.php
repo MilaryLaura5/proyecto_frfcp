@@ -5,21 +5,45 @@ $user = auth();
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Dashboard - Administrador</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f9; }
-        .sidebar { min-height: 100vh; background-color: #2c3e50; color: white; }
-        .sidebar a { color: #ecf0f1; }
-        .sidebar a:hover { background-color: #34495e; }
-        .main-content { padding: 20px; }
-        .card-dashboard { transition: transform 0.2s; }
-        .card-dashboard:hover { transform: translateY(-5px); }
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .sidebar a {
+            color: #ecf0f1;
+        }
+
+        .sidebar a:hover {
+            background-color: #34495e;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .card-dashboard {
+            transition: transform 0.2s;
+        }
+
+        .card-dashboard:hover {
+            transform: translateY(-5px);
+        }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -33,9 +57,10 @@ $user = auth();
                 <ul class="nav flex-column">
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_dashboard"><i class="bi bi-house"></i> Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_concursos"><i class="bi bi-trophy"></i> Gestionar Concursos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-list-ul"></i> Gestionar Series</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-people"></i> Gestionar Conjuntos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-person-badge"></i> Gestionar Jurados</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_tipos_danza"><i class="bi bi-list-ul"></i> Tipos de Danza</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_series"><i class="bi bi-list-ul"></i> Gestionar Series</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_seleccionar_concurso"><i class="bi bi-people"></i> Gestionar Conjuntos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_jurados"><i class="bi bi-person-badge"></i> Gestionar Jurados</a></li>
                     <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-key"></i> Generar Tokens</a></li>
                     <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-play-circle"></i> Activar Concurso</a></li>
                     <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Resultados en Vivo</a></li>
@@ -110,4 +135,5 @@ $user = auth();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

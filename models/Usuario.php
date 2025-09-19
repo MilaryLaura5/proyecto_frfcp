@@ -2,15 +2,17 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-class Usuario {
-    
+class Usuario
+{
+
     // Validar credenciales del usuario
-    public static function validar($correo, $contraseña) {
+    public static function validar($usuario, $contraseña)
+    {
         global $pdo;
-        
+
         $sql = "SELECT 
                     u.id_usuario, 
-                    u.correo, 
+                    u.usuario, 
                     u.rol, 
                     u.estado,
                     u.contraseña as hash_contraseña,
@@ -24,10 +26,10 @@ class Usuario {
                 LEFT JOIN Administrador a ON u.id_usuario = a.id_admin
                 LEFT JOIN Jurado j ON u.id_usuario = j.id_jurado
                 LEFT JOIN Presidente p ON u.id_usuario = p.id_presidente
-                WHERE u.correo = ?";
+                WHERE u.usuario = ?";
 
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$correo]);
+        $stmt->execute([$usuario]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Verificar si existe y si la contraseña es correcta
@@ -37,4 +39,3 @@ class Usuario {
         return false;
     }
 }
-?>
