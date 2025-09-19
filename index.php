@@ -4,6 +4,7 @@
 // Iniciar sesión solo si no está activa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+    require_once __DIR__ . '/config/database.php';
 }
 
 // Forzar que la cookie de sesión se envíe
@@ -25,7 +26,9 @@ if (!isset($_COOKIE[session_name()]) && !headers_sent()) {
 // Verificar si se solicita una acción o vista
 $page = $_GET['page'] ?? 'login';
 
-// Rutas públicas (sin necesidad de login)
+// =============================
+// RUTAS PÚBLICAS (sin login)
+// =============================
 if ($page === 'login') {
     require_once __DIR__ . '/controllers/AuthController.php';
     $controller = new AuthController();
@@ -41,7 +44,9 @@ if ($page === 'login') {
     $controller = new AuthController();
     $controller->logout();
 
-// Rutas protegidas (requieren inicio de sesión)
+// =============================
+// RUTAS PROTEGIDAS (con login)
+// =============================
 } else {
     // Verificar autenticación
     if (!isset($_SESSION['user'])) {
@@ -49,8 +54,8 @@ if ($page === 'login') {
         exit;
     }
 
-    // Cargar controladores según la acción
     switch ($page) {
+        // --- ADMINISTRADOR ---
         case 'admin_dashboard':
             require_once __DIR__ . '/views/admin/dashboard.php';
             break;
@@ -85,18 +90,6 @@ if ($page === 'login') {
             $controller->eliminarConcurso();
             break;
 
-        case 'jurado_evaluar':
-            // Aquí irá la vista del jurado
-            echo "<h3>Evaluación - Jurado " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
-            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
-            // Más adelante: formulario de evaluación
-            break;
-
-        case 'presidente_resultados':
-            echo "<h3>Resultados Oficiales - Presidente " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
-            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
-            break;
-
         case 'admin_activar_concurso':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
@@ -108,9 +101,41 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->cerrarConcurso();
             break;
-            
+
+        // --- JURADO ---
+        case 'jurado_evaluar':
+            echo "<h3>Evaluación - Jurado " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
+            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
+            // Aquí luego irá el formulario de evaluación
+            break;
+
+        // --- PRESIDENTE ---
+        case 'presidente_dashboard':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->dashboard();
+            break;
+
+        case 'presidente_seleccionar_concurso':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->seleccionarConcurso();
+            break;
+
+        case 'presidente_revisar_resultados':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->revisarResultados();
+            break;
+
+        case 'presidente_generar_reporte':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->generarReporte();
+            break;
+
+        // --- DEFAULT ---
         default:
-            // Cualquier página no definida redirige al login
             header('Location: index.php?page=login');
             exit;
     }

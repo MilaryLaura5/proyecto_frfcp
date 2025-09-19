@@ -1,7 +1,7 @@
 <?php
+// controllers/AuthController.php
 
 require_once __DIR__ . '/../models/Usuario.php';
-
 
 class AuthController {
 
@@ -13,6 +13,11 @@ class AuthController {
 
     // Procesar el inicio de sesión
     public function login() {
+        // Asegurar que la sesión esté iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if ($_POST) {
             $correo = trim($_POST['correo']);
             $contraseña = $_POST['contraseña'];
@@ -27,39 +32,54 @@ class AuthController {
             $usuario = Usuario::validar($correo, $contraseña);
 
             if ($usuario) {
-                // Iniciar sesión
+                // Limpiar cualquier sesión previa
+                session_destroy();
+                session_start();
+
+                // Guardar datos del usuario
                 $_SESSION['user'] = [
                     'id' => $usuario['id_usuario'],
                     'correo' => $usuario['correo'],
                     'rol' => $usuario['rol'],
                     'nombre' => $usuario['nombre']
                 ];
-                
+
                 // Redirigir según rol
                 switch ($usuario['rol']) {
                     case 'Administrador':
                         header('Location: index.php?page=admin_dashboard');
                         break;
+
                     case 'Jurado':
                         header('Location: index.php?page=jurado_evaluar');
                         break;
+
                     case 'Presidente':
-                        header('Location: index.php?page=presidente_resultados');
+                        // ✅ CORREGIDO: Cambiado a una página que SÍ existe
+                        header('Location: index.php?page=presidente_seleccionar_concurso');
                         break;
+
                     default:
                         header('Location: index.php?page=login&error=rol');
                         break;
                 }
-                exit;
+                exit; // ← Muy importante: detener ejecución después de redirigir
             } else {
                 header('Location: index.php?page=login&error=invalido');
                 exit;
             }
+        } else {
+            // Si no es POST, redirigir al login
+            header('Location: index.php?page=login');
+            exit;
         }
     }
 
     // Cerrar sesión
     public function logout() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         session_destroy();
         header('Location: index.php?page=login');
         exit;
