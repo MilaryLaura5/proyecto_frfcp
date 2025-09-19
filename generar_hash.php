@@ -10,4 +10,3 @@ echo "<p><strong>Contraseña:</strong> <code>$contraseña_normal</code></p>";
 echo "<p><strong>Hash (copia TODO este texto):</strong></p>";
 echo "<textarea rows='4' cols='80'>$hash</textarea>";
 echo "<p>💡 Este hash FUNCIONARÁ porque fue creado por tu sistema.</p>";
-?>

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/Concurso.php';
 require_once __DIR__ . '/../helpers/auth.php';
 require_once __DIR__ . '/../models/Serie.php';
 require_once __DIR__ . '/../models/TipoDanza.php';
+require_once __DIR__ . '/../config/database.php';
 
 class AdminController
 {
@@ -152,6 +153,8 @@ class AdminController
         redirect_if_not_admin();
         require_once __DIR__ . '/../views/admin/gestion_series.php';
     }
+
+
     // SERIES
     public function crearSerie()
     {
@@ -210,6 +213,81 @@ class AdminController
             header('Location: index.php?page=admin_gestion_series&success=eliminado');
         } else {
             header('Location: index.php?page=admin_gestion_series&error=db');
+        }
+        exit;
+    }
+
+    public function gestionarTiposYSeries()
+    {
+        redirect_if_not_admin();
+
+        // ← Asegúrate de cargar los modelos necesarios
+        require_once __DIR__ . '/../models/TipoDanza.php';
+        require_once __DIR__ . '/../models/Serie.php';
+        require_once __DIR__ . '/../config/database.php'; // ← Importante: conexión
+        global $pdo; // ← Necesario para consultas en la vista
+
+        // Cargar la vista
+        require_once __DIR__ . '/../views/admin/gestion_tipos_y_series.php';
+    }
+
+    // TIPOS DE DANZA
+    public function crearTipoDanza()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/TipoDanza.php';
+
+        if ($_POST) {
+            $nombre_tipo = trim($_POST['nombre_tipo']);
+
+            if (empty($nombre_tipo)) {
+                header('Location: index.php?page=admin_gestion_tipos_series&error=nombre_vacio');
+                exit;
+            }
+
+            // Validar formato (opcional)
+            if (!preg_match('/^[a-z_]+$/', $nombre_tipo)) {
+                header('Location: index.php?page=admin_gestion_tipos_series&error=formato_invalido');
+                exit;
+            }
+
+            if (TipoDanza::crear($nombre_tipo)) {
+                header('Location: index.php?page=admin_gestion_tipos_series&success=tipo_creado');
+            } else {
+                header('Location: index.php?page=admin_gestion_tipos_series&error=db');
+            }
+            exit;
+        }
+    }
+
+    public function actualizarTipoDanza()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/TipoDanza.php';
+
+        if ($_POST) {
+            $id = (int)$_POST['id_tipo'];
+            $nombre_tipo = trim($_POST['nombre_tipo']);
+
+            if (TipoDanza::actualizar($id, $nombre_tipo)) {
+                header('Location: index.php?page=admin_gestion_tipos_series&success=tipo_editado');
+            } else {
+                header('Location: index.php?page=admin_gestion_tipos_series&error=db');
+            }
+            exit;
+        }
+    }
+
+    public function eliminarTipoDanza()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/TipoDanza.php';
+
+        $id = $_GET['id'] ?? null;
+        if ($id && TipoDanza::eliminar($id)) {
+            header('Location: index.php?page=admin_gestion_tipos_series&success=tipo_eliminado');
+        } else {
+            header('Location: index.php?page=admin_gestion_tipos_series&error=tiene_series');
         }
         exit;
     }

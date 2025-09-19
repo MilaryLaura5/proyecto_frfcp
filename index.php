@@ -42,9 +42,9 @@ if ($page === 'login') {
     $controller = new AuthController();
     $controller->logout();
 
-// =============================
-// RUTAS PROTEGIDAS (con login)
-// =============================
+    // =============================
+    // RUTAS PROTEGIDAS (con login)
+    // =============================
 
     // Rutas protegidas (requieren inicio de sesión)
 
@@ -190,6 +190,33 @@ if ($page === 'login') {
             $controller->eliminarSerie();
             break;
 
+
+        //TIPOS DE DANZA Y SERIES
+        // Tipos y Series
+        case 'admin_gestion_tipos_series':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarTiposYSeries();
+            break;
+
+        case 'admin_crear_tipo_danza':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->crearTipoDanza();
+            break;
+
+        case 'admin_actualizar_tipo_danza':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->actualizarTipoDanza();
+            break;
+
+        case 'admin_eliminar_tipo_danza':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->eliminarTipoDanza();
+            break;
+
         //CONJUNTOS
         case 'admin_gestion_conjuntos':
             require_once __DIR__ . '/controllers/AdminController.php';
@@ -302,6 +329,3 @@ if ($page === 'login') {
             exit;
     }
 }
-
-?>
-

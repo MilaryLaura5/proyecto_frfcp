@@ -40,8 +40,8 @@ if (!$token) {
 
             <form method="POST" action="index.php?page=jurado_login_submit">
                 <div class="mb-3">
-                    <label class="form-label"><strong>Correo (Usuario)</strong></label>
-                    <input type="email" class="form-control" name="correo" placeholder="tu.correo@frfcp.org" required>
+                    <label class="form-label"><strong>Usuario)/strong></label>
+                    <input type="text" class="form-control" name="usuario" placeholder="Carlos45" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label"><strong>Contraseña</strong></label>

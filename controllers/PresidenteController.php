@@ -2,24 +2,28 @@
 require_once __DIR__ . '/../models/Presidente.php';
 require_once __DIR__ . '/../helpers/auth.php';
 
-class PresidenteController {
+class PresidenteController
+{
 
     private $presidenteModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         global $pdo;
         $this->presidenteModel = new Presidente($pdo);
     }
 
     // Dashboard del presidente
-    public function dashboard() {
+    public function dashboard()
+    {
         redirect_if_not_presidente();
         $user = auth();
         require_once __DIR__ . '/../views/presidente/dashboard.php';
     }
 
     // Seleccionar concurso
-    public function seleccionarConcurso() {
+    public function seleccionarConcurso()
+    {
         redirect_if_not_presidente();
         $concursos = $this->presidenteModel->getAllConcursos();
         $error = $_GET['error'] ?? null;
@@ -27,7 +31,8 @@ class PresidenteController {
     }
 
     // Revisar resultados finales
-    public function revisarResultados() {
+    public function revisarResultados()
+    {
         redirect_if_not_presidente();
 
         $id_concurso = $_GET['id_concurso'] ?? null;
@@ -48,7 +53,8 @@ class PresidenteController {
     }
 
     // Generar reporte oficial
-    public function generarReporte() {
+    public function generarReporte()
+    {
         redirect_if_not_presidente();
 
         $id_concurso = $_GET['id_concurso'] ?? null;
@@ -74,7 +80,7 @@ class PresidenteController {
             mkdir('uploads/reportes', 0777, true);
         }
 
-        file_put_contents($ruta_archivo, "REPORTE OFICIAL\nConcurso ID: {$id_concurso}\nGenerado por: {$user['correo']}");
+        file_put_contents($ruta_archivo, "REPORTE OFICIAL\nConcurso ID: {$id_concurso}\nGenerado por: {$user['usuario']}");
 
         $_SESSION['success_reporte'] = "✅ Reporte generado correctamente: <strong>{$nombre_archivo}</strong>";
         $_SESSION['reporte_path'] = $ruta_archivo;
@@ -82,4 +88,3 @@ class PresidenteController {
         require_once __DIR__ . '/../views/presidente/generar_reporte.php';
     }
 }
-?>
