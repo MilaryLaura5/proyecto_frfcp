@@ -221,7 +221,38 @@ if ($page === 'login') {
             break;
 
 
+        //JURADOS
+        case 'admin_gestion_jurados':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarJurados();
+            break;
 
+        case 'admin_crear_jurado':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->crearFormularioJurado();
+            break;
+
+        case 'admin_guardar_jurado':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->guardarJurado();
+            break;
+
+        // Mostrar login con token
+        case 'jurado_login':
+            require_once __DIR__ . '/controllers/AuthController.php';
+            $controller = new AuthController();
+            $controller->mostrarLoginConToken();
+            break;
+
+        // Procesar login con credenciales
+        case 'jurado_login_submit':
+            require_once __DIR__ . '/controllers/AuthController.php';
+            $controller = new AuthController();
+            $controller->loginConTokenSubmit();
+            break;
 
         default:
             // Cualquier página no definida redirige al login

@@ -60,7 +60,7 @@ $user = auth();
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_tipos_danza"><i class="bi bi-list-ul"></i> Tipos de Danza</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_series"><i class="bi bi-list-ul"></i> Gestionar Series</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_seleccionar_concurso"><i class="bi bi-people"></i> Gestionar Conjuntos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-person-badge"></i> Gestionar Jurados</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_jurados"><i class="bi bi-person-badge"></i> Gestionar Jurados</a></li>
                     <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-key"></i> Generar Tokens</a></li>
                     <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-play-circle"></i> Activar Concurso</a></li>
                     <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Resultados en Vivo</a></li>
