@@ -9,15 +9,12 @@ require_once __DIR__ . '/../config/database.php';
 
 class AdminController
 {
-
     // Mostrar formulario para crear concurso
     public function mostrarFormularioCrearConcurso()
     {
         redirect_if_not_admin();
-
         $editando = false;
         $page = 'admin_crear_concurso';
-
         require_once __DIR__ . '/../views/admin/gestion_concursos.php';
     }
 
@@ -25,39 +22,33 @@ class AdminController
     public function crearConcurso()
     {
         redirect_if_not_admin();
-
         if ($_POST) {
             $nombre = trim($_POST['nombre']);
             $fecha_inicio = $_POST['fecha_inicio'];
             $fecha_fin = $_POST['fecha_fin'];
 
-            // Validaciones básicas
             if (empty($nombre) || empty($fecha_inicio) || empty($fecha_fin)) {
                 header('Location: index.php?page=admin_gestion_concursos&error=vacios');
                 exit;
             }
-
             if ($fecha_inicio >= $fecha_fin) {
                 header('Location: index.php?page=admin_gestion_concursos&error=fechas');
                 exit;
             }
 
-            // Intentar registrar el concurso
             if (Concurso::crear($nombre, $fecha_inicio, $fecha_fin)) {
                 header('Location: index.php?page=admin_gestion_concursos&success=1');
-                exit;
             } else {
                 header('Location: index.php?page=admin_gestion_concursos&error=db');
-                exit;
             }
+            exit;
         }
     }
 
-    //Mostrar formulario de edición
+    // Mostrar formulario de edición
     public function mostrarFormularioEditarConcurso()
     {
         redirect_if_not_admin();
-
         $id = $_GET['id'] ?? null;
         $concurso = Concurso::obtenerPorId($id);
         if (!$concurso) {
@@ -66,17 +57,15 @@ class AdminController
         }
         $editando = true;
         $page = 'admin_editar_concurso';
-
         require_once __DIR__ . '/../views/admin/gestion_concursos.php';
     }
 
-
-    //Procesar edición
+    // Procesar edición
     public function actualizarConcurso()
     {
         redirect_if_not_admin();
         if ($_POST) {
-            $id = $_POST['id_concurso'];
+            $id = (int)$_POST['id_concurso'];
             $nombre = trim($_POST['nombre']);
             $fecha_inicio = $_POST['fecha_inicio'];
             $fecha_fin = $_POST['fecha_fin'];
@@ -92,20 +81,18 @@ class AdminController
 
             if (Concurso::editar($id, $nombre, $fecha_inicio, $fecha_fin)) {
                 header('Location: index.php?page=admin_gestion_concursos&success=editado');
-                exit;
             } else {
                 header("Location: index.php?page=admin_editar_concurso&id=$id&error=db");
-                exit;
             }
+            exit;
         }
     }
 
-    //Eliminar concurso
+    // Eliminar concurso
     public function eliminarConcurso()
     {
         redirect_if_not_admin();
         $id = $_GET['id'] ?? null;
-
         if (!$id) {
             header('Location: index.php?page=admin_gestion_concursos');
             exit;
@@ -148,17 +135,109 @@ class AdminController
         exit;
     }
 
-    public function gestionarSeries()
+    // =============================
+    // TIPOS DE DANZA + SERIES
+    // =============================
+
+    /**
+     * Muestra la vista unificada de tipos de danza y series
+     */
+    public function gestionarSeriesYTpos()
     {
         redirect_if_not_admin();
+
+        // Asegurar conexión
+        global $pdo;
+
+        // Cargar la vista
         require_once __DIR__ . '/../views/admin/gestion_series.php';
     }
 
+    // --- TIPOS DE DANZA ---
 
-    // SERIES
+    public function crearTipoDanza()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/TipoDanza.php';
+
+        if ($_POST) {
+            $nombre = trim($_POST['nombre_tipo']);
+
+            if (empty($nombre)) {
+                header('Location: index.php?page=admin_gestion_series&error=tipo_vacio');
+                exit;
+            }
+
+            if (TipoDanza::crear($nombre)) {
+                header('Location: index.php?page=admin_gestion_series&success=tipo_creado');
+            } else {
+                header('Location: index.php?page=admin_gestion_series&error=tipo_db');
+            }
+            exit;
+        }
+    }
+
+    public function editarTipoDanza()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/TipoDanza.php';
+
+        $id = $_GET['id'] ?? null;
+        $tipo = $id ? TipoDanza::obtenerPorId($id) : null;
+
+        if (!$tipo) {
+            header('Location: index.php?page=admin_gestion_series&error=tipo_no_existe');
+            exit;
+        }
+
+        // Pasar a la misma vista principal
+        require_once __DIR__ . '/../views/admin/gestion_series.php';
+    }
+
+    public function actualizarTipoDanza()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/TipoDanza.php';
+
+        if ($_POST) {
+            $id = (int)$_POST['id_tipo'];
+            $nombre = trim($_POST['nombre_tipo']);
+
+            if (TipoDanza::actualizar($id, $nombre)) {
+                header('Location: index.php?page=admin_gestion_series&success=tipo_editado');
+            } else {
+                header('Location: index.php?page=admin_gestion_series&error=tipo_db');
+            }
+            exit;
+        }
+    }
+
+    public function eliminarTipoDanza()
+    {
+        redirect_if_not_admin();
+        require_once __DIR__ . '/../models/TipoDanza.php';
+
+        $id = $_GET['id'] ?? null;
+        if ($id && TipoDanza::eliminar($id)) {
+            header('Location: index.php?page=admin_gestion_series&success=tipo_eliminado');
+        } else {
+            header('Location: index.php?page=admin_gestion_series&error=tipo_usado');
+        }
+        exit;
+    }
+
+    // --- SERIES ---
+
+    public function gestionarSeries()
+    {
+        redirect_if_not_admin();
+        $this->gestionarSeriesYTpos(); // Reutiliza el método unificado
+    }
+
     public function crearSerie()
     {
         redirect_if_not_admin();
+        require_once __DIR__ . '/../models/Serie.php';
 
         if ($_POST) {
             $numero_serie = (int)$_POST['numero_serie'];
@@ -182,11 +261,13 @@ class AdminController
     public function mostrarFormularioEditarSerie()
     {
         redirect_if_not_admin();
+        require_once __DIR__ . '/../views/admin/gestion_series.php'; // Usa la misma vista unificada
     }
 
     public function actualizarSerie()
     {
         redirect_if_not_admin();
+        require_once __DIR__ . '/../models/Serie.php';
 
         if ($_POST) {
             $id = (int)$_POST['id_serie'];
@@ -206,9 +287,9 @@ class AdminController
     public function eliminarSerie()
     {
         redirect_if_not_admin();
+        require_once __DIR__ . '/../models/Serie.php';
 
         $id = $_GET['id'] ?? null;
-
         if ($id && Serie::eliminar($id)) {
             header('Location: index.php?page=admin_gestion_series&success=eliminado');
         } else {
@@ -217,82 +298,10 @@ class AdminController
         exit;
     }
 
-    public function gestionarTiposYSeries()
-    {
-        redirect_if_not_admin();
-
-        // ← Asegúrate de cargar los modelos necesarios
-        require_once __DIR__ . '/../models/TipoDanza.php';
-        require_once __DIR__ . '/../models/Serie.php';
-        require_once __DIR__ . '/../config/database.php'; // ← Importante: conexión
-        global $pdo; // ← Necesario para consultas en la vista
-
-        // Cargar la vista
-        require_once __DIR__ . '/../views/admin/gestion_tipos_y_series.php';
-    }
-
-    // TIPOS DE DANZA
-    public function crearTipoDanza()
-    {
-        redirect_if_not_admin();
-        require_once __DIR__ . '/../models/TipoDanza.php';
-
-        if ($_POST) {
-            $nombre_tipo = trim($_POST['nombre_tipo']);
-
-            if (empty($nombre_tipo)) {
-                header('Location: index.php?page=admin_gestion_tipos_series&error=nombre_vacio');
-                exit;
-            }
-
-            // Validar formato (opcional)
-            if (!preg_match('/^[a-z_]+$/', $nombre_tipo)) {
-                header('Location: index.php?page=admin_gestion_tipos_series&error=formato_invalido');
-                exit;
-            }
-
-            if (TipoDanza::crear($nombre_tipo)) {
-                header('Location: index.php?page=admin_gestion_tipos_series&success=tipo_creado');
-            } else {
-                header('Location: index.php?page=admin_gestion_tipos_series&error=db');
-            }
-            exit;
-        }
-    }
-
-    public function actualizarTipoDanza()
-    {
-        redirect_if_not_admin();
-        require_once __DIR__ . '/../models/TipoDanza.php';
-
-        if ($_POST) {
-            $id = (int)$_POST['id_tipo'];
-            $nombre_tipo = trim($_POST['nombre_tipo']);
-
-            if (TipoDanza::actualizar($id, $nombre_tipo)) {
-                header('Location: index.php?page=admin_gestion_tipos_series&success=tipo_editado');
-            } else {
-                header('Location: index.php?page=admin_gestion_tipos_series&error=db');
-            }
-            exit;
-        }
-    }
-
-    public function eliminarTipoDanza()
-    {
-        redirect_if_not_admin();
-        require_once __DIR__ . '/../models/TipoDanza.php';
-
-        $id = $_GET['id'] ?? null;
-        if ($id && TipoDanza::eliminar($id)) {
-            header('Location: index.php?page=admin_gestion_tipos_series&success=tipo_eliminado');
-        } else {
-            header('Location: index.php?page=admin_gestion_tipos_series&error=tiene_series');
-        }
-        exit;
-    }
-
+    // =============================
     // CONJUNTOS
+    // =============================
+
     public function gestionarConjuntos()
     {
         redirect_if_not_admin();
@@ -307,7 +316,7 @@ class AdminController
         if ($_POST) {
             $nombre = trim($_POST['nombre']);
             $id_serie = (int)$_POST['id_serie'];
-            $id_concurso = (int)$_POST['id_concurso']; // ← Viene del formulario
+            $id_concurso = (int)$_POST['id_concurso'];
             $orden_presentacion = (int)$_POST['orden_presentacion'];
             $numero_oficial = (int)$_POST['numero_oficial'];
 
@@ -316,7 +325,6 @@ class AdminController
                 exit;
             }
 
-            // Verificar duplicado por número oficial en este concurso
             global $pdo;
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM Conjunto WHERE numero_oficial = ? AND id_concurso = ?");
             $stmt->execute([$numero_oficial, $id_concurso]);
@@ -351,9 +359,8 @@ class AdminController
             $id_serie = (int)$_POST['id_serie'];
             $orden_presentacion = (int)$_POST['orden_presentacion'];
             $numero_oficial = (int)$_POST['numero_oficial'];
-            $id_concurso = (int)$_POST['id_concurso']; // ← Importante: mantener el contexto
+            $id_concurso = (int)$_POST['id_concurso'];
 
-            // Opcional: verificar que el conjunto pertenezca al concurso (seguridad)
             global $pdo;
             $check = $pdo->prepare("SELECT id_concurso FROM Conjunto WHERE id_conjunto = ?");
             $check->execute([$id]);
@@ -379,14 +386,13 @@ class AdminController
         require_once __DIR__ . '/../models/Conjunto.php';
 
         $id = $_GET['id'] ?? null;
-        $id_concurso = $_GET['id_concurso'] ?? null; // ← Recuperar para redirigir correctamente
+        $id_concurso = $_GET['id_concurso'] ?? null;
 
         if (!$id_concurso) {
             header('Location: index.php?page=admin_gestion_concursos&error=no_concurso');
             exit;
         }
 
-        // Verificar que el conjunto pertenezca al concurso
         global $pdo;
         $check = $pdo->prepare("SELECT id_concurso FROM Conjunto WHERE id_conjunto = ?");
         $check->execute([$id]);
@@ -428,8 +434,7 @@ class AdminController
             exit;
         }
 
-        // Saltar encabezado
-        fgetcsv($handle);
+        fgetcsv($handle); // Saltar encabezado
 
         $errores = [];
         $importados = 0;
@@ -445,7 +450,6 @@ class AdminController
                 continue;
             }
 
-            // Verificar duplicado
             global $pdo;
             $check = $pdo->prepare("SELECT COUNT(*) FROM Conjunto WHERE numero_oficial = ? AND id_concurso = ?");
             $check->execute([$numero_oficial, $id_concurso]);
@@ -472,17 +476,14 @@ class AdminController
         exit;
     }
 
-    //JURADOS
+    // =============================
+    // JURADOS
+    // =============================
+
     public function gestionarJurados()
     {
         redirect_if_not_admin();
         require_once __DIR__ . '/../views/admin/gestion_jurados.php';
-    }
-
-    public function crearJurado()
-    {
-        redirect_if_not_admin();
-        $id_concurso = $_GET['id_concurso'] ?? null;
     }
 
     public function crearFormularioJurado()
@@ -494,7 +495,6 @@ class AdminController
     public function guardarJurado()
     {
         redirect_if_not_admin();
-
         require_once __DIR__ . '/../models/Jurado.php';
         require_once __DIR__ . '/../config/database.php';
         global $pdo;
@@ -503,7 +503,7 @@ class AdminController
             $id_concurso = (int)$_POST['id_concurso'];
             $dni = trim($_POST['dni']);
             $nombre = trim($_POST['nombre']);
-            $usuario = trim($_POST['usuario']);
+            $usuario = trim($_POST['usuario']); // ← correo como usuario
             $especialidad = trim($_POST['especialidad']);
             $años_experiencia = (int)$_POST['años_experiencia'];
 
@@ -512,24 +512,19 @@ class AdminController
                 header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=dni");
                 exit;
             }
-
             if (empty($nombre) || empty($usuario) || !filter_var($usuario, FILTER_VALIDATE_EMAIL)) {
                 header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=datos");
                 exit;
             }
 
-            // Contraseña temporal
             $contraseña = 'temporal123';
 
-            // Crear jurado (incluye Usuario)
             if (Jurado::crear($dni, $nombre, $especialidad, $años_experiencia, $usuario, $contraseña)) {
-                // Buscar id_jurado recién creado
                 $stmt = $pdo->prepare("SELECT id_jurado FROM Jurado WHERE dni = ?");
                 $stmt->execute([$dni]);
                 $jurado = $stmt->fetch();
 
                 if ($jurado) {
-                    // Obtener fecha_fin del concurso → para expiración del token
                     $stmt_concurso = $pdo->prepare("SELECT fecha_fin FROM Concurso WHERE id_concurso = ?");
                     $stmt_concurso->execute([$id_concurso]);
                     $concurso = $stmt_concurso->fetch();
@@ -539,48 +534,37 @@ class AdminController
                         exit;
                     }
 
-                    $fecha_expiracion = $concurso['fecha_fin']; // ✅ El token expira cuando acaba el concurso
-
-                    // Generar token único
+                    $fecha_expiracion = $concurso['fecha_fin'];
                     $token = bin2hex(random_bytes(16));
 
-                    // Insertar token en TokenAcceso
                     $sql_token = "INSERT INTO TokenAcceso 
-                              (token, id_concurso, id_jurado, generado_por, fecha_generacion, fecha_expiracion, usado)
-                              VALUES (?, ?, ?, ?, NOW(), ?, 0)";
+                                  (token, id_concurso, id_jurado, generado_por, fecha_generacion, fecha_expiracion, usado)
+                                  VALUES (?, ?, ?, ?, NOW(), ?, 0)";
 
                     $stmt_token = $pdo->prepare($sql_token);
                     $resultado = $stmt_token->execute([
                         $token,
                         $id_concurso,
                         $jurado['id_jurado'],
-                        $_SESSION['user']['id'], // ID del admin
+                        $_SESSION['user']['id'],
                         $fecha_expiracion
                     ]);
 
                     if ($resultado) {
-                        // ✅ Éxito: redirigir con mensaje y token
                         header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso&success=token&token=$token");
-                        exit;
                     } else {
-                        // Error al guardar token
                         error_log("Error al insertar token para jurado DNI: $dni");
                         header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=token_db");
-                        exit;
                     }
                 } else {
-                    // No se encontró el jurado después de crearlo
                     error_log("Jurado creado pero no encontrado por DNI: $dni");
                     header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=no_encontrado");
-                    exit;
                 }
             } else {
-                // Error al crear jurado (probablemente duplicado o fallo interno)
                 header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=db");
-                exit;
             }
+            exit;
         } else {
-            // Acceso inválido (no es POST)
             header('Location: index.php?page=admin_gestion_concursos');
             exit;
         }

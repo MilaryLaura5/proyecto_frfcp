@@ -4,7 +4,6 @@
 // Iniciar sesión solo si no está activa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-    require_once __DIR__ . '/config/database.php';
 }
 
 // Forzar que la cookie de sesión se envíe
@@ -16,12 +15,15 @@ if (!isset($_COOKIE[session_name()]) && !headers_sent()) {
             'expires' => 0,
             'path' => '/',
             'domain' => '',
-            'secure' => false,   // true si usas HTTPS
+            'secure' => false,   // Cambia a true si usas HTTPS
             'httponly' => true,
-            'samesite' => 'Lax'  // Permite envío en formularios
+            'samesite' => 'Lax'
         ]
     );
 }
+
+// Cargar conexión a la base de datos
+require_once __DIR__ . '/config/database.php';
 
 // Verificar si se solicita una acción o vista
 $page = $_GET['page'] ?? 'login';
@@ -43,10 +45,8 @@ if ($page === 'login') {
     $controller->logout();
 
     // =============================
-    // RUTAS PROTEGIDAS (con login)
+    // RUTAS PROTEGIDAS (requieren login)
     // =============================
-
-    // Rutas protegidas (requieren inicio de sesión)
 
 } else {
     // Verificar autenticación
@@ -61,6 +61,7 @@ if ($page === 'login') {
             require_once __DIR__ . '/views/admin/dashboard.php';
             break;
 
+        // CONCURSOS
         case 'admin_gestion_concursos':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
@@ -91,20 +92,6 @@ if ($page === 'login') {
             $controller->eliminarConcurso();
             break;
 
-        case 'jurado_evaluar':
-            // Aquí irá la vista del jurado
-            echo "<h3>Evaluación - Jurado " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
-            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
-            // Más adelante: formulario de evaluación
-            break;
-
-        case 'presidente_resultados':
-            echo "<h3>Resultados Oficiales - Presidente " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
-            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
-            break;
-
-        //CONCURSOS
-
         case 'admin_activar_concurso':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
@@ -117,53 +104,11 @@ if ($page === 'login') {
             $controller->cerrarConcurso();
             break;
 
-
-        // --- JURADO ---
-        case 'jurado_evaluar':
-            echo "<h3>Evaluación - Jurado " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
-            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
-            // Aquí luego irá el formulario de evaluación
-            break;
-
-        // --- PRESIDENTE ---
-        case 'presidente_dashboard':
-            require_once __DIR__ . '/controllers/PresidenteController.php';
-            $controller = new PresidenteController();
-            $controller->dashboard();
-            break;
-
-        case 'presidente_seleccionar_concurso':
-            require_once __DIR__ . '/controllers/PresidenteController.php';
-            $controller = new PresidenteController();
-            $controller->seleccionarConcurso();
-            break;
-
-        case 'presidente_revisar_resultados':
-            require_once __DIR__ . '/controllers/PresidenteController.php';
-            $controller = new PresidenteController();
-            $controller->revisarResultados();
-            break;
-
-        case 'presidente_generar_reporte':
-            require_once __DIR__ . '/controllers/PresidenteController.php';
-            $controller = new PresidenteController();
-            $controller->generarReporte();
-            break;
-
-        // --- DEFAULT ---
-        case 'admin_tipos_danza':
-            require_once __DIR__ . '/views/admin/gestion_tipos_danza.php';
-            break;
-
-        case 'admin_seleccionar_concurso':
-            require_once __DIR__ . '/views/admin/seleccionar_concurso.php';
-            break;
-
-        //SERIES
+        // TIPOS DE DANZA Y SERIES (UNIFICADOS)
         case 'admin_gestion_series':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->gestionarSeries();
+            $controller->gestionarSeriesYTpos(); // Muestra tipos + series
             break;
 
         case 'admin_crear_serie_submit':
@@ -190,19 +135,17 @@ if ($page === 'login') {
             $controller->eliminarSerie();
             break;
 
-
-        //TIPOS DE DANZA Y SERIES
-        // Tipos y Series
-        case 'admin_gestion_tipos_series':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->gestionarTiposYSeries();
-            break;
-
+        // TIPOS DE DANZA (CRUD)
         case 'admin_crear_tipo_danza':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->crearTipoDanza();
+            break;
+
+        case 'admin_editar_tipo_danza':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->editarTipoDanza();
             break;
 
         case 'admin_actualizar_tipo_danza':
@@ -217,7 +160,7 @@ if ($page === 'login') {
             $controller->eliminarTipoDanza();
             break;
 
-        //CONJUNTOS
+        // CONJUNTOS
         case 'admin_gestion_conjuntos':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
@@ -248,8 +191,8 @@ if ($page === 'login') {
             $controller->eliminarConjunto();
             break;
 
+        // DESCARGAR PLANTILLA CSV
         case 'descargar_plantilla_conjuntos':
-            // Solo accesible si está logueado como admin
             if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'Administrador') {
                 header('Location: index.php?page=login');
                 exit;
@@ -260,38 +203,25 @@ if ($page === 'login') {
                 die("Error: No se especificó un concurso.");
             }
 
-            // Nombre del archivo descargado
             $filename = "plantilla_conjuntos_concurso_$id_concurso.csv";
-
-            // Encabezados para forzar descarga
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
             header('Pragma: no-cache');
 
-            // Abrir output stream
             $output = fopen('php://output', 'w');
-
-            // Escribir BOM para UTF-8 (evita problemas con tildes en Excel)
-            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            // Encabezados de la plantilla
+            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8
             fputcsv($output, ['nombre', 'id_serie', 'orden_presentacion', 'numero_oficial'], ',', '"');
-
-            // Ejemplos opcionales (puedes quitarlos si prefieres vacío)
-            fputcsv($output, ['Morenada Laykakota', '7', '14', '14'], ',', '"');
-            // fputcsv($output, ['Diablada Fuego Andino', '6', '2', '63'], ',', '"');
-
             fclose($output);
             exit;
 
+            // IMPORTAR CSV
         case 'admin_importar_conjuntos_csv':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->importarConjuntosCSV();
             break;
 
-
-        //JURADOS
+        // JURADOS
         case 'admin_gestion_jurados':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
@@ -310,22 +240,52 @@ if ($page === 'login') {
             $controller->guardarJurado();
             break;
 
-        // Mostrar login con token
+        // LOGIN DEL JURADO CON TOKEN
         case 'jurado_login':
             require_once __DIR__ . '/controllers/AuthController.php';
             $controller = new AuthController();
             $controller->mostrarLoginConToken();
             break;
 
-        // Procesar login con credenciales
         case 'jurado_login_submit':
             require_once __DIR__ . '/controllers/AuthController.php';
             $controller = new AuthController();
             $controller->loginConTokenSubmit();
             break;
 
+        // --- PRESIDENTE ---
+        case 'presidente_dashboard':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->dashboard();
+            break;
+
+        case 'presidente_seleccionar_concurso':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->seleccionarConcurso();
+            break;
+
+        case 'presidente_revisar_resultados':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->revisarResultados();
+            break;
+
+        case 'presidente_generar_reporte':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->generarReporte();
+            break;
+
+        case 'presidente_resultados':
+            echo "<h3>Resultados Oficiales - Presidente " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
+            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
+            break;
+
+        // --- DEFAULT ---
         default:
-            header('Location: index.php?page=login');
+            header('Location: index.php?page=admin_dashboard');
             exit;
     }
 }
