@@ -5,9 +5,17 @@ require_once __DIR__ . '/../../models/Jurado.php';
 redirect_if_not_admin();
 $user = auth();
 
-$error = $_GET['error'] ?? null;
-$success = $_GET['success'] ?? null;
+// ✅ Ahora sí puedes usar $_SESSION
+$mostrarToken = false;
+$token = '';
 
+if (isset($_SESSION['mensaje_token'])) {
+    $token = $_SESSION['mensaje_token'];
+    unset($_SESSION['mensaje_token']); // Limpiar para que no aparezca nuevamente
+    $mostrarToken = true;
+}
+
+$error = $_GET['error'] ?? null;
 $id_concurso = $_GET['id_concurso'] ?? null;
 
 if ($id_concurso) {
@@ -18,35 +26,6 @@ if ($id_concurso) {
     $jurados = Jurado::listar();
 }
 ?>
-
-<?php if ($success == 'token'): ?>
-    <?php $token = $_GET['token'] ?? ''; ?>
-    <div class="alert alert-success">
-        <h5><i class="bi bi-check-circle"></i> ¡Jurado creado con éxito!</h5>
-
-        <p><strong>Token generado:</strong></p>
-        <code class="d-block p-2 bg-light mb-3 text-center" style="font-size: 1.1em;">
-            <?= htmlspecialchars($token) ?>
-        </code>
-
-        <p><strong>Enlace de acceso para el jurado:</strong></p>
-        <?php
-        $link = "http://$_SERVER[HTTP_HOST]" . dirname($_SERVER['SCRIPT_NAME']);
-        $link = rtrim($link, '/') . "/index.php?page=jurado_login&token=" . urlencode($token);
-        ?>
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" value="<?= htmlspecialchars($link) ?>" id="linkToken" readonly>
-            <button class="btn btn-outline-secondary" type="button" onclick="copiarLink()">
-                <i class="bi bi-copy"></i> Copiar
-            </button>
-        </div>
-
-        <small class="text-muted">
-            Entrega este enlace al jurado. Solo funcionará hasta el final del concurso.
-        </small>
-    </div>
-<?php endif; ?>
-
 
 <!DOCTYPE html>
 <html lang="es">
@@ -94,7 +73,7 @@ if ($id_concurso) {
                                 $stmt = $pdo->query("SELECT * FROM Concurso ORDER BY nombre");
                                 while ($c = $stmt->fetch()): ?>
                                     <option value="<?= $c['id_concurso'] ?>" <?= ($id_concurso == $c['id_concurso']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($c['nombre']) ?>
+                                        <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>
@@ -104,11 +83,31 @@ if ($id_concurso) {
             </div>
         </div>
 
-        <!-- Mensajes -->
-        <?php if ($success == '1'): ?>
-            <div class="alert alert-success">✅ Jurado creado correctamente.</div>
-        <?php elseif ($success == 'token'): ?>
-            <div class="alert alert-success">✅ Token generado y copiado al portapapeles.</div>
+        <?php if ($mostrarToken && $token): ?>
+            <div class="alert alert-success">
+                <h5><i class="bi bi-check-circle"></i> ¡Jurado creado con éxito!</h5>
+
+                <p><strong>Token generado:</strong></p>
+                <code class="d-block p-2 bg-light mb-3 text-center" style="font-size: 1.1em;">
+                    <?= htmlspecialchars($token) ?>
+                </code>
+
+                <p><strong>Enlace de acceso para el jurado:</strong></p>
+                <?php
+                $link = "http://$_SERVER[HTTP_HOST]" . dirname($_SERVER['SCRIPT_NAME']);
+                $link = rtrim($link, '/') . "/index.php?page=jurado_login&token=" . urlencode($token);
+                ?>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($link) ?>" id="linkToken" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copiarLink()">
+                        <i class="bi bi-copy"></i> Copiar
+                    </button>
+                </div>
+
+                <small class="text-muted">
+                    Entrega este enlace al jurado. Solo funcionará hasta el final del concurso.
+                </small>
+            </div>
         <?php endif; ?>
 
         <!-- Listado de jurados -->

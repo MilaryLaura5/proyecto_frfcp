@@ -1,6 +1,7 @@
 <?php
 
-function auth() {
+function auth()
+{
     if (!isset($_SESSION['user'])) {
         header('Location: index.php?page=login');
         exit;
@@ -8,29 +9,34 @@ function auth() {
     return $_SESSION['user'];
 }
 
-function is_admin() {
+function is_admin()
+{
     $user = auth();
     return isset($user['rol']) && strtolower($user['rol']) === 'administrador';
 }
 
-function is_jurado() {
+function is_jurado()
+{
     $user = auth();
     return isset($user['rol']) && strtolower($user['rol']) === 'jurado';
 }
 
-function is_presidente() {
+function is_presidente()
+{
     $user = auth();
     return isset($user['rol']) && strtolower($user['rol']) === 'presidente';
 }
 
-function redirect_if_not_admin() {
+function redirect_if_not_admin()
+{
     if (!is_admin()) {
         header('Location: index.php?page=login&error=permiso');
         exit;
     }
 }
 
-function redirect_if_not_jurado() {
+function redirect_if_not_jurado()
+{
     if (!is_jurado()) {
         header('Location: index.php?page=login&error=permiso');
         exit;
@@ -38,10 +44,29 @@ function redirect_if_not_jurado() {
 }
 
 
-function redirect_if_not_presidente() {
+function redirect_if_not_presidente()
+{
     if (!is_presidente()) {
         header('Location: index.php?page=login&error=permiso');
         exit;
     }
 }
-?>
+
+function normalizarTexto($string)
+{
+    $replacements = [
+        'á' => 'a',
+        'é' => 'e',
+        'í' => 'i',
+        'ó' => 'o',
+        'ú' => 'u',
+        'Á' => 'A',
+        'É' => 'E',
+        'Í' => 'I',
+        'Ó' => 'O',
+        'Ú' => 'U',
+        'ñ' => 'n',
+        'Ñ' => 'N'
+    ];
+    return str_replace(array_keys($replacements), array_values($replacements), $string);
+}

@@ -26,23 +26,19 @@ $error = $_GET['error'] ?? null;
 $success = $_GET['success'] ?? null;
 
 // Cargar modelos
-require_once __DIR__ . '/../../models/Serie.php';
 require_once __DIR__ . '/../../models/Conjunto.php';
+require_once __DIR__ . '/../../models/ParticipacionConjunto.php';
 
-$series = Serie::listar(); // Para el select
-$editando = false;
-$conjunto_edit = null;
+// Conjuntos globales (todos los registrados)
+$conjuntos_globales = Conjunto::listar();
 
-if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_conjunto') {
-    $conjunto_edit = Conjunto::obtenerPorId($_GET['id']);
-    if ($conjunto_edit && $conjunto_edit['id_concurso'] == $id_concurso) {
-        $editando = true;
-    } else {
-        header("Location: index.php?page=admin_gestion_conjuntos&id_concurso=$id_concurso&error=no_permiso");
-        exit;
-    }
-}
+// Ordenar alfabéticamente por nombre
+usort($conjuntos_globales, function ($a, $b) {
+    return strcasecmp($a['nombre'], $b['nombre']);
+});
 
+// Participaciones en este concurso
+$participaciones = ParticipacionConjunto::listarPorConcurso($id_concurso);
 ?>
 
 <!DOCTYPE html>
@@ -50,7 +46,7 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_conjunto') {
 
 <head>
     <meta charset="UTF-8">
-    <title>Gestionar Conjuntos - <?= htmlspecialchars($concurso['nombre']) ?></title>
+    <title>Gestionar Conjuntos - <?= htmlspecialchars($concurso['nombre'], ENT_QUOTES, 'UTF-8') ?></title>
     <!-- Corrección: eliminar espacios al final -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -63,6 +59,30 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_conjunto') {
             max-width: 900px;
             margin: 80px auto;
         }
+
+        .search-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .item-conjunto {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease;
+            display: none;
+        }
+
+        .item-conjunto.mostrado {
+            display: block;
+            opacity: 1;
+        }
+
+        #mensajeNoResultados {
+            display: none;
+        }
     </style>
 </head>
 
@@ -71,9 +91,9 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_conjunto') {
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>
                 <i class="bi bi-people me-2 text-primary"></i>
-                Gestionar Conjuntos - <?= htmlspecialchars($concurso['nombre']) ?>
+                Gestionar Conjuntos - <?= htmlspecialchars($concurso['nombre'], ENT_QUOTES, 'UTF-8') ?>
             </h2>
-            <a href="index.php?page=admin_gestion_concursos" class="btn btn-outline-secondary btn-sm">
+            <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
@@ -82,192 +102,179 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_conjunto') {
         <?php if ($error === 'vacios'): ?>
             <div class="alert alert-warning">⚠️ Completa todos los campos.</div>
         <?php elseif ($error === 'duplicado'): ?>
-            <div class="alert alert-danger">❌ Ya existe un conjunto con ese número oficial en este concurso.</div>
+            <div class="alert alert-danger">❌ Ya existe un conjunto con ese orden en este concurso.</div>
         <?php elseif ($error === 'calificado'): ?>
             <div class="alert alert-danger">❌ No se puede eliminar: el conjunto ya fue evaluado.</div>
-        <?php elseif ($error === 'no_concurso'): ?>
-            <div class="alert alert-danger">❌ No se especificó un concurso válido.</div>
         <?php endif; ?>
 
-        <?php if ($success == '1'): ?>
-            <div class="alert alert-success">✅ Conjunto creado correctamente.</div>
-        <?php elseif ($success == 'editado'): ?>
-            <div class="alert alert-success">✅ Conjunto actualizado.</div>
+        <?php if ($success == 'asignado'): ?>
+            <div class="alert alert-success">✅ Conjunto asignado correctamente.</div>
         <?php elseif ($success == 'eliminado'): ?>
-            <div class="alert alert-success">✅ Conjunto eliminado.</div>
+            <div class="alert alert-success">✅ Conjunto eliminado del concurso.</div>
         <?php endif; ?>
 
-        <!-- Formulario -->
-        <div class="card mb-5 shadow-sm">
+        <!-- Buscar Conjunto para Agregar -->
+        <div class="card mb-4 shadow-sm">
             <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="bi <?= $editando ? 'bi-pencil-fill text-warning' : 'bi-plus-circle-fill text-success' ?>"></i>
-                    <?= $editando ? 'Editar Conjunto' : 'Agregar Nuevo Conjunto' ?>
-                </h5>
+                <h5><i class="bi bi-search"></i> Buscar Conjunto para Agregar</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="index.php?page=<?= $editando ? 'admin_actualizar_conjunto' : 'admin_crear_conjunto_submit' ?>">
-                    <!-- Campo oculto: id_concurso -->
-                    <input type="hidden" name="id_concurso" value="<?= $id_concurso ?>">
+                <input type="text"
+                    id="buscadorConjuntos"
+                    class="form-control mb-3"
+                    placeholder="Escribe para buscar..."
+                    onkeyup="filtrarConjuntos()">
 
-                    <?php if ($editando): ?>
-                        <input type="hidden" name="id_conjunto" value="<?= $conjunto_edit['id_conjunto'] ?>">
-                    <?php endif; ?>
+                <div class="search-box">
+                    <ul id="listaConjuntos" class="list-group">
+                        <?php foreach ($conjuntos_globales as $c): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center item-conjunto"
+                                data-nombre="<?= strtolower(normalizarTexto($c['nombre'])) ?>"
+                                onclick="seleccionarConjunto(<?= $c['id_conjunto'] ?>, '<?= addslashes(htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8')) ?>', 'SERIE <?= $c['numero_serie'] ?> - <?= addslashes(htmlspecialchars($c['nombre_serie'], ENT_QUOTES, 'UTF-8')) ?>')"
+                                style="cursor: pointer;">
+                                <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>
+                                <small class="text-muted">SERIE <?= $c['numero_serie'] ?></small>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <p id="mensajeNoResultados" class="text-muted text-center mt-3" style="display: none;">
+                        No se encontraron conjuntos que coincidan.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario: Asignar a concurso -->
+        <div id="formularioAsignacion" class="card mb-4 shadow-sm" style="display: none;">
+            <div class="card-header bg-white">
+                <h5><i class="bi bi-plus-circle"></i> Asignar Conjunto al Concurso</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="index.php?page=admin_asignar_conjunto_a_concurso">
+                    <input type="hidden" name="id_conjunto" id="id_conjunto_input">
+                    <input type="hidden" name="id_concurso" value="<?= $id_concurso ?>">
 
                     <div class="mb-3">
                         <label class="form-label"><strong>Nombre del Conjunto</strong></label>
-                        <input type="text"
-                            class="form-control"
-                            name="nombre"
-                            placeholder="Ej: Morenada San Martín"
-                            value="<?= $editando ? htmlspecialchars($conjunto_edit['nombre']) : '' ?>"
-                            required>
+                        <input type="text" class="form-control" id="nombre_mostrado" readonly>
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label"><strong>Serie</strong></label>
-                            <select class="form-control" name="id_serie" required>
-                                <option value="">Selecciona una serie</option>
-                                <?php foreach ($series as $s): ?>
-                                    <option value="<?= $s['id_serie'] ?>">...</option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label"><strong>Orden</strong></label>
-                            <input type="number"
-                                class="form-control"
-                                name="orden_presentacion"
-                                min="1"
-                                value="<?= $editando ? $conjunto_edit['orden_presentacion'] : '' ?>"
-                                required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label"><strong>N° Oficial</strong></label>
-                            <input type="number"
-                                class="form-control"
-                                name="numero_oficial"
-                                min="1"
-                                value="<?= $editando ? $conjunto_edit['numero_oficial'] : '' ?>"
-                                required>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2 d-md-flex mt-4">
-                        <?php if ($editando): ?>
-                            <button type="submit" class="btn btn-warning">Actualizar Conjunto</button>
-                            <a href="index.php?page=admin_gestion_conjuntos&id_concurso=<?= $id_concurso ?>" class="btn btn-secondary">Cancelar</a>
-                        <?php else: ?>
-                            <button type="submit" class="btn btn-success">Registrar Conjunto</button>
-                        <?php endif; ?>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Sección: Importar CSV -->
-        <div class="card mt-5 shadow-sm">
-            <div class="card-header bg-white">
-                <h5><i class="bi bi-file-earmark-spreadsheet"></i> Importar Conjuntos desde CSV</h5>
-            </div>
-            <div class="card-body">
-
-                <!-- Botón: Descargar plantilla -->
-                <p class="text-muted mb-3">
-                    <strong> Paso 1:</strong>
-                    <a href="index.php?page=descargar_plantilla_conjuntos&id_concurso=<?= $id_concurso ?>"
-                        class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-download"></i> Descargar plantilla CSV
-                    </a>
-                    <br>
-                    <small>Rellena los datos y luego súbelos.</small>
-                </p>
-
-                <!-- Formulario: Subir CSV -->
-                <p><strong>Paso 2:</strong> Sube el archivo lleno</p>
-                <form method="POST" action="index.php?page=admin_importar_conjuntos_csv" enctype="multipart/form-data">
-                    <input type="hidden" name="id_concurso" value="<?= $id_concurso ?>">
                     <div class="mb-3">
-                        <label for="archivo_csv" class="form-label">Archivo CSV completado</label>
-                        <input type="file" class="form-control" name="archivo_csv" accept=".csv" required>
+                        <label class="form-label"><strong>Serie</strong></label>
+                        <input type="text" class="form-control" id="serie_mostrada" readonly>
                     </div>
-                    <button type="submit" class="btn btn-primary">Importar conjuntos</button>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Orden / N° Oficial</strong></label>
+                        <input type="number" class="form-control" name="orden_presentacion" min="1" required>
+                        <small class="text-muted">Este será su número oficial en el concurso.</small>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-success">Agregar al Concurso</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelar()">Cancelar</button>
+                    </div>
                 </form>
             </div>
         </div>
 
-        <!-- Importar desde CSV -->
-        <div class="card mt-5 shadow-sm">
-            <div class="card-header bg-white">
-                <h5><i class="bi bi-file-earmark-spreadsheet"></i> Importar Conjuntos desde CSV</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Formato del archivo CSV:</p>
-                <code>nombre,id_serie,orden_presentacion,numero_oficial</code>
-                <form method="POST" action="index.php?page=admin_importar_conjuntos_csv" enctype="multipart/form-data" class="mt-3">
-                    <input type="hidden" name="id_concurso" value="<?= $id_concurso ?>">
-                    <div class="mb-3">
-                        <label for="archivo_csv" class="form-label">Seleccionar archivo CSV</label>
-                        <input type="file" class="form-control" name="archivo_csv" accept=".csv" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Importar CSV</button>
-                </form>
-            </div>
-        </div>
-        <br>
-        <!-- Listado por serie -->
+        <!-- Listado de participaciones -->
         <div class="card shadow-sm">
             <div class="card-header bg-white">
-                <h5><i class="bi bi-list-ul"></i> Conjuntos por Serie</h5>
+                <h5><i class="bi bi-list-ul"></i> Conjuntos Asignados al Concurso</h5>
             </div>
             <div class="card-body">
-
-                <?php foreach ($series as $s): ?>
-                    <h6 class="text-primary mt-4">SERIE <?= $s['numero_serie'] ?> - <?= $s['nombre_serie'] ?></h6>
-                    <?php
-                    // Listar solo conjuntos de esta serie Y de este concurso
-                    $conjuntos_serie = $pdo->prepare("
-                        SELECT c.* FROM Conjunto c 
-                        WHERE c.id_serie = ? AND c.id_concurso = ? 
-                        ORDER BY c.orden_presentacion
-                    ");
-                    $conjuntos_serie->execute([$s['id_serie'], $id_concurso]);
-                    $resultados = $conjuntos_serie->fetchAll(PDO::FETCH_ASSOC);
-                    ?>
-                    <?php if (count($resultados) > 0): ?>
-                        <ul class="list-group mb-3">
-                            <?php foreach ($resultados as $c): ?>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>
-                                        <strong><?= $c['numero_oficial'] ?></strong> - <?= htmlspecialchars($c['nombre']) ?>
-                                        <br><small class="text-muted">Orden: <?= $c['orden_presentacion'] ?></small>
-                                    </span>
-                                    <span>
-                                        <a href="index.php?page=admin_editar_conjunto&id=<?= $c['id_conjunto'] ?>&id_concurso=<?= $id_concurso ?>"
-                                            class="btn btn-sm btn-warning me-1" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <a href="index.php?page=admin_eliminar_conjunto&id=<?= $c['id_conjunto'] ?>&id_concurso=<?= $id_concurso ?>"
-                                            class="btn btn-sm btn-danger" title="Eliminar"
-                                            onclick="return confirm('¿Eliminar este conjunto?');">
+                <?php if (count($participaciones) > 0): ?>
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N°</th>
+                                <th>Nombre</th>
+                                <th>Serie</th>
+                                <th>Tipo Danza</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($participaciones as $p): ?>
+                                <tr>
+                                    <td><strong><?= $p['orden_presentacion'] ?></strong></td>
+                                    <td><?= htmlspecialchars($p['nombre_conjunto'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars($p['nombre_serie'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars($p['nombre_tipo'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td>
+                                        <a href="index.php?page=admin_eliminar_participacion&id=<?= $p['id_participacion'] ?>&id_concurso=<?= $id_concurso ?>"
+                                            class="btn btn-sm btn-danger"
+                                            title="Eliminar del concurso"
+                                            onclick="return confirm('¿Eliminar este conjunto del concurso?');">
                                             <i class="bi bi-trash"></i>
                                         </a>
-                                    </span>
-                                </li>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p class="text-muted mb-0">No hay conjuntos registrados en esta serie para este concurso.</p>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p class="text-muted">No hay conjuntos asignados a este concurso.</p>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
     <!-- Corrección: eliminar espacio al final -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function seleccionarConjunto(id, nombre, serie) {
+            document.getElementById('id_conjunto_input').value = id;
+            document.getElementById('nombre_mostrado').value = nombre;
+            document.getElementById('serie_mostrada').value = serie;
+            document.getElementById('formularioAsignacion').style.display = 'block';
+        }
+
+        function cancelar() {
+            document.getElementById('formularioAsignacion').style.display = 'none';
+        }
+
+        // Filtrar conjuntos mientras escribes
+        function filtrarConjuntos() {
+            const input = document.getElementById('buscadorConjuntos');
+            const filtroOriginal = input.value.trim();
+
+            // Normalizar texto de búsqueda (quitar acentos)
+            const filtro = filtroOriginal
+                .normalize('NFD') // Descomponer acentos
+                .replace(/[\u0300-\u036f]/g, '') // Eliminar marcas diacríticas
+                .toLowerCase();
+
+            const items = document.getElementsByClassName('item-conjunto');
+            let algunoVisible = false;
+
+            if (filtro === '') {
+                for (let i = 0; i < items.length; i++) {
+                    items[i].style.display = 'none';
+                }
+                document.getElementById('mensajeNoResultados').style.display = 'none';
+                return;
+            }
+
+            for (let i = 0; i < items.length; i++) {
+                const nombreNormalizado = items[i].getAttribute('data-nombre');
+                // En filtrarConjuntos()
+                if (nombreNormalizado && nombreNormalizado.includes(filtro)) {
+                    items[i].style.display = 'block';
+                    items[i].style.opacity = '1';
+                    items[i].style.pointerEvents = 'auto';
+                    algunoVisible = true;
+                } else {
+                    items[i].style.display = 'none';
+                    items[i].style.opacity = '0';
+                    items[i].style.pointerEvents = 'none';
+                }
+            }
+
+            document.getElementById('mensajeNoResultados').style.display = !algunoVisible ? 'block' : 'none';
+        }
+    </script>
 </body>
 
 </html>

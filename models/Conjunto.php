@@ -1,69 +1,89 @@
 <?php
-// models/Conjunto.php
-require_once __DIR__ . '/../config/database.php';
-
 class Conjunto
 {
-    public static function listarPorConcurso($id_concurso)
+    // Listar todos los conjuntos activos
+    public static function listar()
     {
         global $pdo;
-        $sql = "SELECT c.*, s.nombre_serie, td.nombre_tipo 
+        $sql = "SELECT c.*, 
+                   s.numero_serie,
+                   s.nombre_serie,
+                   td.nombre_tipo 
             FROM Conjunto c
             JOIN Serie s ON c.id_serie = s.id_serie
             JOIN TipoDanza td ON s.id_tipo = td.id_tipo
-            WHERE c.id_concurso = ?
-            ORDER BY c.orden_presentacion";
+            WHERE c.estado_activo = 1
+            ORDER BY c.nombre";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id_concurso]);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    public static function crear($nombre, $id_serie, $id_concurso, $orden_presentacion, $numero_oficial)
+
+    // Crear nuevo conjunto
+    public static function crear($nombre, $id_serie)
     {
         global $pdo;
-        $sql = "INSERT INTO Conjunto (nombre, id_serie, id_concurso, estado_activo, orden_presentacion, numero_oficial) 
-            VALUES (?, ?, ?, 1, ?, ?)";
+
+        // Verificar si ya existe un conjunto con ese nombre (ignorando mayúsculas)
+        $check = $pdo->prepare("SELECT COUNT(*) FROM Conjunto WHERE LOWER(nombre) = LOWER(?)");
+        $check->execute([$nombre]);
+
+        if ($check->fetchColumn() > 0) {
+            return false; // Ya existe
+        }
+
+        // Si no existe, proceder con la inserción
+        $sql = "INSERT INTO Conjunto (nombre, id_serie) VALUES (?, ?)";
         $stmt = $pdo->prepare($sql);
-        return $stmt->execute([$nombre, $id_serie, $id_concurso, $orden_presentacion, $numero_oficial]);
+        return $stmt->execute([$nombre, $id_serie]);
     }
 
+    // Editar conjunto (incluyendo serie)
+    public static function editar($id, $nombre, $id_serie)
+    {
+        global $pdo;
+        $sql = "UPDATE Conjunto SET nombre = ?, id_serie = ? WHERE id_conjunto = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([$nombre, $id_serie, $id]);
+    }
+
+    // Verificar si fue evaluado
+    public static function fueEvaluado($id_conjunto)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM Calificacion c 
+                               JOIN ParticipacionConjunto pc ON c.id_participacion = pc.id_participacion
+                               WHERE pc.id_conjunto = ?");
+        $stmt->execute([$id_conjunto]);
+        return $stmt->fetchColumn() > 0;
+    }
+
+    // Eliminar conjunto (solo si no fue evaluado)
+    public static function eliminar($id_conjunto)
+    {
+        if (self::fueEvaluado($id_conjunto)) {
+            return false;
+        }
+        global $pdo;
+        $stmt = $pdo->prepare("DELETE FROM Conjunto WHERE id_conjunto = ?");
+        return $stmt->execute([$id_conjunto]);
+    }
+
+    // Obtener conjunto por ID
+    // Obtener un conjunto por su ID (con datos de serie y tipo)
     public static function obtenerPorId($id)
     {
         global $pdo;
-        $sql = "SELECT * FROM Conjunto WHERE id_conjunto = ?";
+        $sql = "SELECT c.*, 
+                   s.numero_serie,
+                   s.nombre_serie,
+                   td.nombre_tipo 
+            FROM Conjunto c
+            JOIN Serie s ON c.id_serie = s.id_serie
+            JOIN TipoDanza td ON s.id_tipo = td.id_tipo
+            WHERE c.id_conjunto = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public static function editar($id, $nombre, $id_serie, $orden_presentacion, $numero_oficial)
-    {
-        global $pdo;
-        $sql = "UPDATE Conjunto SET nombre = ?, id_serie = ?, orden_presentacion = ?, numero_oficial = ? 
-            WHERE id_conjunto = ?";
-        $stmt = $pdo->prepare($sql);
-        return $stmt->execute([$nombre, $id_serie, $orden_presentacion, $numero_oficial, $id]);
-    }
-
-    public static function eliminar($id)
-    {
-        global $pdo;
-        // Verificar si ya fue calificado
-        $check = $pdo->prepare("SELECT COUNT(*) FROM Calificacion WHERE id_conjunto = ?");
-        $check->execute([$id]);
-        if ($check->fetchColumn() > 0) {
-            return false; // No se puede eliminar
-        }
-        $sql = "DELETE FROM Conjunto WHERE id_conjunto = ?";
-        $stmt = $pdo->prepare($sql);
-        return $stmt->execute([$id]);
-    }
-
-    public static function listarPorSerie($id_serie)
-    {
-        global $pdo;
-        $sql = "SELECT c.* FROM Conjunto c WHERE c.id_serie = ? ORDER BY c.orden_presentacion";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id_serie]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

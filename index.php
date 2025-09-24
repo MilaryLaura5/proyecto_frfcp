@@ -160,35 +160,62 @@ if ($page === 'login') {
             $controller->eliminarTipoDanza();
             break;
 
-        // CONJUNTOS
+        // --- GESTIÓN GLOBAL DE CONJUNTOS ---
+        case 'admin_gestionar_conjuntos_globales':
+            require_once __DIR__ . '/views/admin/gestion_conjuntos_globales.php';
+            break;
+
+        case 'admin_crear_conjunto_global_submit':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->crearConjuntoGlobal();
+            break;
+
+        case 'admin_editar_conjunto_global':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->mostrarFormularioEditarConjuntoGlobal();
+            break;
+
+        case 'admin_actualizar_conjunto_global':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->actualizarConjuntoGlobal();
+            break;
+
+        case 'admin_eliminar_conjunto_global':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->eliminarConjuntoGlobal();
+            break;
+
+        case 'admin_importar_conjuntos_csv_global':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->importarConjuntosCSVGlobal();
+            break;
+        //CONJUNTOS EN UN CONCURSO (solo asignación)
         case 'admin_gestion_conjuntos':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->gestionarConjuntos();
             break;
-
-        case 'admin_crear_conjunto_submit':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->crearConjunto();
+        case 'admin_seleccionar_concurso':
+            require_once __DIR__ . '/views/admin/seleccionar_concurso.php';
             break;
 
-        case 'admin_editar_conjunto':
+        // Asignar un conjunto existente al concurso (con orden_presentacion)
+        case 'admin_asignar_conjunto_a_concurso':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->mostrarFormularioEditarConjunto();
+            $controller->asignarConjuntoAConcurso();
             break;
 
-        case 'admin_actualizar_conjunto':
+        // Eliminar solo la participación (no elimina el conjunto global)
+        case 'admin_eliminar_participacion':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->actualizarConjunto();
-            break;
-
-        case 'admin_eliminar_conjunto':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->eliminarConjunto();
+            $controller->eliminarParticipacion();
             break;
 
         // DESCARGAR PLANTILLA CSV

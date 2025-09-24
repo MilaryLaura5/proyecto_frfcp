@@ -58,12 +58,13 @@ $user = auth();
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_dashboard"><i class="bi bi-house"></i> Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_concursos"><i class="bi bi-trophy"></i> Gestionar Concursos</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_series"><i class="bi bi-list-ul"></i> Tipos de Danza y Series</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_seleccionar_concurso"><i class="bi bi-people"></i> Gestionar Conjuntos</a></li>
+
+                    <!-- NUEVO: Crear o gestionar conjuntos -->
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestionar_conjuntos_globales"><i class="bi bi-collection"></i> Gestionar Conjuntos Globales</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_seleccionar_concurso"><i class="bi bi-people"></i> Asignar a Concurso</a></li>
+
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_jurados"><i class="bi bi-person-badge"></i> Gestionar Jurados</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-key"></i> Generar Tokens</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-play-circle"></i> Activar Concurso</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Resultados en Vivo</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-file-earmark-pdf"></i> Exportar Reporte</a></li>
+
                     <li class="nav-item mt-3"><a class="nav-link text-danger" href="index.php?page=logout"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a></li>
                 </ul>
             </nav>
