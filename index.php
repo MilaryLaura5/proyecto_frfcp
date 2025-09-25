@@ -267,13 +267,14 @@ if ($page === 'login') {
             $controller->guardarJurado();
             break;
 
-        // LOGIN DEL JURADO CON TOKEN
+        // Mostrar login con token
         case 'jurado_login':
             require_once __DIR__ . '/controllers/AuthController.php';
             $controller = new AuthController();
             $controller->mostrarLoginConToken();
             break;
 
+        // Procesar login con credenciales
         case 'jurado_login_submit':
             require_once __DIR__ . '/controllers/AuthController.php';
             $controller = new AuthController();

@@ -5,7 +5,7 @@ require_once __DIR__ . '/../models/Usuario.php';
 
 class AuthController
 {
- 
+
 
     // Mostrar formulario de login
     public function showLogin()
@@ -15,14 +15,15 @@ class AuthController
     }
 
     // Procesar el inicio de sesión
- 
-    public function login() {
+
+    public function login()
+    {
         // Asegurar que la sesión esté iniciada
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
- 
+
         if ($_POST) {
             $usuario = trim($_POST['usuario']);
             $contraseña = $_POST['contraseña'];
@@ -79,7 +80,6 @@ class AuthController
             exit;
         }
     }
-
     // En AuthController.php → método para login con token
     public function loginConToken()
     {
@@ -91,7 +91,7 @@ class AuthController
 
         global $pdo;
         $stmt = $pdo->prepare("
-        SELECT u.id_usuario, u.usuario, t.fecha_expiracion 
+        SELECT u.id_usuario, u.correo, t.fecha_expiracion 
         FROM TokenAcceso t
         JOIN Usuario u ON t.id_jurado = u.id_usuario
         WHERE t.token = ? AND t.usado = 0 AND t.fecha_expiracion > NOW()
@@ -110,7 +110,7 @@ class AuthController
         session_start();
         $_SESSION['user'] = [
             'id' => $usuario['id_usuario'],
-            'usuario' => $usuario['usuario'],
+            'correo' => $usuario['correo'],
             'rol' => 'Jurado'
         ];
 
@@ -133,7 +133,7 @@ class AuthController
         global $pdo;
         // Verificar que el token exista, no esté usado y el concurso esté activo
         $stmt = $pdo->prepare("
-        SELECT t.token, u.usuario, u.contraseña, u.estado 
+        SELECT t.token, u.correo, u.contraseña, u.estado 
         FROM TokenAcceso t
         JOIN Usuario u ON t.id_jurado = u.id_usuario
         JOIN Concurso c ON t.id_concurso = c.id_concurso
@@ -162,7 +162,7 @@ class AuthController
         session_start();
 
         if ($_POST) {
-            $usuario = trim($_POST['usuario']);
+            $correo = trim($_POST['correo']);
             $contrasena = $_POST['contrasena'];
             $token = $_SESSION['pending_token'] ?? null;
 
@@ -177,9 +177,9 @@ class AuthController
             SELECT u.id_usuario, u.rol 
             FROM Usuario u
             JOIN TokenAcceso t ON u.id_usuario = t.id_jurado
-            WHERE u.usuario = ? AND u.rol = 'Jurado' AND u.estado = 1
+            WHERE u.correo = ? AND u.rol = 'Jurado' AND u.estado = 1
         ");
-            $stmt->execute([$usuario]);
+            $stmt->execute([$correo]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($contrasena, $user['contraseña'])) {
@@ -198,7 +198,7 @@ class AuthController
                 // Iniciar sesión real del jurado
                 $_SESSION['user'] = [
                     'id' => $user['id_usuario'],
-                    'usuario' => $usuario,
+                    'correo' => $correo,
                     'rol' => 'Jurado'
                 ];
 
@@ -214,12 +214,13 @@ class AuthController
         }
     }
     // Cerrar sesión
- 
-    public function logout() {
+
+    public function logout()
+    {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
- 
+
         session_destroy();
         header('Location: index.php?page=login');
         exit;

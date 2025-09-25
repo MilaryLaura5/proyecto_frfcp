@@ -611,14 +611,21 @@ class AdminController
         exit;
     }
 
-    // =============================
-    // JURADOS
-    // =============================
-
+    //JURADOS
     public function gestionarJurados()
     {
         redirect_if_not_admin();
         require_once __DIR__ . '/../views/admin/gestion_jurados.php';
+    }
+
+    public function crearJurado()
+    {
+        redirect_if_not_admin();
+        $id_concurso = $_GET['id_concurso'] ?? null;
+
+        // Aquí puedes mostrar un formulario o generar directamente
+        // Por ahora, redirigimos al formulario de creación
+        // O implementamos generación automática (ver abajo)
     }
 
     public function crearFormularioJurado()
@@ -630,91 +637,94 @@ class AdminController
     public function guardarJurado()
     {
         redirect_if_not_admin();
-        error_log("DEBUG: Iniciando guardarJurado");
-
-        if (!$_POST) {
-            header('Location: index.php?page=admin_gestion_concursos');
-            exit;
-        }
 
         require_once __DIR__ . '/../models/Jurado.php';
         require_once __DIR__ . '/../config/database.php';
         global $pdo;
 
-        $id_concurso = (int)$_POST['id_concurso'];
-        $dni = trim($_POST['dni']);
-        $nombre = trim($_POST['nombre']);
-        $usuario = trim($_POST['usuario']);
-        $especialidad = trim($_POST['especialidad']);
-        $años_experiencia = (int)$_POST['años_experiencia'];
+        if ($_POST) {
+            $id_concurso = (int)$_POST['id_concurso'];
+            $dni = trim($_POST['dni']);
+            $nombre = trim($_POST['nombre']);
+            $correo = trim($_POST['correo']);
+            $especialidad = trim($_POST['especialidad']);
+            $años_experiencia = (int)$_POST['años_experiencia'];
 
-        error_log("Datos recibidos: DNI=$dni, Usuario=$usuario");
+            // Validaciones
+            if (!preg_match('/^\d{8}$/', $dni)) {
+                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=dni");
+                exit;
+            }
 
-        // Validaciones
-        if (!preg_match('/^\d{8}$/', $dni)) {
-            error_log("❌ DNI inválido");
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=dni");
-            exit;
-        }
+            if (empty($nombre) || empty($correo) || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=datos");
+                exit;
+            }
 
-        if (empty($nombre) || empty($usuario)) {
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=datos");
-            exit;
-        }
+            // Contraseña temporal
+            $contraseña = 'temporal123';
 
-        if (!preg_match('/^[a-zA-Z0-9._-]{3,50}$/', $usuario)) {
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=usuario_invalido");
-            exit;
-        }
+            // Crear jurado (incluye Usuario)
+            if (Jurado::crear($dni, $nombre, $especialidad, $años_experiencia, $correo, $contraseña)) {
+                // Buscar id_jurado recién creado
+                $stmt = $pdo->prepare("SELECT id_jurado FROM Jurado WHERE dni = ?");
+                $stmt->execute([$dni]);
+                $jurado = $stmt->fetch();
 
-        // Crear jurado
-        $id_jurado = Jurado::crear($dni, $nombre, $especialidad, $años_experiencia, $usuario, 'temporal123');
+                if ($jurado) {
+                    // Obtener fecha_fin del concurso → para expiración del token
+                    $stmt_concurso = $pdo->prepare("SELECT fecha_fin FROM Concurso WHERE id_concurso = ?");
+                    $stmt_concurso->execute([$id_concurso]);
+                    $concurso = $stmt_concurso->fetch();
 
-        if (!$id_jurado) {
-            error_log("❌ Fallo al crear jurado o usuario");
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=db");
-            exit;
-        }
+                    if (!$concurso) {
+                        header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=concurso");
+                        exit;
+                    }
 
-        // Obtener fecha de fin del concurso
-        $stmt_concurso = $pdo->prepare("SELECT fecha_fin FROM Concurso WHERE id_concurso = ?");
-        $stmt_concurso->execute([$id_concurso]);
-        $concurso = $stmt_concurso->fetch();
+                    $fecha_expiracion = $concurso['fecha_fin']; // ✅ El token expira cuando acaba el concurso
 
-        if (!$concurso) {
-            error_log("❌ Concurso no encontrado: $id_concurso");
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=concurso");
-            exit;
-        }
+                    // Generar token único
+                    $token = bin2hex(random_bytes(16));
 
-        // Generar token
-        $token = bin2hex(random_bytes(16));
-        $fecha_expiracion = $concurso['fecha_fin'];
+                    // Insertar token en TokenAcceso
+                    $sql_token = "INSERT INTO TokenAcceso 
+                              (token, id_concurso, id_jurado, generado_por, fecha_generacion, fecha_expiracion, usado)
+                              VALUES (?, ?, ?, ?, NOW(), ?, 0)";
 
-        // Insertar en TokenAcceso
-        $sql_token = "INSERT INTO TokenAcceso 
-                  (token, id_concurso, id_jurado, generado_por, fecha_generacion, fecha_expiracion, usado)
-                  VALUES (?, ?, ?, ?, NOW(), ?, 0)";
+                    $stmt_token = $pdo->prepare($sql_token);
+                    $resultado = $stmt_token->execute([
+                        $token,
+                        $id_concurso,
+                        $jurado['id_jurado'],
+                        $_SESSION['user']['id'], // ID del admin
+                        $fecha_expiracion
+                    ]);
 
-        $stmt_token = $pdo->prepare($sql_token);
-        $resultado = $stmt_token->execute([
-            $token,
-            $id_concurso,
-            $id_jurado,
-            $_SESSION['user']['id'],
-            $fecha_expiracion
-        ]);
-
-        if ($resultado) {
-            error_log("✅ Jurado y token creados correctamente");
-            // ✅ Ahora sí: guarda en sesión y redirige limpio
-            $_SESSION['mensaje_token'] = $token;
-            header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso");
-            exit;
+                    if ($resultado) {
+                        // ✅ Éxito: redirigir con mensaje y token
+                        header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso&success=token&token=$token");
+                        exit;
+                    } else {
+                        // Error al guardar token
+                        error_log("Error al insertar token para jurado DNI: $dni");
+                        header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=token_db");
+                        exit;
+                    }
+                } else {
+                    // No se encontró el jurado después de crearlo
+                    error_log("Jurado creado pero no encontrado por DNI: $dni");
+                    header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=no_encontrado");
+                    exit;
+                }
+            } else {
+                // Error al crear jurado (probablemente duplicado o fallo interno)
+                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=db");
+                exit;
+            }
         } else {
-            $error = $stmt_token->errorInfo();
-            error_log("❌ Error al insertar token: " . print_r($error, true));
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=token_db");
+            // Acceso inválido (no es POST)
+            header('Location: index.php?page=admin_gestion_concursos');
             exit;
         }
     }
