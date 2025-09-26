@@ -2,6 +2,7 @@
 // controllers/AuthController.php
 
 require_once __DIR__ . '/../models/Usuario.php';
+require_once __DIR__ . '/../helpers/auth.php';
 
 class AuthController
 {
@@ -129,7 +130,7 @@ class AuthController
         global $pdo;
         // Verificar que el token exista, no esté usado y el concurso esté activo
         $stmt = $pdo->prepare("
-        SELECT t.token, u.correo, u.contraseña, u.estado 
+        SELECT t.token, u.usuario, u.contraseña, u.estado 
         FROM TokenAcceso t
         JOIN Usuario u ON t.id_jurado = u.id_usuario
         JOIN Concurso c ON t.id_concurso = c.id_concurso
@@ -158,7 +159,7 @@ class AuthController
         session_start();
 
         if ($_POST) {
-            $correo = trim($_POST['correo']);
+            $usuario = trim($_POST['correo']); // ← sigue siendo 'correo' en name, pero es 'usuario'
             $contrasena = $_POST['contrasena'];
             $token = $_SESSION['pending_token'] ?? null;
 
@@ -168,45 +169,46 @@ class AuthController
             }
 
             global $pdo;
-            // Buscar usuario y verificar credenciales
-            $stmt = $pdo->prepare("
-            SELECT u.id_usuario, u.rol 
-            FROM Usuario u
-            JOIN TokenAcceso t ON u.id_usuario = t.id_jurado
-            WHERE u.correo = ? AND u.rol = 'Jurado' AND u.estado = 1
+
+            // Verificar que el token sea válido y no usado
+            $check_token = $pdo->prepare("
+            SELECT t.id_jurado, u.id_usuario, u.contraseña, u.estado 
+            FROM TokenAcceso t
+            JOIN Usuario u ON t.id_jurado = u.id_usuario
+            WHERE t.token = ? AND t.usado = 0 AND u.usuario = ?
         ");
-            $stmt->execute([$correo]);
-            $user = $stmt->fetch();
+            $check_token->execute([$token, $usuario]);
+            $datos = $check_token->fetch();
 
-            if ($user && password_verify($contrasena, $user['contraseña'])) {
-                // Verificar nuevamente el token antes de marcar como usado
-                $check = $pdo->prepare("SELECT * FROM TokenAcceso WHERE token = ? AND usado = 0");
-                $check->execute([$token]);
-                if ($check->rowCount() == 0) {
-                    echo "❌ Token ya fue usado o inválido.";
-                    exit;
-                }
-
-                // Marcar token como usado
-                $pdo->prepare("UPDATE TokenAcceso SET usado = 1, fecha_uso = NOW() WHERE token = ?")
-                    ->execute([$token]);
-
-                // Iniciar sesión real del jurado
-                $_SESSION['user'] = [
-                    'id' => $user['id_usuario'],
-                    'correo' => $correo,
-                    'rol' => 'Jurado'
-                ];
-
-                // Limpiar token pendiente
-                unset($_SESSION['pending_token']);
-
-                // Redirigir a evaluación
-                header('Location: index.php?page=jurado_evaluar');
+            if (!$datos) {
+                echo "<div class='alert alert-danger text-center'>❌ Token inválido o usuario incorrecto.</div>";
                 exit;
-            } else {
-                echo "❌ Credenciales incorrectas.";
             }
+
+            // Verificar contraseña
+            if (!password_verify($contrasena, $datos['contraseña'])) {
+                echo "<div class='alert alert-danger text-center'>❌ Contraseña incorrecta.</div>";
+                exit;
+            }
+
+            // ✅ Autenticado correctamente
+            // Marcar token como usado
+            $pdo->prepare("UPDATE TokenAcceso SET usado = 1, fecha_uso = NOW() WHERE token = ?")
+                ->execute([$token]);
+
+            // Iniciar sesión
+            $_SESSION['user'] = [
+                'id' => $datos['id_usuario'],
+                'usuario' => $usuario,
+                'rol' => 'Jurado'
+            ];
+
+            // Limpiar
+            unset($_SESSION['pending_token']);
+
+            // Redirigir a evaluación
+            header('Location: index.php?page=jurado_evaluar');
+            exit;
         }
     }
     // Cerrar sesión

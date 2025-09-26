@@ -86,6 +86,12 @@ if (!$concurso) {
                 <input type="text" class="form-control" name="usuario" required>
             </div>
 
+            <div class="mb-3">
+                <label><strong>Contraseña Temporal</strong></label>
+                <input type="text" class="form-control" name="contrasena_temporal" placeholder="Opcional (por defecto: temporal123)">
+                <small class="text-muted">Si no llenas, será <code>temporal123</code></small>
+            </div>
+
             <div class="row g-3 mt-3">
                 <div class="col-md-6">
                     <label class="form-label"><strong>Especialidad</strong></label>

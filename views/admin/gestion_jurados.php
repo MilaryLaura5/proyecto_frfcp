@@ -1,32 +1,29 @@
 <?php
 require_once __DIR__ . '/../../helpers/auth.php';
+require_once __DIR__ . '/../../models/Jurado.php';
 
 redirect_if_not_admin();
 $user = auth();
-require_once __DIR__ . '/../../models/Jurado.php';
+
+// ✅ Obtener token desde sesión si existe
+$mostrarToken = false;
+$token = '';
+
+if (isset($_SESSION['mensaje_token'])) {
+    $token = $_SESSION['mensaje_token'];
+    unset($_SESSION['mensaje_token']); // Limpiar para que no aparezca nuevamente
+    $mostrarToken = true;
+}
 
 $error = $_GET['error'] ?? null;
-$success = $_GET['success'] ?? null;
-
 $id_concurso = $_GET['id_concurso'] ?? null;
 
 if ($id_concurso) {
-    // Obtener jurados asignados a este concurso
-    require_once __DIR__ . '/../../models/Jurado.php';
     $jurados = Jurado::porConcurso($id_concurso);
 } else {
-    // Listar todos los jurados (opcional)
     $jurados = Jurado::listar();
 }
 ?>
-<?php if ($success == 'token'): ?>
-    <?php $token = $_GET['token'] ?? ''; ?>
-    <div class="alert alert-success text-center">
-        <strong>✅ Token generado:</strong><br>
-        <code style="font-size: 1.1em;"><?= htmlspecialchars($token) ?></code><br>
-        <small>Este token ya fue copiado. Entrégaselo al jurado.</small>
-    </div>
-<?php endif; ?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -51,9 +48,7 @@ if ($id_concurso) {
 <body>
     <div class="container-main">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-person-badge me-2 text-primary"></i>
-                Gestionar Jurados
-            </h2>
+            <h2><i class="bi bi-person-badge me-2 text-primary"></i> Gestionar Jurados</h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
@@ -74,7 +69,7 @@ if ($id_concurso) {
                                 $stmt = $pdo->query("SELECT * FROM Concurso ORDER BY nombre");
                                 while ($c = $stmt->fetch()): ?>
                                     <option value="<?= $c['id_concurso'] ?>" <?= ($id_concurso == $c['id_concurso']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($c['nombre']) ?>
+                                        <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>
@@ -84,11 +79,45 @@ if ($id_concurso) {
             </div>
         </div>
 
-        <!-- Mensajes -->
-        <?php if ($success == '1'): ?>
-            <div class="alert alert-success">✅ Jurado creado correctamente.</div>
-        <?php elseif ($success == 'token'): ?>
-            <div class="alert alert-success">✅ Token generado y copiado al portapapeles.</div>
+        <!-- ✅ Mensaje único: Token generado -->
+        <?php if ($mostrarToken && $token): ?>
+            <div class="alert alert-success">
+                <h5><i class="bi bi-check-circle"></i> ¡Jurado creado con éxito!</h5>
+
+                <p><strong>Token generado:</strong></p>
+                <code class="d-block p-2 bg-light mb-3 text-center" style="font-size: 1.1em;">
+                    <?= htmlspecialchars($token) ?>
+                </code>
+
+                <p><strong>Enlace de acceso para el jurado:</strong></p>
+                <?php
+                $link = "http://$_SERVER[HTTP_HOST]" . dirname($_SERVER['SCRIPT_NAME']);
+                $link = rtrim($link, '/') . "/index.php?page=jurado_login&token=" . urlencode($token);
+                ?>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($link) ?>" id="linkToken" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copiarLink()">
+                        <i class="bi bi-copy"></i> Copiar
+                    </button>
+                </div>
+
+                <small class="text-muted">
+                    Entrega este enlace al jurado. Solo funcionará hasta el final del concurso.
+                </small>
+            </div>
+        <?php endif; ?>
+
+        <!-- Errores -->
+        <?php if ($error === 'dni'): ?>
+            <div class="alert alert-danger">❌ DNI inválido. Debe tener 8 dígitos.</div>
+        <?php elseif ($error === 'datos'): ?>
+            <div class="alert alert-danger">❌ Completa todos los campos correctamente.</div>
+        <?php elseif ($error === 'usuario_invalido'): ?>
+            <div class="alert alert-danger">❌ Usuario inválido. Usa letras, números, puntos o guiones.</div>
+        <?php elseif ($error === 'db'): ?>
+            <div class="alert alert-danger">❌ Error al guardar el jurado. Inténtalo de nuevo.</div>
+        <?php elseif ($error === 'token_db'): ?>
+            <div class="alert alert-danger">❌ Error al generar el token. Contacta al administrador.</div>
         <?php endif; ?>
 
         <!-- Listado de jurados -->
@@ -105,7 +134,7 @@ if ($id_concurso) {
                             <thead class="table-light">
                                 <tr>
                                     <th>DNI</th>
-                                    <th>Usuario</th> <!-- ✅ Cambiado de "Correo" a "Usuario" -->
+                                    <th>Usuario</th>
                                     <th>Especialidad</th>
                                     <th>Años Exp.</th>
                                     <th>Token</th>
@@ -159,12 +188,21 @@ if ($id_concurso) {
                 <button class="btn btn-success" disabled title="Primero selecciona un concurso">
                     <i class="bi bi-plus-circle"></i> Nuevo Jurado + Token
                 </button>
+                <br>
                 <small class="text-muted">Para crear un jurado, primero selecciona un concurso.</small>
             <?php endif; ?>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copiarLink() {
+            const input = document.getElementById('linkToken');
+            input.select();
+            document.execCommand('copy');
+            alert('✅ Enlace copiado al portapapeles');
+        }
+    </script>
 </body>
 
 </html>
