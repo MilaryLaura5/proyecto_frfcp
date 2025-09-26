@@ -127,39 +127,46 @@ class AuthController
             die("Acceso denegado: falta token.");
         }
 
-        global $pdo;
-        // Verificar que el token exista, no esté usado y el concurso esté activo
-        $stmt = $pdo->prepare("
-        SELECT t.token, u.usuario, u.contraseña, u.estado 
-        FROM TokenAcceso t
-        JOIN Usuario u ON t.id_jurado = u.id_usuario
-        JOIN Concurso c ON t.id_concurso = c.id_concurso
-        WHERE t.token = ? AND t.usado = 0 AND c.estado = 'Activo' AND c.fecha_fin > NOW()
-    ");
-        $stmt->execute([$token]);
-        $datos = $stmt->fetch();
-
-        if (!$datos) {
-            echo "<div class='alert alert-danger text-center'>
-                ❌ Token inválido, ya usado o el concurso no está activo.
-              </div>";
-            exit;
+        // Asegurar sesión
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
 
-        // Guardar token temporalmente (para validar después)
-        session_start();
-        $_SESSION['pending_token'] = $token;
+        global $pdo;
+        try {
+            $stmt = $pdo->prepare("
+            SELECT t.token, u.usuario, u.contraseña
+            FROM TokenAcceso t
+            JOIN Usuario u ON t.id_jurado = u.id_usuario
+            JOIN Concurso c ON t.id_concurso = c.id_concurso
+            WHERE t.token = ? 
+            AND c.estado = 'Activo' 
+            AND c.fecha_fin > NOW()
+            ");
+            $stmt->execute([$token]);
+            $datos = $stmt->fetch();
 
-        // Mostrar formulario de login
-        require_once __DIR__ . '/../views/jurado/login.php'; // Vista arriba
+            if (!$datos) {
+                require_once __DIR__ . '/../views/jurado/login_invalido.php';
+                exit;
+            }
+
+            $_SESSION['pending_token'] = $token;
+            require_once __DIR__ . '/../views/jurado/login.php';
+        } catch (Exception $e) {
+            error_log("Error en mostrarLoginConToken: " . $e->getMessage());
+            require_once __DIR__ . '/../views/jurado/login_invalido.php';
+        }
     }
 
     public function loginConTokenSubmit()
     {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
         if ($_POST) {
-            $usuario = trim($_POST['correo']); // ← sigue siendo 'correo' en name, pero es 'usuario'
+            $usuario = trim($_POST['usuario']);
             $contrasena = $_POST['contrasena'];
             $token = $_SESSION['pending_token'] ?? null;
 
@@ -169,48 +176,82 @@ class AuthController
             }
 
             global $pdo;
+            try {
+                $check_token = $pdo->prepare("
+                SELECT t.id_jurado, t.id_concurso, u.id_usuario, u.contraseña, u.estado 
+                FROM TokenAcceso t
+                JOIN Usuario u ON t.id_jurado = u.id_usuario
+                JOIN Concurso c ON t.id_concurso = c.id_concurso
+                WHERE t.token = ? 
+                  AND u.usuario = ?
+                  AND c.estado = 'Activo'
+                  AND c.fecha_fin > NOW()
+            ");
+                $check_token->execute([$token, $usuario]);
+                $datos = $check_token->fetch();
 
-            // Verificar que el token sea válido y no usado
-            $check_token = $pdo->prepare("
-            SELECT t.id_jurado, u.id_usuario, u.contraseña, u.estado 
-            FROM TokenAcceso t
-            JOIN Usuario u ON t.id_jurado = u.id_usuario
-            WHERE t.token = ? AND t.usado = 0 AND u.usuario = ?
-        ");
-            $check_token->execute([$token, $usuario]);
-            $datos = $check_token->fetch();
+                if (!$datos) {
+                    require_once __DIR__ . '/../views/jurado/login_invalido.php';
+                    exit;
+                }
 
-            if (!$datos) {
-                echo "<div class='alert alert-danger text-center'>❌ Token inválido o usuario incorrecto.</div>";
+                if (!password_verify($contrasena, $datos['contraseña'])) {
+                    require_once __DIR__ . '/../views/jurado/login_invalido.php';
+                    exit;
+                }
+
+                // ✅ Guardar id_concurso en la sesión
+                $_SESSION['user'] = [
+                    'id' => $datos['id_usuario'],
+                    'usuario' => $usuario,
+                    'rol' => 'Jurado',
+                    'id_concurso' => $datos['id_concurso'] // ✅ Añadido
+                ];
+                unset($_SESSION['pending_token']);
+
+                header('Location: index.php?page=jurado_evaluar');
+                exit;
+            } catch (Exception $e) {
+                error_log("Error en loginConTokenSubmit: " . $e->getMessage());
+                require_once __DIR__ . '/../views/jurado/login_invalido.php';
                 exit;
             }
-
-            // Verificar contraseña
-            if (!password_verify($contrasena, $datos['contraseña'])) {
-                echo "<div class='alert alert-danger text-center'>❌ Contraseña incorrecta.</div>";
-                exit;
-            }
-
-            // ✅ Autenticado correctamente
-            // Marcar token como usado
-            $pdo->prepare("UPDATE TokenAcceso SET usado = 1, fecha_uso = NOW() WHERE token = ?")
-                ->execute([$token]);
-
-            // Iniciar sesión
-            $_SESSION['user'] = [
-                'id' => $datos['id_usuario'],
-                'usuario' => $usuario,
-                'rol' => 'Jurado'
-            ];
-
-            // Limpiar
-            unset($_SESSION['pending_token']);
-
-            // Redirigir a evaluación
-            header('Location: index.php?page=jurado_evaluar');
-            exit;
         }
     }
+
+    public function guardarCalificacion()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        redirect_if_not_jurado();
+        $user = $_SESSION['user'];
+
+        if ($_POST) {
+            $id_participacion = (int)$_POST['id_participacion'];
+            $id_concurso = (int)$_POST['id_concurso'];
+            $descalificado = isset($_POST['descalificar']) ? 1 : 0;
+
+            // Recoger puntajes
+            $datos = [];
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'puntaje_') === 0) {
+                    $datos[$key] = (float)$value;
+                }
+            }
+
+            require_once __DIR__ . '/../models/Calificacion.php';
+            if (Calificacion::guardar($id_participacion, $user['id'], $id_concurso, $datos, $descalificado)) {
+                header("Location: index.php?page=jurado_evaluar");
+                exit;
+            } else {
+                die("Error al guardar la calificación.");
+            }
+        }
+    }
+
+
     // Cerrar sesión
     public function logout()
     {

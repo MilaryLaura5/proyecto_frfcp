@@ -281,6 +281,19 @@ if ($page === 'login') {
             $controller->loginConTokenSubmit();
             break;
 
+        case 'jurado_evaluar':
+            require_once __DIR__ . '/views/jurado/evaluar.php';
+            break;
+
+        case 'jurado_calificar':
+            require_once __DIR__ . '/views/jurado/calificar.php';
+            break;
+
+        case 'jurado_guardar_calificacion':
+            require_once __DIR__ . '/controllers/AuthController.php';
+            $controller = new AuthController();
+            $controller->guardarCalificacion();
+            break;
         // --- PRESIDENTE ---
         case 'presidente_dashboard':
             require_once __DIR__ . '/controllers/PresidenteController.php';

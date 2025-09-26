@@ -37,8 +37,8 @@ function redirect_if_not_admin()
 
 function redirect_if_not_jurado()
 {
-    if (!is_jurado()) {
-        header('Location: index.php?page=login&error=permiso');
+    if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'Jurado') {
+        header('Location: index.php?page=login');
         exit;
     }
 }

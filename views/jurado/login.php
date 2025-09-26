@@ -48,7 +48,7 @@
                 <form method="POST" action="index.php?page=jurado_login_submit">
                     <div class="mb-3">
                         <label class="form-label"><strong>Usuario</strong></label>
-                        <input type="text" class="form-control" name="correo" placeholder="ej: jurado123" required autofocus>
+                        <input type="text" class="form-control" name="usuario" placeholder="ej: jurado123" required autofocus>
                     </div>
                     <div class="mb-3">
                         <label class="form-label"><strong>Contraseña</strong></label>
