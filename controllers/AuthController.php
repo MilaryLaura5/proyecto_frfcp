@@ -232,22 +232,82 @@ class AuthController
             $id_participacion = (int)$_POST['id_participacion'];
             $id_concurso = (int)$_POST['id_concurso'];
             $descalificado = isset($_POST['descalificar']) ? 1 : 0;
+            $estado = $descalificado ? 'descalificado' : 'enviado';
 
-            // Recoger puntajes
-            $datos = [];
+            // Recoger todos los puntajes
+            $puntajes = [];
             foreach ($_POST as $key => $value) {
                 if (strpos($key, 'puntaje_') === 0) {
-                    $datos[$key] = (float)$value;
+                    $float_value = filter_var($value, FILTER_VALIDATE_FLOAT);
+                    if ($float_value === false || $float_value < 0 || $float_value > 10) {
+                        header("Location: index.php?page=jurado_calificar&id=$id_participacion&error=rango");
+                        exit;
+                    }
+                    $puntajes[$key] = number_format($float_value, 2, '.', '');
                 }
             }
 
-            require_once __DIR__ . '/../models/Calificacion.php';
-            if (Calificacion::guardar($id_participacion, $user['id'], $id_concurso, $datos, $descalificado)) {
-                header("Location: index.php?page=jurado_evaluar");
+            // Validar que haya al menos un criterio
+            if (empty($puntajes)) {
+                header("Location: index.php?page=jurado_calificar&id=$id_participacion&error=sin_puntajes");
                 exit;
-            } else {
-                die("Error al guardar la calificación.");
             }
+
+            global $pdo;
+
+            try {
+                $pdo->beginTransaction();
+
+                // Verificar si ya existe una calificación
+                $stmt_check = $pdo->prepare("
+                SELECT id_calificacion FROM Calificacion 
+                WHERE id_participacion = ? AND id_jurado = ?
+            ");
+                $stmt_check->execute([$id_participacion, $user['id']]);
+                $existe = $stmt_check->fetch();
+
+                // Preparar campos dinámicamente
+                $campos = '';
+                $valores = [];
+
+                foreach ($puntajes as $campo => $valor) {
+                    $campos .= "$campo = ?, ";
+                    $valores[] = $valor;
+                }
+
+                $valores[] = $estado;
+                $valores[] = $descalificado;
+                $valores[] = $id_participacion;
+                $valores[] = $user['id'];
+
+                if ($existe) {
+                    // Actualizar
+                    $sql = "UPDATE Calificacion SET " . rtrim($campos, ', ') . ", estado = ?, descalificado = ? WHERE id_participacion = ? AND id_jurado = ?";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($valores);
+                } else {
+                    // Insertar nueva calificación
+                    $campos_insert = rtrim($campos, ', ') . ", estado, descalificado, id_participacion, id_jurado, id_concurso";
+                    $placeholders = str_repeat('?, ', count($valores)) . '?, ?, ?';
+                    $sql = "INSERT INTO Calificacion SET $campos_insert";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute(array_merge($valores, [$user['id_concurso']]));
+                }
+
+                $pdo->commit();
+
+                // Redirigir con éxito
+                header("Location: index.php?page=jurado_evaluar&success=calificado");
+                exit;
+            } catch (Exception $e) {
+                $pdo->rollback();
+                error_log("Error al guardar calificación: " . $e->getMessage());
+                header("Location: index.php?page=jurado_calificar&id=$id_participacion&error=db");
+                exit;
+            }
+        } else {
+            header('Location: index.php?page=jurado_evaluar');
+            exit;
         }
     }
 

@@ -1,30 +1,36 @@
 <?php
 // views/jurado/calificar.php
 require_once __DIR__ . '/../../helpers/auth.php';
+require_once __DIR__ . '/../../config/database.php'; // ← Importante: asegura $pdo
+
 redirect_if_not_jurado();
 
 $user = $_SESSION['user'];
 $id_participacion = $_GET['id'] ?? null;
 
-if (!$id_participacion) {
-    die("Conjunto no especificado.");
+if (!$id_participacion || !is_numeric($id_participacion)) {
+    die("Conjunto no especificado o inválido.");
 }
 
 global $pdo;
 
 // Obtener datos del conjunto
 $stmt = $pdo->prepare("
-    SELECT pc.id_participacion, pc.orden_presentacion, c.nombre AS nombre_conjunto, s.numero_serie
-    FROM ParticipacionConjunto pc
-    JOIN Conjunto c ON pc.id_conjunto = c.id_conjunto
-    JOIN Serie s ON c.id_serie = s.id_serie
+    SELECT 
+        pc.id_participacion, 
+        pc.orden_presentacion, 
+        c.nombre AS nombre_conjunto, 
+        s.numero_serie
+    FROM participacionconjunto pc
+    JOIN conjunto c ON pc.id_conjunto = c.id_conjunto
+    JOIN serie s ON c.id_serie = s.id_serie
     WHERE pc.id_participacion = ?
 ");
 $stmt->execute([$id_participacion]);
 $conjunto = $stmt->fetch();
 
 if (!$conjunto) {
-    die("Conjunto no encontrado.");
+    die("Conjunto no encontrado en esta participación.");
 }
 
 // Verificar si ya fue calificado por este jurado
@@ -35,7 +41,7 @@ $stmt_check = $pdo->prepare("
 $stmt_check->execute([$id_participacion, $user['id']]);
 $calificacion = $stmt_check->fetch();
 
-// Criterios de evaluación (ajusta según tu sistema)
+// Criterios de evaluación
 $criterios = [
     'Presentación y Vestimenta',
     'Música',
@@ -52,6 +58,7 @@ $criterios = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calificar - FRFCP</title>
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -71,7 +78,7 @@ $criterios = [
         .card-conjunto {
             margin-bottom: 20px;
             border-radius: 10px;
-            <?php if ($calificacion && $calificacion['descalificado']): ?>border: 3px solid #dc3545;
+            <?php if ($calificacion && $calificacion['estado'] === 'descalificado'): ?>border: 3px solid #dc3545;
             /* Rojo */
             <?php elseif ($calificacion): ?>border: 3px solid #28a745;
             /* Verde */
@@ -129,16 +136,16 @@ $criterios = [
 
         <?php foreach ($criterios as $criterio): ?>
             <div class="mb-3">
-                <label><?= $criterio ?> (0-10)</label>
-                <input type="range" class="form-range" name="puntaje_<?= strtolower(str_replace(' ', '_', $criterio)) ?>"
-                    min="0" max="10" step="0.5"
-                    value="<?= $calificacion ? $calificacion['puntaje_' . strtolower(str_replace(' ', '_', $criterio))] : 5 ?>">
-                <div class="d-flex justify-content-between">
-                    <small>0</small>
-                    <strong>
-                        <?= $calificacion ? number_format($calificacion['puntaje_' . strtolower(str_replace(' ', '_', $criterio))], 1) : '5.0' ?>
-                    </strong>
-                    <small>10</small>
+                <label><?= $criterio ?> (0 - 10)</label>
+                <input type="number"
+                    class="form-control"
+                    name="puntaje_<?= strtolower(str_replace(' ', '_', $criterio)) ?>"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    value="<?= $calificacion ? number_format($calificacion['puntaje_' . strtolower(str_replace(' ', '_', $criterio))], 2) : '' ?>"
+                    required>
+                <div class="form-text text-muted">
                 </div>
             </div>
         <?php endforeach; ?>
@@ -148,9 +155,9 @@ $criterios = [
                 <i class="bi bi-save"></i> Guardar Calificación
             </button>
 
-            <?php if ($calificacion && !$calificacion['descalificado']): ?>
+            <?php if ($calificacion && $calificacion['estado'] !== 'descalificado'): ?>
                 <button type="submit" name="descalificar" value="1" class="btn btn-descalificar">
-                    <i class="bi bi-x-circle"></i> Deshabilitar / Descalificar
+                    <i class="bi bi-x-circle"></i> Descalificar
                 </button>
             <?php endif; ?>
         </div>
@@ -171,6 +178,7 @@ $criterios = [
         });
     </script>
 
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
