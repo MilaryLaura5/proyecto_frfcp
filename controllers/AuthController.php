@@ -5,8 +5,6 @@ require_once __DIR__ . '/../models/Usuario.php';
 
 class AuthController
 {
-
-
     // Mostrar formulario de login
     public function showLogin()
     {
@@ -15,7 +13,6 @@ class AuthController
     }
 
     // Procesar el inicio de sesión
-
     public function login()
     {
         // Asegurar que la sesión esté iniciada
@@ -121,7 +118,6 @@ class AuthController
         exit;
     }
 
-
     public function mostrarLoginConToken()
     {
         $token = $_GET['token'] ?? null;
@@ -214,7 +210,6 @@ class AuthController
         }
     }
     // Cerrar sesión
-
     public function logout()
     {
         if (session_status() === PHP_SESSION_NONE) {

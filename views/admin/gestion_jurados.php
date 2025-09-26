@@ -105,7 +105,7 @@ if ($id_concurso) {
                             <thead class="table-light">
                                 <tr>
                                     <th>DNI</th>
-                                    <th>Correo</th>
+                                    <th>Usuario</th> <!-- ✅ Cambiado de "Correo" a "Usuario" -->
                                     <th>Especialidad</th>
                                     <th>Años Exp.</th>
                                     <th>Token</th>

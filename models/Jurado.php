@@ -5,26 +5,26 @@ require_once __DIR__ . '/../config/database.php';
 class Jurado
 {
 
-    public static function crear($dni, $nombre, $especialidad, $años_experiencia, $correo, $contraseña)
+
+    public static function crear($dni, $nombre, $especialidad, $años_experiencia, $usuario, $contraseña)
     {
-        require_once __DIR__ . '/../config/database.php'; // Asegura conexión
         global $pdo;
 
         try {
             $pdo->beginTransaction();
 
-            // Verificar si el correo ya existe
-            $check = $pdo->prepare("SELECT id_usuario FROM Usuario WHERE correo = ?");
-            $check->execute([$correo]);
+            // Verificar si el usuario ya existe
+            $check = $pdo->prepare("SELECT id_usuario FROM Usuario WHERE usuario = ?");
+            $check->execute([$usuario]);
             if ($check->rowCount() > 0) {
-                throw new Exception("Correo ya registrado");
+                throw new Exception("Usuario ya registrado");
             }
 
-            // Insertar en Usuario
+            // Insertar en Usuario → usa 'usuario', no 'correo'
             $hash = password_hash($contraseña, PASSWORD_DEFAULT);
-            $sql_user = "INSERT INTO Usuario (correo, contraseña, rol, estado) VALUES (?, ?, 'Jurado', 1)";
+            $sql_user = "INSERT INTO Usuario (usuario, contraseña, rol, estado) VALUES (?, ?, 'Jurado', 1)";
             $stmt_user = $pdo->prepare($sql_user);
-            $stmt_user->execute([$correo, $hash]);
+            $stmt_user->execute([$usuario, $hash]);
             $id_usuario = $pdo->lastInsertId();
 
             // Insertar en Jurado
