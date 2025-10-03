@@ -56,7 +56,7 @@ class Jurado
     public static function porConcurso($id_concurso)
     {
         global $pdo;
-        $sql = "SELECT j.*, u.usuario, t.token, t.usado, t.fecha_expiracion
+        $sql = "SELECT j.*, u.usuario, t.token, t.fecha_expiracion
                 FROM Jurado j
                 JOIN Usuario u ON j.id_jurado = u.id_usuario
                 JOIN TokenAcceso t ON j.id_jurado = t.id_jurado

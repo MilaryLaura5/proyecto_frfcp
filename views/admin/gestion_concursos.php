@@ -251,6 +251,16 @@ if (isset($_GET['id']) && $page === 'admin_editar_concurso') {
                                                 <i class="bi bi-people"></i>
                                             </a>
                                         </td>
+                                        <td>
+                                            <a href="index.php?page=admin_gestion_jurados&id_concurso=<?= $c['id_concurso'] ?>"
+                                                class="btn btn-sm btn-outline-success">Jurados</a>
+
+                                            <!-- ✅ Nuevo botón: Editar Criterios -->
+                                            <a href="index.php?page=admin_agregar_criterios&id_concurso=<?= $c['id_concurso'] ?>"
+                                                class="btn btn-sm btn-outline-warning">
+                                                <i class="bi bi-pen"></i> Criterios
+                                            </a>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
 

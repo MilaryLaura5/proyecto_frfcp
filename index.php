@@ -267,6 +267,50 @@ if ($page === 'login') {
             $controller->guardarJurado();
             break;
 
+        case 'admin_buscar_jurado':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->buscarJuradoPorDni();
+            break;
+
+        case 'admin_verificar_usuario':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->verificarUsuario();
+            break;
+
+        // Criterios de evaluación
+        case 'admin_agregar_criterios':
+            require_once __DIR__ . '/views/admin/agregar_criterios.php';
+            break;
+
+        case 'admin_guardar_criterios':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->guardarCriterios();
+            break;
+
+        case 'admin_guardar_criterio_concurso':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->guardarCriterioConcurso();
+            break;
+        // Gestionar criterios globales
+        case 'admin_gestionar_criterios':
+            require_once __DIR__ . '/views/admin/gestion_criterios.php';
+            break;
+
+        // Asignar criterios a concurso
+        case 'admin_asignar_criterios_concurso':
+            require_once __DIR__ . '/views/admin/asignar_criterios_concurso.php';
+            break;
+
+        case 'admin_configurar_criterios':
+            require_once __DIR__ . '/views/admin/asignar_criterios_concurso.php'; // mismo archivo
+            break;
+
+
+
         // Mostrar login con token
         case 'jurado_login':
             require_once __DIR__ . '/controllers/AuthController.php';

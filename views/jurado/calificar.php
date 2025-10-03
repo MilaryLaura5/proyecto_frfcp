@@ -1,7 +1,7 @@
 <?php
 // views/jurado/calificar.php
 require_once __DIR__ . '/../../helpers/auth.php';
-require_once __DIR__ . '/../../config/database.php'; // ← Importante: asegura $pdo
+require_once __DIR__ . '/../../config/database.php';
 
 redirect_if_not_jurado();
 
@@ -41,14 +41,14 @@ $stmt_check = $pdo->prepare("
 $stmt_check->execute([$id_participacion, $user['id']]);
 $calificacion = $stmt_check->fetch();
 
-// Criterios de evaluación
-$criterios = [
-    'Presentación y Vestimenta',
-    'Música',
-    'Coreografía',
-    'Armonía',
-    'Originalidad'
-];
+// Obtener criterios del concurso actual
+$stmt_criterios = $pdo->prepare("SELECT * FROM Criterio WHERE id_concurso = ? ORDER BY peso DESC");
+$stmt_criterios->execute([$user['id_concurso']]);
+$criterios = $stmt_criterios->fetchAll();
+
+if (empty($criterios)) {
+    die("No hay criterios definidos para este concurso.");
+}
 ?>
 
 <!DOCTYPE html>
@@ -103,12 +103,12 @@ $criterios = [
             border-radius: 8px;
         }
 
-        .form-range {
-            height: 10px;
-        }
-
         label {
             font-weight: bold;
+        }
+
+        .form-text {
+            font-size: 0.85em;
         }
     </style>
 </head>
@@ -134,20 +134,41 @@ $criterios = [
         <input type="hidden" name="id_participacion" value="<?= $conjunto['id_participacion'] ?>">
         <input type="hidden" name="id_concurso" value="<?= $user['id_concurso'] ?>">
 
-        <?php foreach ($criterios as $criterio): ?>
+        <?php foreach ($criterios as $c): ?>
             <div class="mb-3">
-                <label><?= $criterio ?> (0 - 10)</label>
+                <label>
+                    <?= htmlspecialchars($c['nombre']) ?>
+                    <?php if ($c['peso'] != 1.00): ?>
+                        <small class="text-muted">(<?= number_format($c['peso'] * 100, 0) ?>%)</small>
+                    <?php endif; ?>
+                </label>
                 <input type="number"
                     class="form-control"
-                    name="puntaje_<?= strtolower(str_replace(' ', '_', $criterio)) ?>"
+                    name="puntaje_<?= strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú'], ['_', 'a', 'e', 'i', 'o', 'u'], $c['nombre'])) ?>"
                     step="0.01"
                     min="0"
                     max="10"
-                    value="<?= $calificacion ? number_format($calificacion['puntaje_' . strtolower(str_replace(' ', '_', $criterio))], 2) : '' ?>"
+                    value="<?= $calificacion ? number_format($calificacion['puntaje_' . strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú'], ['_', 'a', 'e', 'i', 'o', 'u'], $c['nombre']))], 2) : '5.00' ?>"
                     required>
                 <div class="form-text text-muted">
+                    Ej: 6.3, 8.75, 10.0
                 </div>
             </div>
+
+            <div class="mb-3">
+                <label>
+                    <?= htmlspecialchars($c['nombre']) ?>
+                    <small class="text-muted">(0 - <?= $c['peso'] * 100 ?> puntos)</small>
+                </label>
+                <input type="number"
+                    class="form-control"
+                    name="puntaje_<?= strtolower(str_replace(' ', '_', $c['nombre'])) ?>"
+                    step="0.01"
+                    min="0"
+                    max="<?= $c['peso'] * 10 ?>" <!-- Escala: si peso=0.20 → máx=2.0 -->
+                value="<?= $calificacion ? number_format($calificacion['...'], 2) : '0.00' ?>"
+                required>
+            </div>form>
         <?php endforeach; ?>
 
         <div class="d-grid gap-2 mt-4">
@@ -169,14 +190,7 @@ $criterios = [
         </a>
     </div>
 
-    <script>
-        // Actualiza el valor mostrado al mover el slider
-        document.querySelectorAll('.form-range').forEach(slider => {
-            slider.addEventListener('input', function() {
-                this.nextElementSibling.querySelector('strong').textContent = parseFloat(this.value).toFixed(1);
-            });
-        });
-    </script>
+    <!-- ✅ Eliminado script de sliders (no se usa) -->
 
     <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

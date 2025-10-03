@@ -9,6 +9,7 @@ $user = auth();
 <head>
     <meta charset="UTF-8">
     <title>Dashboard - Administrador</title>
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -51,7 +52,7 @@ $user = auth();
             <nav class="col-md-3 col-lg-2 sidebar">
                 <div class="p-3 text-center">
                     <h5><i class="bi bi-shield-lock"></i> FRFCP Admin</h5>
-                    <small>¡Bienvenido, <?php echo htmlspecialchars($user['nombre']); ?>!</small>
+                    <small>¡Bienvenido, <?php echo htmlspecialchars($user['nombre'] ?? $user['usuario']); ?>!</small>
                 </div>
                 <hr>
                 <ul class="nav flex-column">
@@ -59,11 +60,14 @@ $user = auth();
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_concursos"><i class="bi bi-trophy"></i> Gestionar Concursos</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_series"><i class="bi bi-list-ul"></i> Tipos de Danza y Series</a></li>
 
-                    <!-- NUEVO: Crear o gestionar conjuntos -->
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestionar_conjuntos_globales"><i class="bi bi-collection"></i> Gestionar Conjuntos Globales</a></li>
+                    <!-- NUEVO: Gestionar conjuntos globales -->
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestionar_conjuntos_globales"><i class="bi bi-collection"></i> Conjuntos Globales</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_seleccionar_concurso"><i class="bi bi-people"></i> Asignar a Concurso</a></li>
 
                     <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_jurados"><i class="bi bi-person-badge"></i> Gestionar Jurados</a></li>
+
+                    <!-- ✅ Nueva opción: Criterios -->
+                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestionar_criterios"><i class="bi bi-list-task"></i> Criterios Globales</a></li>
 
                     <li class="nav-item mt-3"><a class="nav-link text-danger" href="index.php?page=logout"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a></li>
                 </ul>
@@ -77,6 +81,7 @@ $user = auth();
                 </div>
 
                 <div class="row">
+                    <!-- Gestionar Concursos -->
                     <div class="col-xl-3 col-md-6 mb-4">
                         <a href="index.php?page=admin_gestion_concursos" class="text-decoration-none">
                             <div class="card card-dashboard shadow">
@@ -89,32 +94,48 @@ $user = auth();
                         </a>
                     </div>
 
+                    <!-- Gestionar Conjuntos Globales -->
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <a href="#" class="text-decoration-none">
+                        <a href="index.php?page=admin_gestionar_conjuntos_globales" class="text-decoration-none">
                             <div class="card card-dashboard shadow">
                                 <div class="card-body text-center">
                                     <i class="bi bi-people text-info" style="font-size: 2rem;"></i>
-                                    <h5 class="mt-2">Gestionar Conjuntos</h5>
-                                    <p class="text-muted">Agrega, edita o importa desde CSV</p>
+                                    <h5 class="mt-2">Conjuntos Globales</h5>
+                                    <p class="text-muted">Administra todos los conjuntos</p>
                                 </div>
                             </div>
                         </a>
                     </div>
 
+                    <!-- Criterios de Evaluación -->
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <a href="#" class="text-decoration-none">
+                        <a href="index.php?page=admin_gestionar_criterios" class="text-decoration-none">
+                            <div class="card card-dashboard shadow">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-list-task text-primary" style="font-size: 2rem;"></i>
+                                    <h5 class="mt-2">Criterios Globales</h5>
+                                    <p class="text-muted">Define criterios reutilizables</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Generar Tokens (acceso jurados) -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <a href="index.php?page=admin_gestion_jurados" class="text-decoration-none">
                             <div class="card card-dashboard shadow">
                                 <div class="card-body text-center">
                                     <i class="bi bi-key text-success" style="font-size: 2rem;"></i>
-                                    <h5 class="mt-2">Generar Tokens</h5>
-                                    <p class="text-muted">Acceso seguro para jurados</p>
+                                    <h5 class="mt-2">Tokens de Acceso</h5>
+                                    <p class="text-muted">Genera enlaces seguros para jurados</p>
                                 </div>
                             </div>
                         </a>
                     </div>
 
+                    <!-- Resultados en Vivo -->
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <a href="#" class="text-decoration-none">
+                        <a href="index.php?page=presidente_seleccionar_concurso" class="text-decoration-none">
                             <div class="card card-dashboard shadow">
                                 <div class="card-body text-center">
                                     <i class="bi bi-graph-up text-danger" style="font-size: 2rem;"></i>
@@ -127,12 +148,13 @@ $user = auth();
                 </div>
 
                 <div class="alert alert-info mt-4">
-                    <strong>💡 Consejo:</strong> Puedes activar el concurso cuando todos los jurados tengan su token.
+                    <strong>💡 Consejo:</strong> Usa los criterios globales para reutilizar en múltiples concursos.
                 </div>
             </main>
         </div>
     </div>
 
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

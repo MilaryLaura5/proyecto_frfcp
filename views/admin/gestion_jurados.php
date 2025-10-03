@@ -1,18 +1,23 @@
 <?php
+// Limpiar salida previa (por si hay espacios ocultos)
+if (ob_get_level()) {
+    ob_clean();
+}
+
 require_once __DIR__ . '/../../helpers/auth.php';
 require_once __DIR__ . '/../../models/Jurado.php';
 
 redirect_if_not_admin();
 $user = auth();
 
-// ✅ Obtener token desde sesión si existe
-$mostrarToken = false;
-$token = '';
+// ✅ Reemplazado por mensaje completo con credenciales
+$mostrarCredenciales = false;
+$credenciales = [];
 
-if (isset($_SESSION['mensaje_token'])) {
-    $token = $_SESSION['mensaje_token'];
-    unset($_SESSION['mensaje_token']); // Limpiar para que no aparezca nuevamente
-    $mostrarToken = true;
+if (isset($_SESSION['mensaje_jurado'])) {
+    $credenciales = $_SESSION['mensaje_jurado'];
+    unset($_SESSION['mensaje_jurado']);
+    $mostrarCredenciales = true;
 }
 
 $error = $_GET['error'] ?? null;
@@ -31,6 +36,7 @@ if ($id_concurso) {
 <head>
     <meta charset="UTF-8">
     <title>Gestionar Jurados - FRFCP Admin</title>
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -41,6 +47,16 @@ if ($id_concurso) {
         .container-main {
             max-width: 900px;
             margin: 80px auto;
+        }
+
+        #modalEnlace {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
@@ -79,30 +95,36 @@ if ($id_concurso) {
             </div>
         </div>
 
-        <!-- ✅ Mensaje único: Token generado -->
-        <?php if ($mostrarToken && $token): ?>
+        <!-- ✅ Mensaje: Credenciales del jurado -->
+        <?php if ($mostrarCredenciales): ?>
             <div class="alert alert-success">
                 <h5><i class="bi bi-check-circle"></i> ¡Jurado creado con éxito!</h5>
 
-                <p><strong>Token generado:</strong></p>
-                <code class="d-block p-2 bg-light mb-3 text-center" style="font-size: 1.1em;">
-                    <?= htmlspecialchars($token) ?>
-                </code>
+                <table class="table table-sm bg-light mb-3">
+                    <tr>
+                        <th>Usuario:</th>
+                        <td><code><?= htmlspecialchars($credenciales['usuario']) ?></code></td>
+                    </tr>
+                    <tr>
+                        <th>Contraseña:</th>
+                        <td><code><?= htmlspecialchars($credenciales['contrasena']) ?></code></td>
+                    </tr>
+                </table>
 
                 <p><strong>Enlace de acceso para el jurado:</strong></p>
                 <?php
                 $link = "http://$_SERVER[HTTP_HOST]" . dirname($_SERVER['SCRIPT_NAME']);
-                $link = rtrim($link, '/') . "/index.php?page=jurado_login&token=" . urlencode($token);
+                $link = rtrim($link, '/') . "/index.php?page=jurado_login&token=" . urlencode($credenciales['token']);
                 ?>
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" value="<?= htmlspecialchars($link) ?>" id="linkToken" readonly>
-                    <button class="btn btn-outline-secondary" type="button" onclick="copiarLink()">
+                    <button class="btn btn-outline-secondary" type="button" onclick="copiarNuevoEnlace()">
                         <i class="bi bi-copy"></i> Copiar
                     </button>
                 </div>
 
                 <small class="text-muted">
-                    Entrega este enlace al jurado. Solo funcionará hasta el final del concurso.
+                    Entrega este enlace junto con el usuario y contraseña. El acceso expira al finalizar el concurso.
                 </small>
             </div>
         <?php endif; ?>
@@ -118,6 +140,8 @@ if ($id_concurso) {
             <div class="alert alert-danger">❌ Error al guardar el jurado. Inténtalo de nuevo.</div>
         <?php elseif ($error === 'token_db'): ?>
             <div class="alert alert-danger">❌ Error al generar el token. Contacta al administrador.</div>
+        <?php elseif ($error === 'dni_duplicado'): ?>
+            <div class="alert alert-warning">⚠️ Ya existe un jurado con ese DNI.</div>
         <?php endif; ?>
 
         <!-- Listado de jurados -->
@@ -139,6 +163,7 @@ if ($id_concurso) {
                                     <th>Años Exp.</th>
                                     <th>Token</th>
                                     <th>Estado</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -157,11 +182,22 @@ if ($id_concurso) {
                                         </td>
                                         <td>
                                             <?php if (!empty($j['token'])): ?>
-                                                <span class="badge bg-<?= $j['usado'] ? 'success' : 'warning' ?>">
-                                                    <?= $j['usado'] ? 'Usado' : 'Pendiente' ?>
+                                                <?php
+                                                $expirado = new DateTime($j['fecha_expiracion']) < new DateTime();
+                                                ?>
+                                                <span class="badge bg-<?= $expirado ? 'secondary' : 'warning' ?>">
+                                                    <?= $expirado ? 'Expirado' : 'Activo' ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="badge bg-secondary">No asignado</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($j['token'])): ?>
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                    onclick="mostrarEnlace('<?= $j['token'] ?>')">
+                                                    <i class="bi bi-link-45deg"></i> Ver enlace
+                                                </button>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -194,13 +230,44 @@ if ($id_concurso) {
         </div>
     </div>
 
+    <!-- Modal para mostrar enlaces existentes -->
+    <div id="modalEnlace" class="alert alert-info">
+        <strong>Enlace de acceso:</strong><br>
+        <input type="text" id="enlaceInput" readonly class="form-control form-control-sm mb-2">
+        <div class="d-grid gap-2 d-md-flex">
+            <button class="btn btn-sm btn-secondary" onclick="copiarExistente()">Copiar</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function copiarLink() {
+        // Para nuevo token generado
+        function copiarNuevoEnlace() {
             const input = document.getElementById('linkToken');
             input.select();
             document.execCommand('copy');
             alert('✅ Enlace copiado al portapapeles');
+        }
+
+        // Para ver enlace existente
+        function mostrarEnlace(token) {
+            const basePath = `<?= dirname($_SERVER['SCRIPT_NAME']) ?>`;
+            const link = `${basePath}/index.php?page=jurado_login&token=${encodeURIComponent(token)}`;
+            document.getElementById('enlaceInput').value = link;
+            document.getElementById('modalEnlace').style.display = 'block';
+        }
+
+        function copiarExistente() {
+            const input = document.getElementById('enlaceInput');
+            input.select();
+            document.execCommand('copy');
+            alert('✅ Enlace copiado');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEnlace').style.display = 'none';
         }
     </script>
 </body>
