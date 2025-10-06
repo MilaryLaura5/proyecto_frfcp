@@ -7,11 +7,13 @@ class Serie
     public static function listar()
     {
         global $pdo;
-        $sql = "SELECT s.*, td.nombre_tipo 
-                FROM Serie s
-                JOIN TipoDanza td ON s.id_tipo = td.id_tipo
-                ORDER BY s.numero_serie";
-        $stmt = $pdo->query($sql);
+        $stmt = $pdo->prepare("
+            SELECT s.*, td.nombre_tipo 
+            FROM Serie s 
+            JOIN TipoDanza td ON s.id_tipo = td.id_tipo 
+            ORDER BY td.nombre_tipo, s.numero_serie
+        ");
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -26,8 +28,9 @@ class Serie
     public static function obtenerPorId($id)
     {
         global $pdo;
-        $sql = "SELECT * FROM Serie WHERE id_serie = ?";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare("
+            SELECT * FROM Serie WHERE id_serie = ?
+        ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -57,6 +60,57 @@ class Serie
             ORDER BY s.numero_serie";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id_tipo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function listarConTipo()
+    {
+        global $pdo;
+        $stmt = $pdo->prepare(" SELECT s.*, td.nombre_tipo 
+            FROM Serie s 
+            JOIN TipoDanza td ON s.id_tipo = td.id_tipo 
+            ORDER BY s.numero_serie
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    /*public static function porTipo($id_tipo)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+            SELECT * FROM Serie WHERE id_tipo = ? ORDER BY numero_serie
+        ");
+        $stmt->execute([$id_tipo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }*/
+
+    public static function porTipo($id_tipo)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+            SELECT s.*, c.nombre AS concurso_nombre 
+            FROM Serie s
+            LEFT JOIN Concurso c ON s.id_concurso = c.id_concurso
+            WHERE s.id_tipo = ?
+            ORDER BY s.numero_serie
+        ");
+        $stmt->execute([$id_tipo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function listarConTipoYConcurso()
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+            SELECT s.*, 
+                   td.nombre_tipo,
+                   c.nombre AS concurso_nombre 
+            FROM Serie s
+            JOIN TipoDanza td ON s.id_tipo = td.id_tipo
+            LEFT JOIN Concurso c ON s.id_concurso = c.id_concurso
+            ORDER BY td.nombre_tipo, s.numero_serie
+        ");
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

@@ -1,48 +1,10 @@
-<?php
-require_once __DIR__ . '/../../helpers/auth.php';
-redirect_if_not_admin();
-$user = auth();
-
-$error = $_GET['error'] ?? null;
-$success = $_GET['success'] ?? null;
-
-// Cargar modelos
-require_once __DIR__ . '/../../models/TipoDanza.php';
-require_once __DIR__ . '/../../models/Serie.php';
-
-$tipos = TipoDanza::listar();
-$series = Serie::listar(); // Todas las series
-
-// Variables para edición de serie
-$editando_serie = false;
-$serie_edit = null;
-
-if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_serie') {
-    $serie_edit = Serie::obtenerPorId($_GET['id']);
-    if ($serie_edit) {
-        $editando_serie = true;
-    }
-}
-
-// Variables para edición de tipo
-$editando_tipo = false;
-$tipo_edit = null;
-
-if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_tipo_danza') {
-    $tipo_edit = TipoDanza::obtenerPorId($_GET['id']);
-    if ($tipo_edit) {
-        $editando_tipo = true;
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <title>Gestión Unificada: Tipos y Series - FRFCP</title>
-    <!-- Corrección: eliminar espacios al final -->
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -282,7 +244,7 @@ if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_tipo_danza') {
         </div>
     </div>
 
-    <!-- Corrección: eliminar espacio al final -->
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

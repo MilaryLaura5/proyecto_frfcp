@@ -1,35 +1,3 @@
-<?php
-// Limpiar salida previa (por si hay espacios ocultos)
-if (ob_get_level()) {
-    ob_clean();
-}
-
-require_once __DIR__ . '/../../helpers/auth.php';
-require_once __DIR__ . '/../../models/Jurado.php';
-
-redirect_if_not_admin();
-$user = auth();
-
-// ✅ Reemplazado por mensaje completo con credenciales
-$mostrarCredenciales = false;
-$credenciales = [];
-
-if (isset($_SESSION['mensaje_jurado'])) {
-    $credenciales = $_SESSION['mensaje_jurado'];
-    unset($_SESSION['mensaje_jurado']);
-    $mostrarCredenciales = true;
-}
-
-$error = $_GET['error'] ?? null;
-$id_concurso = $_GET['id_concurso'] ?? null;
-
-if ($id_concurso) {
-    $jurados = Jurado::porConcurso($id_concurso);
-} else {
-    $jurados = Jurado::listar();
-}
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -80,14 +48,11 @@ if ($id_concurso) {
                             <label class="form-label"><strong>Filtrar por Concurso</strong></label>
                             <select name="id_concurso" class="form-control" onchange="this.form.submit()">
                                 <option value="">-- Todos los jurados --</option>
-                                <?php
-                                global $pdo;
-                                $stmt = $pdo->query("SELECT * FROM Concurso ORDER BY nombre");
-                                while ($c = $stmt->fetch()): ?>
+                                <?php foreach ($concursos as $c): ?>
                                     <option value="<?= $c['id_concurso'] ?>" <?= ($id_concurso == $c['id_concurso']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -113,7 +78,7 @@ if ($id_concurso) {
 
                 <p><strong>Enlace de acceso para el jurado:</strong></p>
                 <?php
-                $link = "http://$_SERVER[HTTP_HOST]" . dirname($_SERVER['SCRIPT_NAME']);
+                $link = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
                 $link = rtrim($link, '/') . "/index.php?page=jurado_login&token=" . urlencode($credenciales['token']);
                 ?>
                 <div class="input-group mb-3">

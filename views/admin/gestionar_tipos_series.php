@@ -1,48 +1,10 @@
-<?php
-require_once __DIR__ . '/../../helpers/auth.php';
-redirect_if_not_admin();
-$user = auth();
-
-$error = $_GET['error'] ?? null;
-$success = $_GET['success'] ?? null;
-
-// Cargar modelos
-require_once __DIR__ . '/../../models/TipoDanza.php';
-require_once __DIR__ . '/../../models/Serie.php';
-
-$tipos = TipoDanza::listar();
-$series_por_tipo = [];
-
-foreach ($tipos as $t) {
-    $stmt = $pdo->prepare("SELECT s.*, c.nombre as concurso_nombre 
-                           FROM Serie s
-                           LEFT JOIN Concurso c ON s.id_concurso = c.id_concurso
-                           WHERE s.id_tipo = ?
-                           ORDER BY s.numero_serie");
-    $stmt->execute([$t['id_tipo']]);
-    $series_por_tipo[$t['id_tipo']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Variables para edición
-$editando_tipo = false;
-$tipo_edit = null;
-
-if (isset($_GET['editar_tipo']) && is_numeric($_GET['editar_tipo'])) {
-    $id_tipo = (int)$_GET['editar_tipo'];
-    $tipo_edit = array_filter($tipos, fn($t) => $t['id_tipo'] == $id_tipo);
-    $tipo_edit = reset($tipo_edit);
-    if ($tipo_edit) {
-        $editando_tipo = true;
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Tipos y Series - FRFCP Admin</title>
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -178,7 +140,7 @@ if (isset($_GET['editar_tipo']) && is_numeric($_GET['editar_tipo'])) {
                                     <?= ucfirst(str_replace('_', ' ', $t['nombre_tipo'])) ?>
                                 </button>
                             </h2>
-                            <div id="tipo<?= $t['id_tipo'] ?>" class="accordion-collapse collapse show"
+                            <div id="tipo<?= $t['id_tipo'] ?>" class="accordion-collapse collapse <?= count($series_por_tipo[$t['id_tipo']]) > 0 ? 'show' : '' ?>"
                                 data-bs-parent="#seriesAccordion">
                                 <div class="accordion-body">
                                     <?php if (count($series_por_tipo[$t['id_tipo']]) > 0): ?>
@@ -223,6 +185,7 @@ if (isset($_GET['editar_tipo']) && is_numeric($_GET['editar_tipo'])) {
         </div>
     </div>
 
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

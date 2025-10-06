@@ -1,40 +1,10 @@
-<?php
-require_once __DIR__ . '/../../helpers/auth.php';
-redirect_if_not_admin();
-$user = auth();
-
-// Cargar modelo
-require_once __DIR__ . '/../../models/Conjunto.php';
-
-// Detectar si estamos editando
-$editando = false;
-$conjunto_edit = null;
-
-if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_conjunto_global') {
-    $id = (int)$_GET['id'];
-    $conjunto_edit = Conjunto::obtenerPorId($id);
-    if ($conjunto_edit) {
-        $editando = true;
-    } else {
-        header('Location: index.php?page=admin_gestionar_conjuntos_globales&error=no_existe');
-        exit;
-    }
-}
-
-// Listar todos los conjuntos para mostrar abajo
-$conjuntos = Conjunto::listar();
-
-$error = $_GET['error'] ?? null;
-$success = $_GET['success'] ?? null;
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <title><?= $editando ? 'Editar' : 'Gestionar' ?> Conjuntos Globales - FRFCP</title>
-    <!-- Corrección: eliminar espacios al final -->
+    <title>Gestionar Conjuntos Globales - FRFCP</title>
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -46,35 +16,57 @@ $success = $_GET['success'] ?? null;
             max-width: 900px;
             margin: 80px auto;
         }
+
+        .search-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .item-conjunto {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease;
+            display: none;
+        }
+
+        .item-conjunto.mostrado {
+            display: block;
+            opacity: 1;
+        }
+
+        #mensajeNoResultados {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
     <div class="container-main">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <i class="bi <?= $editando ? 'bi-pencil-fill text-warning' : 'bi-collection me-2 text-primary' ?>"></i>
-                <?= $editando ? 'Editar Conjunto' : 'Conjuntos Globales' ?>
-            </h2>
+            <h2><i class="bi bi-collection me-2 text-primary"></i> Gestionar Conjuntos Globales</h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
 
         <!-- Mensajes -->
+        <?php if ($error === 'vacios'): ?>
+            <div class="alert alert-warning">⚠️ Completa todos los campos.</div>
+        <?php elseif ($error === 'duplicado'): ?>
+            <div class="alert alert-danger">❌ Ya existe un conjunto con ese nombre en esta serie.</div>
+        <?php elseif ($error === 'evaluado'): ?>
+            <div class="alert alert-danger">❌ No se puede eliminar: el conjunto ya fue evaluado.</div>
+        <?php endif; ?>
+
         <?php if ($success == '1'): ?>
             <div class="alert alert-success">✅ Conjunto creado correctamente.</div>
         <?php elseif ($success == 'editado'): ?>
             <div class="alert alert-success">✅ Conjunto actualizado.</div>
         <?php elseif ($success == 'eliminado'): ?>
             <div class="alert alert-success">✅ Conjunto eliminado.</div>
-        <?php elseif ($error == 'evaluado'): ?>
-            <div class="alert alert-danger">❌ No se puede eliminar: el conjunto ya fue evaluado.</div>
-        <?php elseif ($error == 'duplicado'): ?>
-            <div class="alert alert-warning text-center">
-                <i class="bi bi-exclamation-triangle"></i>
-                <strong>Nombre duplicado:</strong> Ya existe un conjunto con este nombre.
-            </div>
         <?php endif; ?>
 
         <!-- Formulario: Crear o Editar conjunto -->
@@ -104,15 +96,12 @@ $success = $_GET['success'] ?? null;
                         <label class="form-label"><strong>Serie</strong></label>
                         <select class="form-control" name="id_serie" required>
                             <option value="">Selecciona una serie</option>
-                            <?php
-                            global $pdo;
-                            $series = $pdo->query("SELECT s.*, td.nombre_tipo FROM Serie s JOIN TipoDanza td ON s.id_tipo = td.id_tipo ORDER BY s.numero_serie");
-                            while ($s = $series->fetch()): ?>
+                            <?php foreach ($series as $s): ?>
                                 <option value="<?= $s['id_serie'] ?>"
                                     <?= ($editando && $conjunto_edit['id_serie'] == $s['id_serie']) ? 'selected' : '' ?>>
                                     SERIE <?= $s['numero_serie'] ?> - <?= htmlspecialchars($s['nombre_serie']) ?>
                                 </option>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -196,7 +185,7 @@ $success = $_GET['success'] ?? null;
         </div>
     </div>
 
-    <!-- Corrección: eliminar espacio al final -->
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

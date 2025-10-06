@@ -5,16 +5,13 @@ class Conjunto
     public static function listar()
     {
         global $pdo;
-        $sql = "SELECT c.*, 
-                   s.numero_serie,
-                   s.nombre_serie,
-                   td.nombre_tipo 
-            FROM Conjunto c
-            JOIN Serie s ON c.id_serie = s.id_serie
-            JOIN TipoDanza td ON s.id_tipo = td.id_tipo
-            WHERE c.estado_activo = 1
-            ORDER BY c.nombre";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare("SELECT c.*, s.numero_serie, s.nombre_serie, td.nombre_tipo 
+        FROM Conjunto c
+        JOIN Serie s ON c.id_serie = s.id_serie
+        JOIN TipoDanza td ON s.id_tipo = td.id_tipo
+        WHERE c.estado_activo = 1
+        ORDER BY c.nombre
+    ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

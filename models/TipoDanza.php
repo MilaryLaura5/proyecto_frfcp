@@ -49,4 +49,18 @@ class TipoDanza
         $stmt = $pdo->prepare($sql);
         return $stmt->execute([$id]);
     }
+    public static function tieneSeries($id)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM Serie WHERE id_tipo = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn() > 0;
+    }
+    public static function existeNombre($nombre)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM TipoDanza WHERE LOWER(nombre_tipo) = LOWER(?)");
+        $stmt->execute([trim($nombre)]);
+        return $stmt->fetchColumn() > 0;
+    }
 }

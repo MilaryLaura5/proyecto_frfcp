@@ -48,4 +48,20 @@ class Calificacion
             return false;
         }
     }
+
+    public static function porJuradoYParticipacion($id_participacion, $id_jurado)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+            SELECT * FROM Calificacion 
+            WHERE id_participacion = ? AND id_jurado = ?
+        ");
+        $stmt->execute([$id_participacion, $id_jurado]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public static function yaCalificado($id_participacion, $id_jurado)
+    {
+        return self::porJuradoYParticipacion($id_participacion, $id_jurado) !== false;
+    }
 }

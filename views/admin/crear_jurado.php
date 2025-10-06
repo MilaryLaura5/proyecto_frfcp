@@ -1,32 +1,10 @@
-<?php
-require_once __DIR__ . '/../../helpers/auth.php';
-redirect_if_not_admin();
-$user = auth();
-
-$id_concurso = $_GET['id_concurso'] ?? null;
-
-if (!$id_concurso) {
-    header('Location: index.php?page=admin_gestion_concursos&error=no_concurso');
-    exit;
-}
-
-global $pdo;
-$stmt = $pdo->prepare("SELECT * FROM Concurso WHERE id_concurso = ?");
-$stmt->execute([$id_concurso]);
-$concurso = $stmt->fetch();
-
-if (!$concurso) {
-    header('Location: index.php?page=admin_gestion_concursos&error=invalido');
-    exit;
-}
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <title>Nuevo Jurado - FRFCP</title>
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -106,6 +84,7 @@ if (!$concurso) {
                     <input type="number" class="form-control" name="años_experiencia" id="años_experiencia" min="1" max="50" required>
                 </div>
             </div>
+
             <div class="mb-3">
                 <label><strong>Duración del enlace (personalizable)</strong></label>
                 <div class="row g-2">
@@ -121,11 +100,11 @@ if (!$concurso) {
                 </div>
                 <small class="text-muted">Ej: 0 días, 1 hora y 20 minutos → el enlace expira en 1h20m</small>
             </div>
+
             <div class="d-grid gap-2 d-md-flex mt-4">
                 <button type="submit" class="btn btn-success">Crear Jurado + Generar Token</button>
                 <a href="index.php?page=admin_gestion_jurados&id_concurso=<?= $id_concurso ?>" class="btn btn-secondary">Cancelar</a>
             </div>
-
         </form>
     </div>
 
@@ -140,8 +119,6 @@ if (!$concurso) {
             const apellido = partes[1]?.toLowerCase() || '';
 
             let usuario = inicial + apellido;
-
-            // Eliminar tildes y caracteres extraños
             usuario = usuario.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
             fetch(`index.php?page=admin_verificar_usuario&usuario=${usuario}`)
@@ -188,6 +165,7 @@ if (!$concurso) {
         }
     </script>
 
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

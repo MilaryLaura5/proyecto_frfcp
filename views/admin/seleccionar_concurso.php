@@ -1,18 +1,3 @@
-<?php
-// views/admin/seleccionar_concurso.php
-require_once __DIR__ . '/../../helpers/auth.php';
-redirect_if_not_admin();
-$user = auth();
-
-global $pdo;
-
-// Obtener todos los concursos
-$stmt = $pdo->query("SELECT * FROM Concurso ORDER BY fecha_inicio DESC");
-$concursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$error = $_GET['error'] ?? null;
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 

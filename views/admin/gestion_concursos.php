@@ -1,36 +1,10 @@
-<?php
-// views/admin/gestion_concursos.php
-require_once __DIR__ . '/../../helpers/auth.php';
-redirect_if_not_admin();
-$user = auth();
-
-// Obtener parámetros de la URL
-$error = $_GET['error'] ?? null;
-$success = $_GET['success'] ?? null;
-
-// Variables para edición
-$editando = false;
-$concurso_a_editar = null;
-$page = $_GET['page'] ?? 'admin_gestion_concursos'; // Definir $page para evitar "undefined variable"
-
-if (isset($_GET['id']) && $page === 'admin_editar_concurso') {
-    $concurso_a_editar = Concurso::obtenerPorId($_GET['id']);
-    if ($concurso_a_editar) {
-        $editando = true;
-    } else {
-        header('Location: index.php?page=admin_gestion_concursos&error=no_existe');
-        exit;
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <title>Gestionar Concursos - FRFCP Admin</title>
-    <!-- Elimina espacios al final de los enlaces -->
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -147,13 +121,12 @@ if (isset($_GET['id']) && $page === 'admin_editar_concurso') {
             </div>
         </div>
 
-        <!-- Listado de concursos con acciones -->
+        <!-- Listado de concursos -->
         <div class="card shadow-sm">
             <div class="card-header bg-white">
                 <h5><i class="bi bi-list-ul"></i> Concursos Registrados</h5>
             </div>
             <div class="card-body p-0">
-                <?php $concursos = Concurso::listar(); ?>
                 <?php if (count($concursos) > 0): ?>
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
@@ -175,95 +148,38 @@ if (isset($_GET['id']) && $page === 'admin_editar_concurso') {
                                         <td><?= date('d/m/Y H:i', strtotime($c['fecha_inicio'])) ?></td>
                                         <td><?= date('d/m/Y H:i', strtotime($c['fecha_fin'])) ?></td>
                                         <td>
-                                            <span class="badge bg-<?=
-                                                                    $c['estado'] == 'Activo' ? 'success' : ($c['estado'] == 'Cerrado' ? 'secondary' : 'warning')
-                                                                    ?>">
+                                            <span class="badge bg-<?= $c['estado'] == 'Activo' ? 'success' : ($c['estado'] == 'Cerrado' ? 'secondary' : 'warning') ?>">
                                                 <?= ucfirst($c['estado']) ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <!-- Editar solo si está pendiente -->
-                                            <?php if ($c['estado'] === 'Pendiente'): ?>
-                                                <a href="index.php?page=admin_editar_concurso&id=<?= (int)$c['id_concurso'] ?>"
-                                                    class="btn btn-sm btn-warning me-2"
-                                                    title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                            <?php else: ?>
-                                                <button class="btn btn-sm btn-secondary me-2" disabled title="Edición bloqueada">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                            <?php endif; ?>
+                                            <!-- Primaria: Gestión básica -->
+                                            <a href="index.php?page=admin_gestion_conjuntos&id_concurso=<?= $c['id_concurso'] ?>"
+                                                class="btn btn-sm btn-info me-1" title="Gestionar conjuntos"><i class="bi bi-people"></i></a>
 
-                                            <!-- Eliminar solo si está pendiente -->
                                             <?php if ($c['estado'] === 'Pendiente'): ?>
-                                                <a href="index.php?page=admin_eliminar_concurso&id=<?= (int)$c['id_concurso'] ?>"
-                                                    class="btn btn-sm btn-danger me-2"
-                                                    title="Eliminar"
-                                                    onclick="return confirm('¿Seguro que deseas eliminar este concurso?');">
-                                                    <i class="bi bi-trash"></i>
-                                                </a>
-                                            <?php else: ?>
-                                                <button class="btn btn-sm btn-secondary me-2" disabled title="Eliminación bloqueada">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            <?php endif; ?>
-
-                                            <!-- Activar o Cerrar según estado -->
-                                            <?php if ($c['estado'] === 'Pendiente'): ?>
-                                                <!-- Botón para activar -->
-                                                <a href="index.php?page=admin_activar_concurso&id=<?= (int)$c['id_concurso'] ?>"
-                                                    class="btn btn-sm btn-success me-2"
-                                                    title="Activar concurso"
-                                                    onclick="return confirm('¿Deseas activar este concurso? Los jurados podrán evaluar.');">
-                                                    <i class="bi bi-play-fill"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-secondary" disabled title="No disponible">
-                                                    <i class="bi bi-lock"></i>
-                                                </button>
-
+                                                <!-- Edición -->
+                                                <a href="index.php?page=admin_editar_concurso&id=<?= $c['id_concurso'] ?>"
+                                                    class="btn btn-sm btn-warning me-1" title="Editar"><i class="bi bi-pencil"></i></a>
+                                                <a href="index.php?page=admin_eliminar_concurso&id=<?= $c['id_concurso'] ?>"
+                                                    class="btn btn-sm btn-danger me-1" title="Eliminar" onclick="return confirm('¿Seguro?');"><i class="bi bi-trash"></i></a>
+                                                <!-- Activación -->
+                                                <a href="index.php?page=admin_activar_concurso&id=<?= $c['id_concurso'] ?>"
+                                                    class="btn btn-sm btn-success" title="Activar" onclick="return confirm('¿Activar este concurso?');"><i class="bi bi-play-fill"></i></a>
                                             <?php elseif ($c['estado'] === 'Activo'): ?>
-                                                <!-- Botón para cerrar -->
-                                                <button class="btn btn-sm btn-secondary me-2" disabled title="Concurso activo">
-                                                    <i class="bi bi-check-circle"></i>
-                                                </button>
-                                                <a href="index.php?page=admin_cerrar_concurso&id=<?= (int)$c['id_concurso'] ?>"
-                                                    class="btn btn-sm btn-danger"
-                                                    title="Cerrar concurso"
-                                                    onclick="return confirm('¿Cerrar este concurso? Se detendrán todas las evaluaciones.');">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </a>
-
-                                            <?php else: ?>
-                                                <!-- Estado: Cerrado -->
-                                                <button class="btn btn-sm btn-secondary me-2" disabled title="Concurso cerrado">
-                                                    <i class="bi bi-lock"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-secondary" disabled title="Evaluaciones finalizadas">
-                                                    <i class="bi bi-check-all"></i>
-                                                </button>
+                                                <!-- Cierre -->
+                                                <a href="index.php?page=admin_cerrar_concurso&id=<?= $c['id_concurso'] ?>"
+                                                    class="btn btn-sm btn-danger" title="Cerrar" onclick="return confirm('¿Cerrar este concurso?');"><i class="bi bi-x-circle"></i></a>
                                             <?php endif; ?>
 
-                                            <!-- 🔵 Botón para gestionar conjuntos -->
-                                            <a href="index.php?page=admin_gestion_conjuntos&id_concurso=<?= (int)$c['id_concurso'] ?>"
-                                                class="btn btn-sm btn-info"
-                                                title="Gestionar conjuntos de este concurso">
-                                                <i class="bi bi-people"></i>
-                                            </a>
-                                        </td>
-                                        <td>
+                                            <!-- Secundarios: Jurados y criterios -->
                                             <a href="index.php?page=admin_gestion_jurados&id_concurso=<?= $c['id_concurso'] ?>"
-                                                class="btn btn-sm btn-outline-success">Jurados</a>
-
-                                            <!-- ✅ Nuevo botón: Editar Criterios -->
+                                                class="btn btn-sm btn-outline-success ms-1">Jurados</a>
                                             <a href="index.php?page=admin_agregar_criterios&id_concurso=<?= $c['id_concurso'] ?>"
-                                                class="btn btn-sm btn-outline-warning">
-                                                <i class="bi bi-pen"></i> Criterios
-                                            </a>
+                                                class="btn btn-sm btn-outline-warning ms-1"><i class="bi bi-pen"></i></a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-
                             </tbody>
                         </table>
                     </div>
@@ -276,7 +192,7 @@ if (isset($_GET['id']) && $page === 'admin_editar_concurso') {
         </div>
     </div>
 
-    <!-- Script sin espacio al final -->
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

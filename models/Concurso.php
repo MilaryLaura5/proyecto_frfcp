@@ -17,18 +17,16 @@ class Concurso
     public static function listar()
     {
         global $pdo;
-        $sql = "SELECT * FROM Concurso ORDER BY fecha_inicio DESC";
-        $stmt = $pdo->query($sql);
+        $stmt = $pdo->query("SELECT * FROM Concurso ORDER BY fecha_inicio DESC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function obtenerPorId($id)
     {
         global $pdo;
-        $sql = "SELECT * FROM Concurso WHERE id_concurso = ?";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare("SELECT * FROM Concurso WHERE id_concurso = ?");
         $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch();
     }
 
     public static function editar($id, $nombre, $fecha_inicio, $fecha_fin)
@@ -68,5 +66,18 @@ class Concurso
         $sql = "UPDATE Concurso SET estado = 'Cerrado' WHERE id_concurso = ?";
         $stmt = $pdo->prepare($sql);
         return $stmt->execute([$id]);
+    }
+    public static function todos()
+    {
+        global $pdo;
+        $stmt = $pdo->query("SELECT * FROM Concurso ORDER BY nombre");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public static function tieneEvaluaciones($id)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM Calificacion WHERE id_concurso = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn() > 0;
     }
 }

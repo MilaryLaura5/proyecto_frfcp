@@ -1,26 +1,3 @@
-<?php
-// views/jurado/evaluar.php
-require_once __DIR__ . '/../../helpers/auth.php';
-redirect_if_not_jurado(); // Asegura que solo jurados accedan
-
-$user = $_SESSION['user'];
-$id_concurso = $user['id_concurso']; // ✅ Obtenido del token
-
-global $pdo;
-
-// Obtener conjuntos asignados a este concurso
-$stmt = $pdo->prepare("
-    SELECT pc.id_participacion, pc.orden_presentacion, c.nombre AS nombre_conjunto, s.numero_serie
-    FROM ParticipacionConjunto pc
-    JOIN Conjunto c ON pc.id_conjunto = c.id_conjunto
-    JOIN Serie s ON c.id_serie = s.id_serie
-    WHERE pc.id_concurso = ?
-    ORDER BY pc.orden_presentacion
-");
-$stmt->execute([$id_concurso]);
-$conjuntos = $stmt->fetchAll();
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -28,7 +5,7 @@ $conjuntos = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluación - FRFCP Jurado</title>
-    <!-- Bootstrap CSS -->
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -109,7 +86,7 @@ $conjuntos = $stmt->fetchAll();
         </a>
     </div>
 
-    <!-- Bootstrap JS -->
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

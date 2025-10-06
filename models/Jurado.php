@@ -66,4 +66,22 @@ class Jurado
         $stmt->execute([$id_concurso]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public static function porDNI($dni)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+            SELECT j.*, u.usuario 
+            FROM Jurado j 
+            JOIN Usuario u ON j.id_jurado = u.id_usuario 
+            WHERE j.dni = ?
+        ");
+        $stmt->execute([$dni]);
+        return $stmt->fetch();
+    }
+
+    public static function existeDNI($dni)
+    {
+        return self::porDNI($dni) !== false;
+    }
 }

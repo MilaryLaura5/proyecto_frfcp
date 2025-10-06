@@ -65,7 +65,7 @@ if ($page === 'login') {
         case 'admin_gestion_concursos':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->mostrarFormularioCrearConcurso();
+            $controller->gestionarConcursos();
             break;
 
         case 'admin_crear_concurso_submit':
@@ -77,7 +77,7 @@ if ($page === 'login') {
         case 'admin_editar_concurso':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->mostrarFormularioEditarConcurso();
+            $controller->gestionarConcursos(); // ✅ Usa el método completo
             break;
 
         case 'admin_actualizar_concurso':
@@ -105,10 +105,15 @@ if ($page === 'login') {
             break;
 
         // TIPOS DE DANZA Y SERIES (UNIFICADOS)
+        case 'admin_gestion_tipos_series':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarTiposSeries();
+            break;
         case 'admin_gestion_series':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->gestionarSeriesYTpos(); // Muestra tipos + series
+            $controller->gestionarSeries();
             break;
 
         case 'admin_crear_serie_submit':
@@ -162,7 +167,9 @@ if ($page === 'login') {
 
         // --- GESTIÓN GLOBAL DE CONJUNTOS ---
         case 'admin_gestionar_conjuntos_globales':
-            require_once __DIR__ . '/views/admin/gestion_conjuntos_globales.php';
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarConjuntosGlobales();
             break;
 
         case 'admin_crear_conjunto_global_submit':
@@ -174,7 +181,7 @@ if ($page === 'login') {
         case 'admin_editar_conjunto_global':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->mostrarFormularioEditarConjuntoGlobal();
+            $controller->gestionarConjuntosGlobales(); // ✅ Reutiliza el mismo método
             break;
 
         case 'admin_actualizar_conjunto_global':
@@ -194,14 +201,24 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->importarConjuntosCSVGlobal();
             break;
+
         //CONJUNTOS EN UN CONCURSO (solo asignación)
         case 'admin_gestion_conjuntos':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->gestionarConjuntos();
             break;
+
         case 'admin_seleccionar_concurso':
-            require_once __DIR__ . '/views/admin/seleccionar_concurso.php';
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->seleccionarConcursoParaGestionarConjuntos();
+            break;
+
+        case 'admin_seleccionarS_concurso':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->seleccionarConcurso();
             break;
 
         // Asignar un conjunto existente al concurso (con orden_presentacion)
@@ -258,7 +275,7 @@ if ($page === 'login') {
         case 'admin_crear_jurado':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->crearFormularioJurado();
+            $controller->crearJurado();
             break;
 
         case 'admin_guardar_jurado':
@@ -280,8 +297,16 @@ if ($page === 'login') {
             break;
 
         // Criterios de evaluación
+        case 'admin_gestionar_criterios':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarCriterios();
+            break;
+
         case 'admin_agregar_criterios':
-            require_once __DIR__ . '/views/admin/agregar_criterios.php';
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->agregarCriterios();
             break;
 
         case 'admin_guardar_criterios':
@@ -295,21 +320,21 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->guardarCriterioConcurso();
             break;
-        // Gestionar criterios globales
-        case 'admin_gestionar_criterios':
-            require_once __DIR__ . '/views/admin/gestion_criterios.php';
-            break;
 
         // Asignar criterios a concurso
         case 'admin_asignar_criterios_concurso':
-            require_once __DIR__ . '/views/admin/asignar_criterios_concurso.php';
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->asignarCriteriosConcurso();
             break;
 
         case 'admin_configurar_criterios':
             require_once __DIR__ . '/views/admin/asignar_criterios_concurso.php'; // mismo archivo
             break;
 
-
+        // ===============
+        //   JURADO
+        // ===============
 
         // Mostrar login con token
         case 'jurado_login':
@@ -326,11 +351,15 @@ if ($page === 'login') {
             break;
 
         case 'jurado_evaluar':
-            require_once __DIR__ . '/views/jurado/evaluar.php';
+            require_once __DIR__ . '/controllers/JuradoController.php';
+            $controller = new JuradoController();
+            $controller->evaluar();
             break;
 
         case 'jurado_calificar':
-            require_once __DIR__ . '/views/jurado/calificar.php';
+            require_once __DIR__ . '/controllers/JuradoController.php';
+            $controller = new JuradoController();
+            $controller->calificar();
             break;
 
         case 'jurado_guardar_calificacion':
