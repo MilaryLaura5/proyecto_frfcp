@@ -54,12 +54,49 @@ class JuradoController
 
         $user = $_SESSION['user'];
         $id_concurso = $user['id_concurso'];
-        $id_jurado = $user['id']; // Asegúrate de que esto sea un entero
+        $id_jurado = $user['id'];
 
         require_once __DIR__ . '/../models/ParticipacionConjunto.php';
 
-        $conjuntos = ParticipacionConjunto::porConcurso($id_concurso, (int)$id_jurado);
+        global $pdo;
 
+        // Obtener conjuntos con estado
+        $stmt = $pdo->prepare("
+    SELECT 
+        p.id_participacion,
+        p.orden_presentacion,
+        c.nombre AS nombre_conjunto,
+        s.numero_serie,
+        COALESCE(cal.estado, 'pendiente') AS estado_calificacion
+    FROM ParticipacionConjunto p
+    JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
+    JOIN Serie s ON c.id_serie = s.id_serie
+    LEFT JOIN Calificacion cal ON p.id_participacion = cal.id_participacion AND cal.id_jurado = ?
+    WHERE p.id_concurso = ?
+    ORDER BY p.orden_presentacion
+");
+        $stmt->execute([$id_jurado, $id_concurso]);
+        $conjuntos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Cargar detalles de puntajes
+        foreach ($conjuntos as &$c) {
+            $c['detalles'] = [];
+
+            // Solo si ya fue calificado
+            if ($c['estado_calificacion'] === 'enviado' || $c['estado_calificacion'] === 'calificado') {
+                $stmt_det = $pdo->prepare("
+            SELECT cr.nombre AS nombre_criterio, dc.puntaje
+            FROM detallecalificacion dc
+            JOIN CriterioConcurso cc ON dc.id_criterio_concurso = cc.id_criterio_concurso
+            JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
+            JOIN Calificacion cal ON dc.id_calificacion = cal.id_calificacion
+            WHERE cal.id_jurado = ? AND cal.id_participacion = ?
+            ORDER BY cr.nombre
+        ");
+                $stmt_det->execute([$id_jurado, $c['id_participacion']]);
+                $c['detalles'] = $stmt_det->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }
         require_once __DIR__ . '/../views/jurado/evaluar.php';
     }
 
@@ -82,27 +119,25 @@ class JuradoController
         $descalificar = isset($_POST['descalificar']);
 
         // Validar acceso
-        $stmt_token = $pdo->prepare("SELECT token FROM TokenAcceso 
+        $stmt_token = $pdo->prepare("
+        SELECT token FROM TokenAcceso 
         WHERE id_jurado = ? AND id_concurso = ? AND fecha_expiracion > NOW()
     ");
         $stmt_token->execute([$user['id'], $id_concurso]);
-        $token_db = $stmt_token->fetchColumn();
-
-        if (!$token_db) {
+        if (!$stmt_token->fetchColumn()) {
             header('Location: index.php?page=jurado_evaluar&error=no_permiso');
             exit;
         }
 
         // Verificar participación
-        $stmt_part = $pdo->prepare("SELECT p.id_participacion, c.id_conjunto
+        $stmt_part = $pdo->prepare("
+        SELECT p.id_participacion, c.id_conjunto
         FROM ParticipacionConjunto p
         JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
         WHERE p.id_participacion = ? AND p.id_concurso = ?
     ");
         $stmt_part->execute([$id_participacion, $id_concurso]);
-        $participacion = $stmt_part->fetch();
-
-        if (!$participacion) {
+        if (!$stmt_part->fetch()) {
             header('Location: index.php?page=jurado_evaluar&error=no_existe');
             exit;
         }
@@ -111,17 +146,44 @@ class JuradoController
             $pdo->beginTransaction();
 
             // Obtener o crear calificación principal
-            $calificacion = Calificacion::porJuradoYParticipacion($user['id'], $id_participacion);
+            $stmt_check = $pdo->prepare("
+            SELECT id_calificacion, estado 
+            FROM Calificacion 
+            WHERE id_jurado = ? AND id_participacion = ?
+        ");
+            $stmt_check->execute([$user['id'], $id_participacion]);
+            $calif = $stmt_check->fetch();
 
             if ($descalificar) {
-                if ($calificacion) {
-                    Calificacion::actualizarEstado($calificacion['id_calificacion'], 'descalificado');
+                if ($calif) {
+                    $pdo->prepare("UPDATE Calificacion SET estado = 'descalificado' WHERE id_calificacion = ?")
+                        ->execute([$calif['id_calificacion']]);
+                    $pdo->prepare("DELETE FROM detallecalificacion WHERE id_calificacion = ?")
+                        ->execute([$calif['id_calificacion']]);
                 } else {
-                    Calificacion::crear($user['id'], $id_participacion, 'descalificado');
+                    $stmt_ins = $pdo->prepare("
+                    INSERT INTO Calificacion (id_jurado, id_participacion, estado, id_concurso, fecha_hora)
+                    VALUES (?, ?, 'descalificado', ?, NOW())
+                ");
+                    $stmt_ins->execute([$user['id'], $id_participacion, $id_concurso]);
                 }
             } else {
+                if (!$calif) {
+                    $stmt_ins = $pdo->prepare("
+                    INSERT INTO Calificacion (id_jurado, id_participacion, estado, id_concurso, fecha_hora)
+                    VALUES (?, ?, 'enviado', ?, NOW())
+                ");
+                    $stmt_ins->execute([$user['id'], $id_participacion, $id_concurso]);
+                    $id_calificacion = $pdo->lastInsertId();
+                } else {
+                    $id_calificacion = $calif['id_calificacion'];
+                    $pdo->prepare("DELETE FROM detallecalificacion WHERE id_calificacion = ?")
+                        ->execute([$id_calificacion]);
+                }
+
                 // Obtener criterios del concurso
-                $stmt_crit = $pdo->prepare("SELECT cc.id_criterio_concurso, cc.id_criterio, cr.nombre, cc.puntaje_maximo
+                $stmt_crit = $pdo->prepare("
+                SELECT cc.id_criterio_concurso, cr.nombre, cc.puntaje_maximo
                 FROM CriterioConcurso cc
                 JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
                 WHERE cc.id_concurso = ?
@@ -129,26 +191,16 @@ class JuradoController
                 $stmt_crit->execute([$id_concurso]);
                 $criterios = $stmt_crit->fetchAll(PDO::FETCH_ASSOC);
 
-                if (empty($criterios)) {
-                    throw new Exception("No hay criterios definidos");
-                }
-
-                // Crear o actualizar cabecera
-                if (!$calificacion) {
-                    $id_calificacion = Calificacion::crear($user['id'], $id_participacion, 'enviado');
-                } else {
-                    $id_calificacion = $calificacion['id_calificacion'];
-                    // Eliminar detalles anteriores
-                    DetalleCalificacion::eliminarPorCalificacion($id_calificacion);
-                }
-
-                // Insertar cada puntaje
                 foreach ($criterios as $c) {
                     $campo = strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú'], ['_', 'a', 'e', 'i', 'o', 'u'], $c['nombre']));
                     $puntaje = round((float)($_POST["puntaje_$campo"] ?? 0), 2);
                     $puntaje = max(0, min($puntaje, $c['puntaje_maximo']));
 
-                    DetalleCalificacion::insertar($id_calificacion, $c['id_criterio_concurso'], $puntaje);
+                    $stmt_det = $pdo->prepare("
+                    INSERT INTO detallecalificacion (id_calificacion, id_criterio_concurso, puntaje)
+                    VALUES (?, ?, ?)
+                ");
+                    $stmt_det->execute([$id_calificacion, $c['id_criterio_concurso'], $puntaje]);
                 }
             }
 

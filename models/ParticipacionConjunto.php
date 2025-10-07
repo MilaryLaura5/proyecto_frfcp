@@ -78,4 +78,74 @@ class ParticipacionConjunto
         $stmt->execute([$id_jurado, $id_concurso]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public static function porConcursoConDetalles($id_concurso, $id_jurado)
+    {
+        global $pdo;
+        $sql = "SELECT 
+            p.id_participacion,
+            p.orden_presentacion,
+            c.nombre AS nombre_conjunto,
+            s.numero_serie,
+            COALESCE(cal.estado, 'pendiente') AS estado_calificacion,
+            dc.puntaje,
+            cr.nombre AS nombre_criterio
+        FROM ParticipacionConjunto p
+        JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
+        JOIN Serie s ON c.id_serie = s.id_serie
+        LEFT JOIN Calificacion cal ON p.id_participacion = cal.id_participacion AND cal.id_jurado = ?
+        LEFT JOIN detallecalificacion dc ON cal.id_calificacion = dc.id_calificacion
+        LEFT JOIN CriterioConcurso cc ON dc.id_criterio_concurso = cc.id_criterio_concurso
+        LEFT JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
+        WHERE p.id_concurso = ?
+        ORDER BY p.orden_presentacion, cr.nombre
+    ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_jurado, $id_concurso]);
+        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Agrupar resultados por conjunto
+        $conjuntos = [];
+        foreach ($resultados as $row) {
+            $id = $row['id_participacion'];
+            if (!isset($conjuntos[$id])) {
+                $conjuntos[$id] = [
+                    'id_participacion' => $id,
+                    'orden_presentacion' => $row['orden_presentacion'],
+                    'nombre_conjunto' => $row['nombre_conjunto'],
+                    'numero_serie' => $row['numero_serie'],
+                    'estado_calificacion' => $row['estado_calificacion'],
+                    'detalles' => []
+                ];
+            }
+            if ($row['puntaje'] !== null) {
+                $conjuntos[$id]['detalles'][] = [
+                    'nombre_criterio' => $row['nombre_criterio'],
+                    'puntaje' => $row['puntaje']
+                ];
+            }
+        }
+
+        return array_values($conjuntos);
+    }
+    public static function porConcursoConEstado($id_concurso, $id_jurado)
+    {
+        global $pdo;
+        $sql = "
+        SELECT 
+            p.id_participacion,
+            p.orden_presentacion,
+            c.nombre AS nombre_conjunto,
+            s.numero_serie,
+            COALESCE(cal.estado, 'pendiente') AS estado_calificacion
+        FROM ParticipacionConjunto p
+        JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
+        JOIN Serie s ON c.id_serie = s.id_serie
+        LEFT JOIN Calificacion cal ON p.id_participacion = cal.id_participacion AND cal.id_jurado = ?
+        WHERE p.id_concurso = ?
+        ORDER BY p.orden_presentacion
+    ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_jurado, $id_concurso]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
