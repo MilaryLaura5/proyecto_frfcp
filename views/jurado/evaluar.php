@@ -87,11 +87,14 @@
 
     <div class="header">
         <h5><i class="bi bi-star-fill"></i> Evaluación de Conjuntos</h5>
-        <small>Jurado: <?= htmlspecialchars($user['usuario']) ?></small>
+        <small>Jurado: <?= htmlspecialchars($user['usuario']) ?> </small>
     </div>
 
     <div class="bg-white p-3 rounded shadow-sm mt-3">
-        <p class="text-center text-muted">Selecciona un conjunto para evaluarlo.</p>
+        <p class="text-center text-muted">
+            Selecciona un conjunto para evaluarlo en el concurso:
+            <strong><?= htmlspecialchars($nombre_concurso) ?></strong>
+        </p>
     </div>
 
     <?php if (count($conjuntos) > 0): ?>
