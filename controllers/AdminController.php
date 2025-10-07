@@ -1032,10 +1032,11 @@ class AdminController
 
         require_once __DIR__ . '/../models/Criterio.php';
         require_once __DIR__ . '/../models/Concurso.php';
+        require_once __DIR__ . '/../models/CriterioConcurso.php';
 
         global $pdo;
 
-        // Si es POST, crear nuevo criterio
+        // Crear nuevo criterio
         if ($_POST['nombre'] ?? null) {
             $nombre = trim($_POST['nombre']);
             if ($nombre && !Criterio::existe($nombre)) {
@@ -1044,19 +1045,24 @@ class AdminController
                 header('Location: index.php?page=admin_gestionar_criterios&error=vacio');
                 exit;
             }
-            // Redirigir para evitar reenvío
             header('Location: index.php?page=admin_gestionar_criterios');
             exit;
         }
 
-        // Listar todos los criterios
+        // Datos principales
         $criterios = Criterio::listar();
-
-        // Listar todos los concursos
         $concursos = Concurso::listar();
 
-        // Pasar todo a la vista
-        require_once __DIR__ . '/../views/admin/gestionar_criterios_unificado.php';
+        // Si viene id_concurso, cargar criterios asignados
+        $id_concurso = $_GET['id_concurso'] ?? null;
+        $criterios_asignados = [];
+
+        if ($id_concurso) {
+            $criterios_asignados = CriterioConcurso::porConcurso($id_concurso);
+        }
+
+        // Cargar vista unificada
+        require_once __DIR__ . '/../views/admin/gestionar_criterios_completo.php';
     }
     public function agregarCriterios()
     {
@@ -1267,5 +1273,30 @@ class AdminController
 
         // Pasar a la vista
         require_once __DIR__ . '/../views/admin/seleccionar_concurso.php';
+    }
+    public function eliminarCriterioConcurso()
+    {
+        redirect_if_not_admin();
+        $id_criterio = $_GET['id'] ?? null;
+        $id_concurso = $_GET['id_concurso'] ?? null;
+
+        if (!$id_criterio || !$id_concurso) {
+            header('Location: index.php?page=admin_gestionar_criterios&error=no_datos');
+            exit;
+        }
+
+        global $pdo;
+
+        try {
+            $stmt = $pdo->prepare("DELETE FROM CriterioConcurso WHERE id_criterio = ? AND id_concurso = ?");
+            $stmt->execute([$id_criterio, $id_concurso]);
+
+            header("Location: index.php?page=admin_gestionar_criterios&id_concurso=$id_concurso&success=eliminado");
+            exit;
+        } catch (Exception $e) {
+            error_log("Error al eliminar criterio del concurso: " . $e->getMessage());
+            header("Location: index.php?page=admin_gestionar_criterios&id_concurso=$id_concurso&error=db");
+            exit;
+        }
     }
 }

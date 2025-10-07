@@ -332,6 +332,12 @@ if ($page === 'login') {
             require_once __DIR__ . '/views/admin/asignar_criterios_concurso.php'; // mismo archivo
             break;
 
+        case 'admin_eliminar_criterio_concurso':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->eliminarCriterioConcurso();
+            break;
+
         // ===============
         //   JURADO
         // ===============

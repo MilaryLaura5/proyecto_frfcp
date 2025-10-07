@@ -1,10 +1,15 @@
+<?php
+// Esta variable debe venir del controlador
+$id_concurso = $_GET['id_concurso'] ?? null;
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Criterios - FRFCP</title>
-    <!-- Bootstrap CSS -->
+    <!-- ✅ Corrección: espacios eliminados -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -36,35 +41,38 @@
 
 <body>
     <div class="container-main">
-        <!-- Mensajes de éxito/error -->
-        <?php if (isset($_GET['success'])): ?>
-            <?php if ($_GET['success'] === 'asignado'): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle"></i> <strong>¡Éxito!</strong> El criterio fue asignado correctamente.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>a
-            <?php endif; ?>
+
+        <!-- ✅ Mensajes de éxito/error -->
+        <?php if (isset($_GET['success']) && $_GET['success'] === 'asignado'): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i>
+                <strong>¡Éxito!</strong> El criterio fue asignado correctamente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php endif; ?>
 
         <?php if (isset($_GET['error'])): ?>
             <?php switch ($_GET['error']):
                 case 'dato_invalido': ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle"></i> <strong>Error:</strong> Datos inválidos.
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Error:</strong> Datos inválidos.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     <?php break; ?>
                 <?php
                 case 'no_guardado': ?>
                     <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-circle"></i> <strong>Advertencia:</strong> No se pudo guardar.
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Advertencia:</strong> No se pudo guardar.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     <?php break; ?>
                 <?php
                 case 'db': ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-database"></i> <strong>Error de base de datos.</strong> Contacta al administrador.
+                        <i class="bi bi-database"></i>
+                        <strong>Error de base de datos.</strong> Contacta al administrador.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     <?php break; ?>
@@ -104,8 +112,7 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center"
                                 onclick="seleccionarCriterio(
                                     <?= $c['id_criterio'] ?>,
-                                    '<?= addslashes(htmlspecialchars($c['nombre'])) ?>'
-                                )">
+                                    '<?= addslashes(htmlspecialchars($c['nombre'])) ?>')">
                                 <?= htmlspecialchars($c['nombre']) ?>
                                 <button class="btn btn-sm btn-outline-primary">Usar</button>
                             </li>
@@ -114,23 +121,20 @@
                 </div>
             </div>
 
-            <!-- Panel derecho: Asignar a concurso -->
+            <!-- Panel derecho superior: Asignar criterio -->
             <div class="col-md-7">
                 <div class="panel">
                     <h5><i class="bi bi-calendar-event"></i> Asignar al Concurso</h5>
                     <p class="text-muted">Selecciona un concurso para asignar el puntaje máximo del criterio.</p>
 
-                    <!-- Mensaje inicial -->
                     <div id="mensajeInicial" class="alert alert-info">
-                        Selecciona un criterio para asignarlo a un concurso.
+                        Selecciona un criterio para asignarlo a un concurso
                     </div>
 
-                    <!-- Formulario dinámico -->
                     <div id="formularioAsignacion" style="display: none;">
                         <div class="alert alert-light">
                             <strong>Criterio seleccionado:</strong> <span id="nombreCriterio"></span>
                         </div>
-
                         <form method="POST" action="index.php?page=admin_guardar_criterio_concurso">
                             <input type="hidden" name="id_criterio" id="id_criterio_input">
 
@@ -162,6 +166,50 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Panel derecho inferior: Gestionar concursos -->
+                <div class="panel mt-4">
+                    <h5><i class="bi bi-calendar-check"></i> Gestionar Concurso</h5>
+                    <p class="text-muted">Selecciona un concurso para ver sus criterios asignados.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Concurso</strong></label>
+                        <select class="form-control" id="selectConcurso" onchange="cambiarConcurso()">
+                            <option value="">Selecciona un concurso</option>
+                            <?php foreach ($concursos as $c): ?>
+                                <option value="<?= $c['id_concurso'] ?>" <?= $id_concurso == $c['id_concurso'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($c['nombre']) ?> (<?= ucfirst($c['estado']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div id="zonaAsignacion">
+                        <?php if ($id_concurso && !empty($criterios_asignados)): ?>
+                            <div class="alert alert-light">
+                                <strong>Criterios asignados a este concurso:</strong>
+                            </div>
+                            <ul class="list-group mb-3">
+                                <?php foreach ($criterios_asignados as $ca): ?>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong><?= htmlspecialchars($ca['nombre_criterio']) ?></strong><br>
+                                            <small>Puntaje máximo: <strong><?= number_format($ca['puntaje_maximo'], 2) ?></strong> puntos</small>
+                                        </div>
+                                        <a href="#" class="btn btn-sm btn-danger"
+                                            onclick="eliminarCriterio(<?= $ca['id_criterio'] ?>, <?= $id_concurso ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php elseif ($id_concurso): ?>
+                            <div class="alert alert-info">No hay criterios asignados aún.</div>
+                        <?php else: ?>
+                            <div class="alert alert-info">Selecciona un concurso para gestionar sus criterios.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -174,17 +222,23 @@
             document.getElementById('formularioAsignacion').style.display = 'block';
         }
 
-        // Opcional: mostrar mensaje cuando cambias el concurso
-        document.querySelector('[name="id_concurso"]').addEventListener('change', function() {
-            const concursoNombre = this.options[this.selectedIndex].text;
-            if (this.value) {
-                console.log('Concurso seleccionado:', concursoNombre);
-                // Puedes mostrar un mensaje aquí si quieres
+        function cambiarConcurso() {
+            const concursoId = document.getElementById('selectConcurso').value;
+            if (concursoId) {
+                window.location.href = 'index.php?page=admin_gestionar_criterios&id_concurso=' + concursoId;
+            } else {
+                window.location.href = 'index.php?page=admin_gestionar_criterios';
             }
-        });
+        }
+
+        function eliminarCriterio(idCriterio, idConcurso) {
+            if (confirm('¿Eliminar este criterio del concurso?')) {
+                window.location.href = 'index.php?page=admin_eliminar_criterio_concurso&id=' + idCriterio + '&id_concurso=' + idConcurso;
+            }
+        }
     </script>
 
-    <!-- Bootstrap JS -->
+    <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
