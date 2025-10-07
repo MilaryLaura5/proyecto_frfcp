@@ -349,11 +349,16 @@ if ($page === 'login') {
             $controller->mostrarLoginConToken();
             break;
 
-        // Procesar login con credenciales
         case 'jurado_login_submit':
             require_once __DIR__ . '/controllers/AuthController.php';
             $controller = new AuthController();
             $controller->loginConTokenSubmit();
+            exit;
+
+        case 'logout':
+            require_once __DIR__ . '/controllers/AuthController.php';
+            $controller = new AuthController();
+            $controller->logout();
             break;
 
         case 'jurado_evaluar':
@@ -369,10 +374,11 @@ if ($page === 'login') {
             break;
 
         case 'jurado_guardar_calificacion':
-            require_once __DIR__ . '/controllers/AuthController.php';
-            $controller = new AuthController();
-            $controller->guardarCalificacion();
+            require_once __DIR__ . '/controllers/JuradoController.php';
+            $controller = new JuradoController();
+            $controller->juradoGuardarCalificacion();
             break;
+
         // --- PRESIDENTE ---
         case 'presidente_dashboard':
             require_once __DIR__ . '/controllers/PresidenteController.php';

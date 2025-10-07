@@ -54,10 +54,33 @@
         .form-text {
             font-size: 0.85em;
         }
+
+        .alert-calificado {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #007bff;
+        }
     </style>
 </head>
 
 <body class="p-3">
+
+    <!-- Mensajes de éxito/error -->
+    <?php if (isset($_GET['success']) && $_GET['success'] === 'guardado'): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> Calificación guardada correctamente.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            Error al guardar: <?= htmlspecialchars($_GET['error']) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="header">
         <h5><i class="bi bi-pencil-square"></i> Calificar Conjunto</h5>
         <small>Jurado: <?= htmlspecialchars($user['usuario']) ?></small>
@@ -66,11 +89,23 @@
     <!-- Información del conjunto -->
     <div class="card card-conjunto bg-white shadow-sm mt-3">
         <div class="card-body">
-            <h5 class="mb-1">N° <?= $conjunto['orden_presentacion'] ?></h5>
-            <h6 class="text-primary"><?= htmlspecialchars($conjunto['nombre_conjunto']) ?></h6>
-            <small class="text-muted">Serie <?= $conjunto['numero_serie'] ?></small>
+            <h5 class="mb-1">N° <?= $conjunto['orden_presentacion'] ?? '?' ?></h5>
+            <h6 class="text-primary"><?= htmlspecialchars($conjunto['nombre_conjunto'] ?? 'Desconocido') ?></h6>
+            <small class="text-muted">Serie <?= $conjunto['numero_serie'] ?? '?' ?></small>
         </div>
     </div>
+
+    <!-- Estado actual -->
+    <?php if ($calificacion): ?>
+        <div class="alert alert-calificado mb-3">
+            <i class="bi bi-info-circle"></i>
+            <?php if ($calificacion['estado'] === 'descalificado'): ?>
+                Este conjunto fue <strong>descalificado</strong>.
+            <?php else: ?>
+                Ya has calificado este conjunto.
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Formulario de calificación -->
     <form method="POST" action="index.php?page=jurado_guardar_calificacion">
@@ -82,11 +117,12 @@
             $valor_guardado = $calificacion ? number_format($calificacion["puntaje_$campo"], 2) : '';
         ?>
             <div class="mb-3">
-                <label>
+                <label for="puntaje_<?= $campo ?>">
                     <?= htmlspecialchars($c['nombre_criterio']) ?>
                     <small class="text-muted">(0 - <?= $c['puntaje_maximo'] ?> puntos)</small>
                 </label>
                 <input type="number"
+                    id="puntaje_<?= $campo ?>"
                     class="form-control"
                     name="puntaje_<?= $campo ?>"
                     step="0.01"

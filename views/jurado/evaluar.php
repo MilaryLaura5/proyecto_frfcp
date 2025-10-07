@@ -44,6 +44,22 @@
 
 <body class="p-3">
 
+    <!-- Mensajes de éxito/error -->
+    <?php if (isset($_GET['success']) && $_GET['success'] === 'guardado'): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> Calificación guardada correctamente.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            Error al guardar: <?= htmlspecialchars($_GET['error']) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="header">
         <h5><i class="bi bi-star-fill"></i> Evaluación de Conjuntos</h5>
         <small>Jurado: <?= htmlspecialchars($user['usuario']) ?></small>
@@ -65,10 +81,19 @@
                                 <h6 class="mb-0">N° <?= $c['orden_presentacion'] ?> - <?= htmlspecialchars($c['nombre_conjunto']) ?></h6>
                                 <small class="text-muted">Serie <?= $c['numero_serie'] ?></small>
                             </div>
-                            <a href="index.php?page=jurado_calificar&id=<?= $c['id_participacion'] ?>"
-                                class="btn btn-evaluar">
-                                <i class="bi bi-pencil-square"></i> Calificar
-                            </a>
+                            <?php if ($c['estado_calificacion'] === 'descalificado'): ?>
+                                <span class="badge bg-danger">Descalificado</span>
+                            <?php elseif ($c['estado_calificacion'] !== 'pendiente'): ?>
+                                <a href="index.php?page=jurado_calificar&id=<?= $c['id_participacion'] ?>"
+                                    class="btn btn-warning btn-sm w-100">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                            <?php else: ?>
+                                <a href="index.php?page=jurado_calificar&id=<?= $c['id_participacion'] ?>"
+                                    class="btn btn-primary btn-sm w-100">
+                                    <i class="bi bi-pencil-square"></i> Calificar
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
