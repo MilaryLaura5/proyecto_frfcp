@@ -4,57 +4,137 @@
 <head>
     <meta charset="UTF-8">
     <title>Gestión Unificada: Tipos y Series - FRFCP</title>
-    <!-- ✅ Corrección: espacios eliminados -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
             background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            margin: 0;
         }
 
-        .container-main {
-            max-width: 1200px;
-            margin: 80px auto;
+        .header-container {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #C1121F;
+            margin: 0;
         }
 
         .panel {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .accordion-button {
+            font-weight: 600;
+        }
+
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+        }
+
+        .list-group-item:first-child {
+            border-top: none;
+        }
+
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .row.g-4>div {
+                margin-bottom: 1rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container-main">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-collection me-2 text-primary"></i> Gestión Unificada: Tipos de Danza y Series</h2>
+
+    <!-- Encabezado con ancho completo -->
+    <div class="header-container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="page-title">
+                Gestión Unificada: Tipos de Danza y Series
+            </h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
+    </div>
+
+    <!-- Contenido principal con ancho completo -->
+    <div class="container-fluid px-4">
 
         <!-- Mensajes -->
         <?php if ($error === 'vacios'): ?>
-            <div class="alert alert-warning">⚠️ Completa todos los campos.</div>
+            <div class="alert alert-warning alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ⚠️ Completa todos los campos.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($error === 'tipo_vacio'): ?>
-            <div class="alert alert-warning">⚠️ El nombre del tipo es obligatorio.</div>
+            <div class="alert alert-warning alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ⚠️ El nombre del tipo es obligatorio.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($error === 'tipo_usado'): ?>
-            <div class="alert alert-danger">❌ No se puede eliminar: tiene series asociadas.</div>
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ❌ No se puede eliminar: tiene series asociadas.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php endif; ?>
 
         <?php if ($success == '1'): ?>
-            <div class="alert alert-success">✅ Serie creada correctamente.</div>
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ✅ Serie creada correctamente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($success == 'editado'): ?>
-            <div class="alert alert-success">✅ Serie actualizada.</div>
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ✅ Serie actualizada.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($success == 'eliminado'): ?>
-            <div class="alert alert-success">✅ Serie eliminada.</div>
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ✅ Serie eliminada.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($success == 'tipo_creado'): ?>
-            <div class="alert alert-success">✅ Tipo de danza creado.</div>
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ✅ Tipo de danza creado.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($success == 'tipo_editado'): ?>
-            <div class="alert alert-success">✅ Tipo de danza actualizado.</div>
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ✅ Tipo de danza actualizado.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($success == 'tipo_eliminado'): ?>
-            <div class="alert alert-success">✅ Tipo de danza eliminado.</div>
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
+                ✅ Tipo de danza eliminado.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php endif; ?>
 
         <div class="row g-4">
@@ -71,14 +151,14 @@
                             <div class="mb-3">
                                 <label class="form-label"><strong>Nombre</strong></label>
                                 <input type="text"
-                                    class="form-control"
+                                    class="form-control form-control-lg"
                                     name="nombre_tipo"
                                     value="<?= htmlspecialchars($tipo_edit['nombre_tipo']) ?>"
                                     required>
                             </div>
                             <div class="d-grid gap-2 d-md-flex">
-                                <button type="submit" class="btn btn-warning">Actualizar Tipo</button>
-                                <a href="index.php?page=admin_gestion_series" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-warning btn-lg">Actualizar Tipo</button>
+                                <a href="index.php?page=admin_gestion_series" class="btn btn-secondary btn-lg">Cancelar</a>
                             </div>
                         </form>
                     <?php else: ?>
@@ -86,12 +166,12 @@
                             <div class="mb-3">
                                 <label class="form-label"><strong>Nombre del Tipo</strong></label>
                                 <input type="text"
-                                    class="form-control"
+                                    class="form-control form-control-lg"
                                     name="nombre_tipo"
                                     placeholder="Ej: Traje Originario"
                                     required>
                             </div>
-                            <button type="submit" class="btn btn-success">Agregar Tipo</button>
+                            <button type="submit" class="btn btn-primary btn-lg">Agregar Tipo</button>
                         </form>
                     <?php endif; ?>
 
@@ -131,7 +211,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label"><strong>Número</strong></label>
                                     <input type="number"
-                                        class="form-control"
+                                        class="form-control form-control-lg"
                                         name="numero_serie"
                                         min="1" max="99"
                                         value="<?= $serie_edit['numero_serie'] ?>"
@@ -140,7 +220,7 @@
                                 <div class="col-md-8">
                                     <label class="form-label"><strong>Nombre</strong></label>
                                     <input type="text"
-                                        class="form-control"
+                                        class="form-control form-control-lg"
                                         name="nombre_serie"
                                         value="<?= htmlspecialchars($serie_edit['nombre_serie']) ?>"
                                         required>
@@ -148,7 +228,7 @@
                             </div>
                             <div class="mt-3">
                                 <label class="form-label"><strong>Tipo</strong></label>
-                                <select class="form-control" name="id_tipo" required>
+                                <select class="form-control form-select-lg" name="id_tipo" required>
                                     <option value="">Selecciona un tipo</option>
                                     <?php foreach ($tipos as $t): ?>
                                         <option value="<?= $t['id_tipo'] ?>" <?= $serie_edit['id_tipo'] == $t['id_tipo'] ? 'selected' : '' ?>>
@@ -158,8 +238,8 @@
                                 </select>
                             </div>
                             <div class="d-grid gap-2 d-md-flex mt-4">
-                                <button type="submit" class="btn btn-warning">Actualizar Serie</button>
-                                <a href="index.php?page=admin_gestion_series" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-warning btn-lg">Actualizar Serie</button>
+                                <a href="index.php?page=admin_gestion_series" class="btn btn-secondary btn-lg">Cancelar</a>
                             </div>
                         </form>
                     <?php else: ?>
@@ -168,7 +248,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label"><strong>Número</strong></label>
                                     <input type="number"
-                                        class="form-control"
+                                        class="form-control form-control-lg"
                                         name="numero_serie"
                                         min="1" max="99"
                                         required>
@@ -176,7 +256,7 @@
                                 <div class="col-md-8">
                                     <label class="form-label"><strong>Nombre</strong></label>
                                     <input type="text"
-                                        class="form-control"
+                                        class="form-control form-control-lg"
                                         name="nombre_serie"
                                         placeholder="Ej: Carnavalescas Ligeras"
                                         required>
@@ -184,14 +264,14 @@
                             </div>
                             <div class="mt-3">
                                 <label class="form-label"><strong>Tipo</strong></label>
-                                <select class="form-control" name="id_tipo" required>
+                                <select class="form-control form-select-lg" name="id_tipo" required>
                                     <option value="">Selecciona un tipo</option>
                                     <?php foreach ($tipos as $t): ?>
                                         <option value="<?= $t['id_tipo'] ?>"><?= htmlspecialchars($t['nombre_tipo']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-success mt-3">Crear Serie</button>
+                            <button type="submit" class="btn btn-primary btn-lg mt-3 w-100">Crear Serie</button>
                         </form>
                     <?php endif; ?>
 
@@ -244,7 +324,7 @@
         </div>
     </div>
 
-    <!-- ✅ Corrección: espacio eliminado -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

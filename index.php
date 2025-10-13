@@ -1,6 +1,6 @@
 <?php
 // index.php - Punto de entrada del sistema
-
+date_default_timezone_set('America/Lima'); // Para Perú, Colombia, Ecuador, México, etc.
 // Iniciar sesión solo si no está activa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -380,33 +380,34 @@ if ($page === 'login') {
             break;
 
         // --- PRESIDENTE ---
-        case 'presidente_dashboard':
-            require_once __DIR__ . '/controllers/PresidenteController.php';
-            $controller = new PresidenteController();
-            $controller->dashboard();
-            break;
-
         case 'presidente_seleccionar_concurso':
             require_once __DIR__ . '/controllers/PresidenteController.php';
             $controller = new PresidenteController();
             $controller->seleccionarConcurso();
             break;
 
-        case 'presidente_revisar_resultados':
+        case 'presidente_ver_resultados':
             require_once __DIR__ . '/controllers/PresidenteController.php';
             $controller = new PresidenteController();
-            $controller->revisarResultados();
+            $controller->verResultados();
             break;
 
-        case 'presidente_generar_reporte':
+        case 'presidente_ver_resultados_por_serie':
             require_once __DIR__ . '/controllers/PresidenteController.php';
             $controller = new PresidenteController();
-            $controller->generarReporte();
+            $controller->verResultadosPorSerie();
             break;
 
-        case 'presidente_resultados':
-            echo "<h3>Resultados Oficiales - Presidente " . htmlspecialchars($_SESSION['user']['nombre']) . "</h3>";
-            echo "<a href='index.php?page=logout' class='btn btn-danger'>Cerrar sesión</a>";
+        case 'resultados_en_vivo':
+            require_once __DIR__ . '/controllers/ResultadosController.php';
+            $controller = new ResultadosController();
+            $controller->panelEnVivo();
+            break;
+
+        case 'api_resultados':
+            require_once __DIR__ . '/controllers/ResultadosController.php';
+            $controller = new ResultadosController();
+            $controller->obtenerResultadosAPI();
             break;
 
         // --- DEFAULT ---

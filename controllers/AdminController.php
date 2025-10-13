@@ -9,7 +9,7 @@ require_once __DIR__ . '/../models/TipoDanza.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../models/Concurso.php';
-
+require_once __DIR__ . '/../tcpdf/tcpdf.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

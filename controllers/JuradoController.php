@@ -5,6 +5,7 @@ require_once __DIR__ . '/../helpers/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Calificacion.php';
 require_once __DIR__ . '/../models/DetalleCalificacion.php';
+require_once __DIR__ . '/../tcpdf/tcpdf.php';
 
 class JuradoController
 {

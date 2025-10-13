@@ -1,90 +1,102 @@
 <?php
+// controllers/PresidenteController.php
+
 require_once __DIR__ . '/../models/Presidente.php';
 require_once __DIR__ . '/../helpers/auth.php';
+require_once __DIR__ . '/../tcpdf/tcpdf.php';
 
 class PresidenteController
 {
-
-    private $presidenteModel;
+    private $presidente;
+    private $user;
 
     public function __construct()
     {
-        global $pdo;
-        $this->presidenteModel = new Presidente($pdo);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        redirect_if_not_presidente(); // Asegura que solo el presidente acceda
+        $this->user = $_SESSION['user'];
+        $this->presidente = new Presidente();
     }
 
-    // Dashboard del presidente
-    public function dashboard()
-    {
-        redirect_if_not_presidente();
-        $user = auth();
-        require_once __DIR__ . '/../views/presidente/dashboard.php';
-    }
-
-    // Seleccionar concurso
+    // Mostrar lista de concursos para seleccionar
     public function seleccionarConcurso()
     {
-        redirect_if_not_presidente();
-        $concursos = $this->presidenteModel->getAllConcursos();
-        $error = $_GET['error'] ?? null;
-        require_once __DIR__ . '/../views/presidente/seleccionar_concursos.php';
+        $concursos = $this->presidente->getAllConcursos();
+
+        require_once __DIR__ . '/../views/presidente/seleccionar_concurso.php';
     }
 
-    // Revisar resultados finales
-    public function revisarResultados()
+    // Ver resultados finales de un concurso
+    public function verResultados()
     {
-        redirect_if_not_presidente();
-
         $id_concurso = $_GET['id_concurso'] ?? null;
+
         if (!$id_concurso) {
             header('Location: index.php?page=presidente_seleccionar_concurso&error=no_concurso');
             exit;
         }
 
-        $resultados = $this->presidenteModel->getResultadosFinales($id_concurso);
-        $criterios = $this->presidenteModel->getCriteriosByConcurso($id_concurso);
+        // Datos del concurso
+        global $pdo;
+        $stmt = $pdo->prepare("SELECT nombre FROM Concurso WHERE id_concurso = ?");
+        $stmt->execute([$id_concurso]);
+        $concurso = $stmt->fetch();
 
-        if (empty($resultados)) {
-            header('Location: index.php?page=presidente_seleccionar_concurso&error=sin_resultados');
+        if (!$concurso) {
+            header('Location: index.php?page=presidente_seleccionar_concurso&error=no_existe');
             exit;
         }
 
-        require_once __DIR__ . '/../views/presidente/revisar_resultados.php';
+        // Resultados finales
+        $resultados = $this->presidente->getResultadosFinales($id_concurso);
+
+        // Criterios del concurso
+        $criterios = $this->presidente->getCriteriosByConcurso($id_concurso);
+
+        require_once __DIR__ . '/../views/presidente/resultados.php';
     }
 
-    // Generar reporte oficial
-    public function generarReporte()
+    // Ver resultados por serie
+    public function verResultadosPorSerie()
     {
-        redirect_if_not_presidente();
-
         $id_concurso = $_GET['id_concurso'] ?? null;
+
         if (!$id_concurso) {
             header('Location: index.php?page=presidente_seleccionar_concurso&error=no_concurso');
             exit;
         }
 
-        $resultados = $this->presidenteModel->getResultadosFinales($id_concurso);
-        $criterios = $this->presidenteModel->getCriteriosByConcurso($id_concurso);
-        $user = auth();
+        global $pdo;
 
-        if (empty($resultados)) {
-            header('Location: index.php?page=presidente_seleccionar_concurso&error=sin_resultados');
+        // Datos del concurso
+        $stmt = $pdo->prepare("SELECT nombre FROM Concurso WHERE id_concurso = ?");
+        $stmt->execute([$id_concurso]);
+        $concurso = $stmt->fetch();
+
+        if (!$concurso) {
+            header('Location: index.php?page=presidente_seleccionar_concurso&error=no_existe');
             exit;
         }
 
-        // Simular generación de PDF
-        $nombre_archivo = "reporte_oficial_{$id_concurso}_" . date('Ymd_His') . ".pdf";
-        $ruta_archivo = "uploads/reportes/" . $nombre_archivo;
+        // Resultados por serie
+        $resultados = $this->presidente->getResultadosPorSerie($id_concurso);
 
-        if (!file_exists('uploads/reportes')) {
-            mkdir('uploads/reportes', 0777, true);
+        // Agrupar por serie
+        $resultados_por_serie = [];
+        foreach ($resultados as $r) {
+            $id_serie = $r['id_serie'];
+            if (!isset($resultados_por_serie[$id_serie])) {
+                $resultados_por_serie[$id_serie] = [
+                    'numero_serie' => $r['numero_serie'],
+                    'nombre_tipo' => $r['nombre_tipo'],
+                    'conjuntos' => []
+                ];
+            }
+            $resultados_por_serie[$id_serie]['conjuntos'][] = $r;
         }
 
-        file_put_contents($ruta_archivo, "REPORTE OFICIAL\nConcurso ID: {$id_concurso}\nGenerado por: {$user['usuario']}");
-
-        $_SESSION['success_reporte'] = "✅ Reporte generado correctamente: <strong>{$nombre_archivo}</strong>";
-        $_SESSION['reporte_path'] = $ruta_archivo;
-
-        require_once __DIR__ . '/../views/presidente/generar_reporte.php';
+        require_once __DIR__ . '/../views/presidente/resultados_por_serie.php';
     }
 }
