@@ -46,8 +46,9 @@ function redirect_if_not_jurado()
 
 function redirect_if_not_presidente()
 {
-    if (!is_presidente()) {
-        header('Location: index.php?page=login&error=permiso');
+    $user = auth();
+    if (!$user || $user['rol'] !== 'Presidente') {
+        header('Location: index.php?page=login');
         exit;
     }
 }

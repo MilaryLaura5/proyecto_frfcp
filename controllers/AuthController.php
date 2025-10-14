@@ -3,7 +3,7 @@
 
 require_once __DIR__ . '/../models/Usuario.php';
 require_once __DIR__ . '/../helpers/auth.php';
-
+require_once __DIR__ . '/../tcpdf/tcpdf.php';
 
 class AuthController
 {
@@ -221,7 +221,6 @@ class AuthController
         }
     }
 
-    // Cerrar sesión
     public function logout()
     {
         if (session_status() === PHP_SESSION_NONE) {
