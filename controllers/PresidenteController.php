@@ -1,10 +1,10 @@
 <?php
+// controllers/PresidenteController.php - VERSIÓN CORREGIDA CON REQUIRE
+
 require_once __DIR__ . '/../models/Presidente.php';
-require_once __DIR__ . '/../helpers/auth.php';
 
 class PresidenteController
 {
-
     private $presidenteModel;
 
     public function __construct()
@@ -13,78 +13,97 @@ class PresidenteController
         $this->presidenteModel = new Presidente($pdo);
     }
 
-    // Dashboard del presidente
-    public function dashboard()
-    {
-        redirect_if_not_presidente();
-        $user = auth();
-        require_once __DIR__ . '/../views/presidente/dashboard.php';
-    }
-
-    // Seleccionar concurso
     public function seleccionarConcurso()
     {
-        redirect_if_not_presidente();
+        if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'Presidente') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+
         $concursos = $this->presidenteModel->getAllConcursos();
-        $error = $_GET['error'] ?? null;
         require_once __DIR__ . '/../views/presidente/seleccionar_concursos.php';
     }
 
-    // Revisar resultados finales
     public function revisarResultados()
     {
-        redirect_if_not_presidente();
-
-        $id_concurso = $_GET['id_concurso'] ?? null;
-        if (!$id_concurso) {
-            header('Location: index.php?page=presidente_seleccionar_concurso&error=no_concurso');
+        // VERIFICAR AUTENTICACIÓN
+        if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'Presidente') {
+            header('Location: index.php?page=login');
             exit;
         }
 
+        // VALIDACIÓN ROBUSTA DE ENTRADA
+        $id_concurso = filter_var($_GET['id_concurso'] ?? 0, FILTER_VALIDATE_INT);
+
+        if (!$id_concurso || $id_concurso < 1) {
+            $_SESSION['error'] = "ID de concurso no válido";
+            header('Location: index.php?page=presidente_seleccionar_concurso');
+            exit;
+        }
+
+        // VERIFICAR ACCESO AL CONCURSO
+        if (!$this->verificarAccesoConcurso($id_concurso)) {
+            $_SESSION['error'] = "No tiene acceso a este concurso";
+            header('Location: index.php?page=presidente_seleccionar_concurso');
+            exit;
+        }
+
+        // Obtener resultados
         $resultados = $this->presidenteModel->getResultadosFinales($id_concurso);
         $criterios = $this->presidenteModel->getCriteriosByConcurso($id_concurso);
 
-        if (empty($resultados)) {
-            header('Location: index.php?page=presidente_seleccionar_concurso&error=sin_resultados');
-            exit;
+        // CALCULAR ESTADÍSTICAS MEJORADAS
+        $estadisticas = [
+            'total_conjuntos' => count($resultados),
+            'calificados' => 0,
+            'pendientes' => 0,
+            'promedio_general' => 0,
+            'puntaje_maximo' => 0
+        ];
+
+        $suma_puntajes = 0;
+        foreach ($resultados as $resultado) {
+            if ($resultado['calificaciones_count'] > 0) {
+                $estadisticas['calificados']++;
+                $suma_puntajes += $resultado['promedio_final'];
+                if ($resultado['promedio_final'] > $estadisticas['puntaje_maximo']) {
+                    $estadisticas['puntaje_maximo'] = $resultado['promedio_final'];
+                }
+            } else {
+                $estadisticas['pendientes']++;
+            }
         }
 
+        $estadisticas['promedio_general'] = $estadisticas['calificados'] > 0 ?
+            round($suma_puntajes / $estadisticas['calificados'], 2) : 0;
+
+        // Pasar datos a la vista
         require_once __DIR__ . '/../views/presidente/revisar_resultados.php';
     }
 
-    // Generar reporte oficial
     public function generarReporte()
     {
-        redirect_if_not_presidente();
+        if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'Presidente') {
+            header('Location: index.php?page=login');
+            exit;
+        }
 
         $id_concurso = $_GET['id_concurso'] ?? null;
+
         if (!$id_concurso) {
             header('Location: index.php?page=presidente_seleccionar_concurso&error=no_concurso');
             exit;
         }
 
-        $resultados = $this->presidenteModel->getResultadosFinales($id_concurso);
-        $criterios = $this->presidenteModel->getCriteriosByConcurso($id_concurso);
-        $user = auth();
+        header("Location: generar_pdf_real.php?id_concurso={$id_concurso}");
+        exit;
+    }
 
-        if (empty($resultados)) {
-            header('Location: index.php?page=presidente_seleccionar_concurso&error=sin_resultados');
-            exit;
-        }
-
-        // Simular generación de PDF
-        $nombre_archivo = "reporte_oficial_{$id_concurso}_" . date('Ymd_His') . ".pdf";
-        $ruta_archivo = "uploads/reportes/" . $nombre_archivo;
-
-        if (!file_exists('uploads/reportes')) {
-            mkdir('uploads/reportes', 0777, true);
-        }
-
-        file_put_contents($ruta_archivo, "REPORTE OFICIAL\nConcurso ID: {$id_concurso}\nGenerado por: {$user['usuario']}");
-
-        $_SESSION['success_reporte'] = "✅ Reporte generado correctamente: <strong>{$nombre_archivo}</strong>";
-        $_SESSION['reporte_path'] = $ruta_archivo;
-
-        require_once __DIR__ . '/../views/presidente/generar_reporte.php';
+    // MÉTODO DE VERIFICACIÓN DE ACCESO
+    private function verificarAccesoConcurso($id_concurso)
+    {
+        // Por ahora retorna true, puedes expandir esta lógica según tus necesidades
+        // Ejemplo: verificar si el presidente tiene permisos para este concurso específico
+        return true;
     }
 }
