@@ -1,6 +1,7 @@
 <?php
+session_start();
 // index.php - Punto de entrada del sistema
-date_default_timezone_set('America/Lima'); // Para Perú, Colombia, Ecuador, México, etc.
+
 // Iniciar sesión solo si no está activa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -61,11 +62,30 @@ if ($page === 'login') {
             require_once __DIR__ . '/views/admin/dashboard.php';
             break;
 
+        //PRESIDENTEEE
+        case 'presidente_seleccionar_concurso':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->seleccionarConcursos();
+            break;
+
+        case 'presidente_revisar_resultados':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->revisarResultados();
+            break;
+
+        case 'presidente_generar_reporte':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->generarReporte();
+            break;
+
         // CONCURSOS
         case 'admin_gestion_concursos':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->gestionarConcursos();
+            $controller->mostrarFormularioCrearConcurso();
             break;
 
         case 'admin_crear_concurso_submit':
@@ -77,7 +97,7 @@ if ($page === 'login') {
         case 'admin_editar_concurso':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->gestionarConcursos(); // ✅ Usa el método completo
+            $controller->mostrarFormularioEditarConcurso();
             break;
 
         case 'admin_actualizar_concurso':
@@ -105,15 +125,10 @@ if ($page === 'login') {
             break;
 
         // TIPOS DE DANZA Y SERIES (UNIFICADOS)
-        case 'admin_gestion_tipos_series':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->gestionarTiposSeries();
-            break;
         case 'admin_gestion_series':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->gestionarSeries();
+            $controller->gestionarSeriesYTpos(); // Muestra tipos + series
             break;
 
         case 'admin_crear_serie_submit':
@@ -167,9 +182,7 @@ if ($page === 'login') {
 
         // --- GESTIÓN GLOBAL DE CONJUNTOS ---
         case 'admin_gestionar_conjuntos_globales':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->gestionarConjuntosGlobales();
+            require_once __DIR__ . '/views/admin/gestion_conjuntos_globales.php';
             break;
 
         case 'admin_crear_conjunto_global_submit':
@@ -181,7 +194,7 @@ if ($page === 'login') {
         case 'admin_editar_conjunto_global':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->gestionarConjuntosGlobales(); // ✅ Reutiliza el mismo método
+            $controller->mostrarFormularioEditarConjuntoGlobal();
             break;
 
         case 'admin_actualizar_conjunto_global':
@@ -201,24 +214,14 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->importarConjuntosCSVGlobal();
             break;
-
         //CONJUNTOS EN UN CONCURSO (solo asignación)
         case 'admin_gestion_conjuntos':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->gestionarConjuntos();
             break;
-
         case 'admin_seleccionar_concurso':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->seleccionarConcursoParaGestionarConjuntos();
-            break;
-
-        case 'admin_seleccionarS_concurso':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->seleccionarConcurso();
+            require_once __DIR__ . '/views/admin/seleccionar_concurso.php';
             break;
 
         // Asignar un conjunto existente al concurso (con orden_presentacion)
@@ -275,7 +278,7 @@ if ($page === 'login') {
         case 'admin_crear_jurado':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->crearJurado();
+            $controller->crearFormularioJurado();
             break;
 
         case 'admin_guardar_jurado':
@@ -297,16 +300,8 @@ if ($page === 'login') {
             break;
 
         // Criterios de evaluación
-        case 'admin_gestionar_criterios':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->gestionarCriterios();
-            break;
-
         case 'admin_agregar_criterios':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->agregarCriterios();
+            require_once __DIR__ . '/views/admin/agregar_criterios.php';
             break;
 
         case 'admin_guardar_criterios':
@@ -320,27 +315,24 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->guardarCriterioConcurso();
             break;
-
+        // Gestionar criterios globales
+        case 'admin_gestionar_criterios':
+            require_once __DIR__ . '/views/admin/gestion_criterios.php';
+            break;
+        //RESULTADOS PARA ADMIN RESULTADO EN VIVO
+        case 'admin_resultados':
+            require_once __DIR__ . '/views/admin/admin_resultados.php';
+            break;
         // Asignar criterios a concurso
         case 'admin_asignar_criterios_concurso':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->asignarCriteriosConcurso();
+            require_once __DIR__ . '/views/admin/asignar_criterios_concurso.php';
             break;
 
         case 'admin_configurar_criterios':
             require_once __DIR__ . '/views/admin/asignar_criterios_concurso.php'; // mismo archivo
             break;
 
-        case 'admin_eliminar_criterio_concurso':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->eliminarCriterioConcurso();
-            break;
 
-        // ===============
-        //   JURADO
-        // ===============
 
         // Mostrar login con token
         case 'jurado_login':
@@ -349,65 +341,54 @@ if ($page === 'login') {
             $controller->mostrarLoginConToken();
             break;
 
+        // Procesar login con credenciales
         case 'jurado_login_submit':
             require_once __DIR__ . '/controllers/AuthController.php';
             $controller = new AuthController();
             $controller->loginConTokenSubmit();
-            exit;
-
-        case 'logout':
-            require_once __DIR__ . '/controllers/AuthController.php';
-            $controller = new AuthController();
-            $controller->logout();
             break;
 
         case 'jurado_evaluar':
-            require_once __DIR__ . '/controllers/JuradoController.php';
-            $controller = new JuradoController();
-            $controller->evaluar();
+            require_once __DIR__ . '/views/jurado/evaluar.php';
             break;
 
         case 'jurado_calificar':
-            require_once __DIR__ . '/controllers/JuradoController.php';
-            $controller = new JuradoController();
-            $controller->calificar();
+            require_once __DIR__ . '/views/jurado/calificar.php';
             break;
 
         case 'jurado_guardar_calificacion':
-            require_once __DIR__ . '/controllers/JuradoController.php';
-            $controller = new JuradoController();
-            $controller->juradoGuardarCalificacion();
+            require_once __DIR__ . '/controllers/AuthController.php';
+            $controller = new AuthController();
+            $controller->guardarCalificacion();
+            break;
+        // RESULTADOS EN VIVO DE ADMIN
+        case 'admin_ver_resultados':
+            require_once __DIR__ . '/views/admin/admin_ver_resultados.php';
+            break;
+        // --- PRESIDENTE ---
+
+        case 'presidente_dashboard':
+            require_once __DIR__ . '/controllers/PresidenteController.php';
+            $controller = new PresidenteController();
+            $controller->dashboard();
             break;
 
-        // --- PRESIDENTE ---
         case 'presidente_seleccionar_concurso':
             require_once __DIR__ . '/controllers/PresidenteController.php';
             $controller = new PresidenteController();
-            $controller->seleccionarConcurso();
+            $controller->seleccionarConcursos();
             break;
 
-        case 'presidente_ver_resultados':
+        case 'presidente_revisar_resultados':
             require_once __DIR__ . '/controllers/PresidenteController.php';
             $controller = new PresidenteController();
-            $controller->verResultados();
+            $controller->revisarResultados();
             break;
 
-        case 'presidente_ver_resultados_por_serie':
+        case 'presidente_generar_reporte':
             require_once __DIR__ . '/controllers/PresidenteController.php';
             $controller = new PresidenteController();
-            $controller->verResultadosPorSerie();
-            break;
-
-        case 'resultados_en_vivo':
-            require_once __DIR__ . '/controllers/ResultadosController.php';
-            $controller = new ResultadosController();
-            $controller->panelEnVivo();
-            break;
-
-        case 'api_resultados':
-            require_once __DIR__ . '/controllers/ResultadosController.php';
-            $controller = new ResultadosController();
-            $controller->obtenerResultadosAPI();
+            $controller->generarReporte();
             break;
 
         // --- DEFAULT ---

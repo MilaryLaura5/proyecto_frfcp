@@ -13,7 +13,7 @@ class PresidenteController
         $this->presidenteModel = new Presidente($pdo);
     }
 
-    public function seleccionarConcurso()
+    public function seleccionarConcursos()
     {
         if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'Presidente') {
             header('Location: index.php?page=login');

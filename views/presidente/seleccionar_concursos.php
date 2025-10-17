@@ -23,17 +23,23 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 bg-dark text-white min-vh-100">
-                <div class="p-3">
-                    <h4>👑 Presidente</h4>
+            <!-- SIDEBAR -->
+            <div class="col-md-3 bg-dark text-white sidebar" id="sidebar">
+                <div class="p-3 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Presidente</h4>
+                    <button class="btn btn-sm btn-outline-light rounded-circle" id="toggleSidebarBtn" title="Ocultar menú">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                </div>
+
+                <div class="p-3 pt-0">
                     <p class="text-muted mb-1">Sesión activa</p>
                     <p class="fw-bold text-warning"><?php echo htmlspecialchars($_SESSION['user']['nombre']); ?></p>
                     <hr class="bg-light">
                     <ul class="nav nav-pills flex-column">
                         <li class="nav-item">
-                            <a href="index.php?page=presidente_seleccionar_concurso" class="nav-link active bg-primary">
-                                📋 Seleccionar Concurso
+                            <a href="index.php?page=presidente_seleccionar_concurso" class="nav-link text-white">
+                                Seleccionar Concursos
                             </a>
                         </li>
                         <li class="nav-item mt-2">
@@ -45,9 +51,15 @@
                 </div>
             </div>
 
-            <!-- Main Content -->
-            <div class="col-md-9">
+            <!-- CONTENIDO PRINCIPAL -->
+            <div class="col-md-9" id="mainContent">
                 <div class="p-4">
+                    <button class="btn btn-outline-dark mb-3 d-none" id="showSidebarBtn" title="Mostrar menú">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+
+
+                    <!-- Main Content -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2 class="text-primary">🏆 Seleccionar Concurso</h2>
                         <span class="badge bg-primary fs-6">Presidente</span>
@@ -115,8 +127,8 @@
                                                             $badge_class = 'bg-warning';
                                                             $icon = '🟡';
                                                         } elseif ($concurso['estado'] == 'Cerrado') {
-                                                            $badge_class = 'bg-info';
-                                                            $icon = '🔵';
+                                                            $badge_class = 'bg-danger';
+                                                            $icon = '🔴';
                                                         }
                                                         ?>
                                                         <span class="badge <?php echo $badge_class; ?>">
@@ -142,10 +154,11 @@
                                         <div class="col-md-6">
                                             <h6>💡 Estados del Concurso:</h6>
                                             <ul class="list-unstyled small">
-                                                <li>🟢 <strong>Activo:</strong> En proceso de calificación</li>
-                                                <li>🔵 <strong>Cerrado:</strong> Finalizado con resultados</li>
-                                                <li>🟡 <strong>Pendiente:</strong> Próximo a iniciar</li>
+                                                <li><span class="badge bg-success me-1">🟢</span> <strong>Activo:</strong> En proceso de calificación</li>
+                                                <li><span class="badge bg-danger me-1">🔴</span> <strong>Cerrado:</strong> Finalizado con resultados</li>
+                                                <li><span class="badge bg-warning text-dark me-1">🟡</span> <strong>Pendiente:</strong> Próximo a iniciar</li>
                                             </ul>
+
                                         </div>
                                         <div class="col-md-6">
                                             <h6>🚀 Acciones Disponibles:</h6>
@@ -174,5 +187,50 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const toggleBtn = document.getElementById('toggleSidebarBtn');
+    const showBtn = document.getElementById('showSidebarBtn');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.style.display = 'none';
+        mainContent.classList.remove('col-md-9');
+        mainContent.classList.add('col-md-12');
+        showBtn.classList.remove('d-none');
+    });
+
+    showBtn.addEventListener('click', () => {
+        sidebar.style.display = 'block';
+        mainContent.classList.remove('col-md-12');
+        mainContent.classList.add('col-md-9');
+        showBtn.classList.add('d-none');
+    });
+</script>
+
+<style>
+    .sidebar {
+        min-height: 100vh;
+        transition: all 0.3s ease;
+    }
+
+    #showSidebarBtn {
+        position: fixed;
+        top: 20px;
+        left: 10px;
+        z-index: 1000;
+    }
+
+    #toggleSidebarBtn i {
+        transition: transform 0.3s ease;
+    }
+
+    #toggleSidebarBtn:hover i {
+        transform: translateX(-2px);
+    }
+</style>
 
 </html>
