@@ -386,24 +386,7 @@ if ($page === 'login') {
         case 'presidente_generar_reporte':
             require_once __DIR__ . '/controllers/PresidenteController.php';
             $controller = new PresidenteController();
-<<<<<<< HEAD
-            $controller->verResultadosPorSerie();
-            break;
 
-        //RESULTADOS EN VIVO
-        case 'resultados_en_vivo':
-            require_once __DIR__ . '/controllers/ResultadosController.php';
-            $controller = new ResultadosController();
-            $controller->panelEnVivo();
-            break;
-
-        case 'api_resultados':
-            require_once __DIR__ . '/controllers/ResultadosController.php';
-            $controller = new ResultadosController();
-            $controller->obtenerResultadosAPI();
-=======
-            $controller->generarReporte();
->>>>>>> cf347bfe650339ecefd6595d79a5a72bcad02182
             break;
 
         // --- DEFAULT ---
