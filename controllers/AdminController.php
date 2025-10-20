@@ -1,7 +1,7 @@
 <?php
-// controllers/AdminController.php
-//error_reporting(E_ALL);
-//ini_set('display_errors', 1);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../models/Concurso.php';
 require_once __DIR__ . '/../helpers/auth.php';
 require_once __DIR__ . '/../models/Serie.php';
@@ -9,11 +9,8 @@ require_once __DIR__ . '/../models/TipoDanza.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../models/Concurso.php';
-require_once __DIR__ . '/../tcpdf/tcpdf.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+
 
 global $pdo;
 class AdminController
@@ -742,6 +739,11 @@ class AdminController
     // JURADOS
     // =============================
 
+    private function normalizarTexto($str)
+    {
+        return strtolower(trim(preg_replace('/[\x{0300}-\x{036f}]/u', '', $str)));
+    }
+
     public function crearJurado()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -766,7 +768,6 @@ class AdminController
             exit;
         }
 
-        // Pasar datos a la vista
         require_once __DIR__ . '/../views/admin/crear_jurado.php';
     }
     public function gestionarJurados()
@@ -778,7 +779,6 @@ class AdminController
 
         $user = auth();
 
-        // ✅ Reemplazado por mensaje completo con credenciales
         $mostrarCredenciales = false;
         $credenciales = [];
 
@@ -791,30 +791,24 @@ class AdminController
         $error = $_GET['error'] ?? null;
         $id_concurso = $_GET['id_concurso'] ?? null;
 
-        // ✅ Listar concursos para el filtro
         require_once __DIR__ . '/../models/Concurso.php';
         require_once __DIR__ . '/../models/Jurado.php';
 
         $concursos = Concurso::listar();
 
-        // ✅ Obtener jurados
         if ($id_concurso) {
-            $jurados = Jurado::porConcurso($id_concurso);
+            // Usar el nuevo método del modelo para obtener jurados con criterios
+            require_once __DIR__ . '/../models/JuradoCriterioConcurso.php';
+            $jurados = JuradoCriterioConcurso::listarPorConcurso($id_concurso);
         } else {
             $jurados = Jurado::listar();
         }
+        global $pdo;
 
-        // ✅ Pasar todo a la vista
         require_once __DIR__ . '/../views/admin/gestionar_jurados.php';
-    }
-    public function crearFormularioJurado()
-    {
-        redirect_if_not_admin();
-        require_once __DIR__ . '/../views/admin/crear_jurado.php';
     }
     public function guardarJurado()
     {
-        // Mostrar todos los errores
         error_reporting(E_ALL);
         ini_set('display_errors', 1);
 
@@ -828,15 +822,16 @@ class AdminController
         require_once __DIR__ . '/../models/Jurado.php';
         require_once __DIR__ . '/../config/database.php';
 
+        // Asegúrate de incluir el modelo para la asignación de criterios
+        require_once __DIR__ . '/../models/JuradoCriterioConcurso.php';
+
         global $pdo;
 
-        // Limpiar buffer de salida
         if (ob_get_level()) ob_clean();
 
         error_log("🔧 Inicio: guardarJurado");
 
         if (!$_POST) {
-            error_log("❌ No es POST");
             header('Location: index.php?page=admin_gestion_concursos');
             exit;
         }
@@ -846,152 +841,208 @@ class AdminController
         $nombre = trim($_POST['nombre']);
         $especialidad = trim($_POST['especialidad']);
         $años_experiencia = (int)$_POST['años_experiencia'];
+        $usuario = trim($_POST['usuario']);
+        $contrasena = trim($_POST['contrasena']); // Solo si se va a actualizar
 
-        error_log("📄 Datos recibidos: DNI=$dni, Nombre=$nombre, Concurso=$id_concurso");
-
-        // Validaciones
+        // Validaciones básicas
         if (!preg_match('/^\d{8}$/', $dni)) {
-            error_log("❌ DNI inválido: $dni");
             header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=dni");
             exit;
         }
 
-        if (empty($nombre)) {
-            error_log("❌ Nombre vacío");
+        if (empty($nombre) || empty($usuario)) {
             header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=datos");
             exit;
         }
 
-        // Verificar DNI duplicado
-        try {
-            $stmt_check = $pdo->prepare("
-            SELECT j.dni 
-            FROM Jurado j 
-            JOIN Usuario u ON j.id_jurado = u.id_usuario 
-            WHERE j.dni = ?
-        ");
-            $stmt_check->execute([$dni]);
-            if ($stmt_check->fetch()) {
-                error_log("❌ DNI ya existe: $dni");
-                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=dni_duplicado");
+        // --- CASO 1: JURADO NUEVO ---
+        $stmt_check = $pdo->prepare("SELECT id_jurado FROM Jurado WHERE dni = ?");
+        $stmt_check->execute([$dni]);
+        $jurado = $stmt_check->fetch();
+
+        if (!$jurado) {
+            // Crear jurado + usuario + token
+            if (Jurado::crear($dni, $nombre, $especialidad, $años_experiencia, $usuario, $contrasena)) {
+                $stmt = $pdo->prepare("SELECT id_jurado FROM Jurado WHERE dni = ?");
+                $stmt->execute([$dni]);
+                $jurado = $stmt->fetch();
+            } else {
+                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=db");
                 exit;
             }
-        } catch (Exception $e) {
-            error_log("❌ Error al verificar DNI: " . $e->getMessage());
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=db");
+        } else {
+            // --- CASO 2: JURADO EXISTE ---
+            // Actualizar datos (opcional)
+            $update_jurado = $pdo->prepare("UPDATE Jurado SET nombre = ?, especialidad = ?, años_experiencia = ? WHERE dni = ?");
+            $update_jurado->execute([$nombre, $especialidad, $años_experiencia, $dni]);
+
+            // Opcional: actualizar contraseña si se proporcionó
+            if (!empty($contrasena)) {
+                $nueva_contra_hash = password_hash($contrasena, PASSWORD_DEFAULT);
+                $update_user = $pdo->prepare("UPDATE Usuario SET contraseña = ? WHERE id_usuario = ?");
+                $update_user->execute([$nueva_contra_hash, $jurado['id_jurado']]);
+            }
+        }
+
+        $jurado_id = $jurado['id_jurado'];
+
+        // === ASIGNAR JURADO AL CRITERIO DEL CONCURSO ===
+        $id_criterio_concurso = (int)$_POST['id_criterio_concurso'];
+
+        // Validar que el criterio pertenece al concurso
+        $stmt_check = $pdo->prepare("
+        SELECT id_criterio_concurso 
+        FROM CriterioConcurso 
+        WHERE id_criterio_concurso = ? AND id_concurso = ?
+    ");
+        $stmt_check->execute([$id_criterio_concurso, $id_concurso]);
+        if ($stmt_check->rowCount() == 0) {
+            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=criterio_invalido");
             exit;
         }
 
-        // Generar usuario y contraseña
-        $usuario = generarUsuario($nombre);
-        $contraseña = generarContrasenaSegura(10);
-        error_log("🔐 Usuario: $usuario, Contraseña: $contraseña");
+        // Asignar jurado al criterio
+        if (!JuradoCriterioConcurso::asignar($jurado_id, $id_criterio_concurso)) {
+            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=asignacion");
+            exit;
+        }
 
-        // Crear jurado
-        if (Jurado::crear($dni, $nombre, $especialidad, $años_experiencia, $usuario, $contraseña)) {
-            error_log("✅ Jurado creado correctamente");
+        // --- GENERAR TOKEN PARA ESTE CONCURSO ---
+        // Verificar si ya tiene token para este concurso
+        $check_token = $pdo->prepare("SELECT token FROM TokenAcceso WHERE id_concurso = ? AND id_jurado = ?");
+        $check_token->execute([$id_concurso, $jurado_id]);
+        $token_existente = $check_token->fetch();
 
-            $stmt = $pdo->prepare("SELECT id_jurado FROM Jurado WHERE dni = ?");
-            $stmt->execute([$dni]);
-            $jurado = $stmt->fetch();
-
-            if (!$jurado) {
-                error_log("❌ No se encontró jurado por DNI: $dni");
-                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=no_encontrado");
-                exit;
-            }
-
-            $jurado_id = $jurado['id_jurado'];
-            error_log("🆔 ID del jurado: $jurado_id");
-
-            // Duración personalizada
-            $dias = (int)($_POST['dias'] ?? 0);
-            $horas = (int)($_POST['horas'] ?? 0);
-            $minutos = (int)($_POST['minutos'] ?? 0);
-            $total_minutos = $dias * 1440 + $horas * 60 + $minutos;
-
-            if ($total_minutos <= 0) {
-                error_log("❌ Duración inválida: $total_minutos minutos");
-                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=duracion");
-                exit;
-            }
-
-            $fecha_expiracion = date('Y-m-d H:i:s', time() + $total_minutos * 60);
-            error_log("⏰ Fecha expiración: $fecha_expiracion");
-
+        if ($token_existente) {
+            // Reutilizar token existente
+            $token = $token_existente['token'];
+        } else {
+            // Generar nuevo token
             $token = bin2hex(random_bytes(16));
-            error_log("🔑 Token generado: $token");
+        }
 
-            // Insertar token
-            $sql_token = "INSERT INTO TokenAcceso 
-                      (token, id_concurso, id_jurado, generado_por, fecha_generacion, fecha_expiracion)
-                      VALUES (?, ?, ?, ?, NOW(), ?)";
+        // Duración personalizada
+        $dias = (int)($_POST['dias'] ?? 0);
+        $horas = (int)($_POST['horas'] ?? 0);
+        $minutos = (int)($_POST['minutos'] ?? 0);
+        $total_minutos = $dias * 1440 + $horas * 60 + $minutos;
 
-            try {
+        if ($total_minutos <= 0) {
+            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=duracion");
+            exit;
+        }
+
+        $fecha_expiracion = date('Y-m-d H:i:s', time() + $total_minutos * 60);
+
+        // Insertar o actualizar token para este concurso
+        try {
+            if (!$token_existente) {
+                $sql_token = "INSERT INTO TokenAcceso (token, id_concurso, id_jurado, generado_por, fecha_generacion, fecha_expiracion) VALUES (?, ?, ?, ?, NOW(), ?)";
                 $stmt_token = $pdo->prepare($sql_token);
-                $resultado = $stmt_token->execute([
+                $stmt_token->execute([
                     $token,
                     $id_concurso,
                     $jurado_id,
                     $_SESSION['user']['id'],
                     $fecha_expiracion
                 ]);
-
-                if ($resultado) {
-                    error_log("✅ Token insertado correctamente");
-
-                    // Guardar en sesión
-                    $_SESSION['mensaje_jurado'] = [
-                        'usuario' => $usuario,
-                        'contrasena' => $contraseña,
-                        'token' => $token
-                    ];
-                    error_log("✅ Sesión guardada: mensaje_jurado");
-
-                    // Redirigir
-                    header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso");
-                    exit;
-                } else {
-                    $errorInfo = $stmt_token->errorInfo();
-                    error_log("❌ Error al ejecutar INSERT Token: " . print_r($errorInfo, true));
-                    header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=token_db");
-                    exit;
-                }
-            } catch (Exception $e) {
-                error_log("❌ Excepción al insertar token: " . $e->getMessage());
-                header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=token_db");
-                exit;
+            } else {
+                // Actualizar fecha de expiración
+                $sql_update = "UPDATE TokenAcceso SET fecha_expiracion = ? WHERE id_concurso = ? AND id_jurado = ?";
+                $pdo->prepare($sql_update)->execute([$fecha_expiracion, $id_concurso, $jurado_id]);
             }
-        } else {
-            error_log("❌ Fallo al crear jurado o usuario");
-            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=db");
+
+            // Guardar credenciales en sesión
+            $_SESSION['mensaje_jurado'] = [
+                'usuario' => $usuario,
+                'contrasena' => !empty($contrasena) ? $contrasena : '(no modificada)',
+                'token' => $token
+            ];
+
+            // Redirigir
+            header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso");
+            exit;
+        } catch (Exception $e) {
+            error_log("❌ Error al guardar token: " . $e->getMessage());
+            header("Location: index.php?page=admin_crear_jurado&id_concurso=$id_concurso&error=token_db");
             exit;
         }
     }
     public function verificarUsuario()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         redirect_if_not_admin();
-        $usuario = $_GET['usuario'] ?? '';
-        $suffix = '';
+        ob_clean();
+
+        $nombre_completo = $_GET['nombre'] ?? '';
+        if (!$nombre_completo) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Nombre requerido']);
+            exit;
+        }
+
         global $pdo;
 
-        while (true) {
+        $partes = preg_split('/\s+/', trim($nombre_completo));
+        if (count($partes) < 2) {
+            echo json_encode(['usuario' => strtolower($partes[0])]);
+            exit;
+        }
+
+        $normalizar = function ($str) {
+            return strtolower(preg_replace('/[\x{0300}-\x{036f}]/u', '', $str));
+        };
+
+        $n = $normalizar($partes[0]);
+        $a1 = $normalizar($partes[1]);
+        $a2 = isset($partes[2]) ? $normalizar($partes[2]) : '';
+
+        $intentos = [
+            $n[0] . $a1,
+            substr($n, 0, 2) . $a1,
+            substr($n, 0, 3) . $a1,
+            ($a2 ? $n[0] . $a2 : '')
+        ];
+
+        foreach ($intentos as $usuario) {
+            if (!$usuario) continue;
             $check = $pdo->prepare("SELECT id_usuario FROM Usuario WHERE usuario = ?");
-            $check->execute([$usuario . $suffix]);
+            $check->execute([$usuario]);
             if ($check->rowCount() == 0) {
-                echo json_encode(['usuario' => $usuario . $suffix]);
+                echo json_encode(['usuario' => $usuario]);
                 exit;
             }
-            $suffix = rand(1, 99);
         }
-    }
 
-    // --- BÚSQUEDA DE JURADO POR DNI ---
+        for ($i = 1; $i <= 99; $i++) {
+            $usuario = $intentos[0] . $i;
+            $check = $pdo->prepare("SELECT id_usuario FROM Usuario WHERE usuario = ?");
+            $check->execute([$usuario]);
+            if ($check->rowCount() == 0) {
+                echo json_encode(['usuario' => $usuario]);
+                exit;
+            }
+        }
+
+        echo json_encode(['usuario' => $intentos[0] . rand(100, 999)]);
+        exit;
+    }
     public function buscarJuradoPorDni()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         redirect_if_not_admin();
-        $dni = $_GET['dni'] ?? '';
 
+        if (ob_get_level()) {
+            ob_clean();
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        $dni = $_GET['dni'] ?? '';
         if (!preg_match('/^\d{8}$/', $dni)) {
             echo json_encode(['existe' => false]);
             exit;
@@ -999,19 +1050,27 @@ class AdminController
 
         global $pdo;
         $stmt = $pdo->prepare("
-            SELECT j.nombre, j.especialidad 
-            FROM Jurado j
-            JOIN Usuario u ON j.id_jurado = u.id_usuario
-            WHERE j.dni = ?
-        ");
+        SELECT 
+            j.dni,
+            j.nombre,
+            j.años_experiencia,
+            u.usuario,
+            j.id_jurado
+        FROM Jurado j
+        JOIN Usuario u ON j.id_jurado = u.id_usuario
+        WHERE j.dni = ?
+    ");
         $stmt->execute([$dni]);
-        $jurado = $stmt->fetch();
+        $jurado = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($jurado) {
             echo json_encode([
                 'existe' => true,
+                'dni' => $jurado['dni'],
                 'nombre' => $jurado['nombre'],
-                'especialidad' => $jurado['especialidad']
+                'años_experiencia' => (int)$jurado['años_experiencia'],
+                'usuario' => $jurado['usuario']
+                // ⚠️ Ya no incluimos 'especialidad'
             ]);
         } else {
             echo json_encode(['existe' => false]);
@@ -1120,38 +1179,36 @@ class AdminController
         header("Location: index.php?page=admin_agregar_criterios&id_concurso=$id_concurso&success=criterios");
         exit;
     }
-    public function guardarCriterioConcurso()
+    public function guardarCriteriosConcurso()
     {
         redirect_if_not_admin();
-        require_once __DIR__ . '/../models/CriterioConcurso.php';
-
-        if (!$_POST) {
-            header('Location: index.php?page=admin_gestionar_criterios');
-            exit;
-        }
-
-        $id_concurso = (int)$_POST['id_concurso'];
-        $id_criterio = (int)$_POST['id_criterio'];
-        $puntaje = (float)$_POST['puntaje_maximo'];
-
-        // Validaciones
-        if ($id_concurso <= 0 || $id_criterio <= 0 || $puntaje <= 0) {
+        $id_concurso = (int)($_POST['id_concurso'] ?? 0);
+        if (!$id_concurso) {
             header("Location: index.php?page=admin_gestionar_criterios&error=dato_invalido");
             exit;
         }
 
-        try {
-            if (CriterioConcurso::asignar($id_criterio, $id_concurso, $puntaje)) {
-                header("Location: index.php?page=admin_gestionar_criterios&success=asignado&id_concurso=$id_concurso");
-            } else {
-                header("Location: index.php?page=admin_gestionar_criterios&error=no_guardado&id_concurso=$id_concurso");
-            }
-            exit;
-        } catch (Exception $e) {
-            error_log("Error al guardar criterio-concurso: " . $e->getMessage());
-            header("Location: index.php?page=admin_gestionar_criterios&error=db&id_concurso=$id_concurso");
+        $puntajes = $_POST['puntajes'] ?? [];
+        if (empty($puntajes)) {
+            header("Location: index.php?page=admin_gestionar_criterios&id_concurso=$id_concurso&error=datos");
             exit;
         }
+
+        require_once __DIR__ . '/../models/CriterioConcurso.php';
+        $todos_guardados = true;
+
+        foreach ($puntajes as $id_criterio => $puntaje) {
+            $puntaje = (float)$puntaje;
+            if ($puntaje <= 0 || $puntaje > 100) continue;
+
+            if (!CriterioConcurso::asignar($id_criterio, $id_concurso, $puntaje)) {
+                $todos_guardados = false;
+            }
+        }
+
+        $mensaje = $todos_guardados ? 'asignado' : 'no_guardado';
+        header("Location: index.php?page=admin_gestionar_criterios&id_concurso=$id_concurso&success=$mensaje");
+        exit;
     }
     public function asignarCriteriosConcurso()
     {

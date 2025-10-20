@@ -266,12 +266,6 @@
                                                             <i class="bi bi-x-circle"></i>
                                                         </a>
                                                     <?php endif; ?>
-
-                                                    <!-- Jurados y Criterios -->
-                                                    <a href="index.php?page=admin_gestion_jurados&id_concurso=<?= $c['id_concurso'] ?>"
-                                                        class="btn btn-sm btn-outline-success" title="Jurados">👥</a>
-                                                    <a href="index.php?page=admin_agregar_criterios&id_concurso=<?= $c['id_concurso'] ?>"
-                                                        class="btn btn-sm btn-outline-primary" title="Criterios">📋</a>
                                                 </div>
                                             <?php endif; ?>
                                         </td>

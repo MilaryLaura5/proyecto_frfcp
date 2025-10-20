@@ -3,7 +3,6 @@
 
 require_once __DIR__ . '/../models/Presidente.php';
 require_once __DIR__ . '/../helpers/auth.php';
-require_once __DIR__ . '/../tcpdf/tcpdf.php';
 
 class PresidenteController
 {

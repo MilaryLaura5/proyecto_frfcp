@@ -284,18 +284,16 @@ if ($page === 'login') {
             $controller->guardarJurado();
             break;
 
-        case 'admin_buscar_jurado':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->buscarJuradoPorDni();
-            break;
-
         case 'admin_verificar_usuario':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->verificarUsuario();
             break;
-
+        case 'admin_buscar_jurado_por_dni':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->buscarJuradoPorDni();
+            break;
         // Criterios de evaluación
         case 'admin_gestionar_criterios':
             require_once __DIR__ . '/controllers/AdminController.php';
@@ -315,10 +313,10 @@ if ($page === 'login') {
             $controller->guardarCriterios();
             break;
 
-        case 'admin_guardar_criterio_concurso':
+        case 'admin_guardar_criterios_concurso':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
-            $controller->guardarCriterioConcurso();
+            $controller->guardarCriteriosConcurso();
             break;
 
         // Asignar criterios a concurso
@@ -398,6 +396,7 @@ if ($page === 'login') {
             $controller->verResultadosPorSerie();
             break;
 
+        //RESULTADOS EN VIVO
         case 'resultados_en_vivo':
             require_once __DIR__ . '/controllers/ResultadosController.php';
             $controller = new ResultadosController();
