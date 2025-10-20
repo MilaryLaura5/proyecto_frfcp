@@ -21,10 +21,15 @@ function is_jurado()
     return isset($user['rol']) && strtolower($user['rol']) === 'jurado';
 }
 
+
+// ✅ CORREGIDO: Ahora el Admin también puede ser Presidente
+
 function is_presidente()
 {
     $user = auth();
-    return isset($user['rol']) && strtolower($user['rol']) === 'presidente';
+    // ✅ Permite tanto a Presidente como a Administrador
+    return isset($user['rol']) &&
+        in_array(strtolower($user['rol']), ['presidente', 'administrador']);
 }
 
 function redirect_if_not_admin()
@@ -44,15 +49,17 @@ function redirect_if_not_jurado()
 }
 
 
+// ✅ CORREGIDO: Usa is_presidente() que ahora permite al Admin
+
+
+
 function redirect_if_not_presidente()
 {
-    $user = auth();
-    if (!$user || $user['rol'] !== 'Presidente') {
+    if (!is_presidente()) {
         header('Location: index.php?page=login');
         exit;
     }
 }
-
 function normalizarTexto($string)
 {
     $replacements = [

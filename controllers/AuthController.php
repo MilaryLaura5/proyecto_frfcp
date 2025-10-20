@@ -21,7 +21,6 @@ class AuthController
             session_start();
         }
 
-
         if ($_POST) {
             $usuario = trim($_POST['usuario']);
             $contraseña = $_POST['contraseña'];
@@ -78,6 +77,7 @@ class AuthController
             exit;
         }
     }
+
     // En AuthController.php → método para login con token
     public function loginConToken()
     {
@@ -89,7 +89,7 @@ class AuthController
 
         global $pdo;
         $stmt = $pdo->prepare("
-        SELECT u.id_usuario, u.correo, t.fecha_expiracion 
+        SELECT u.id_usuario, u.usuario, t.fecha_expiracion 
         FROM TokenAcceso t
         JOIN Usuario u ON t.id_jurado = u.id_usuario
         WHERE t.token = ? AND t.usado = 0 AND t.fecha_expiracion > NOW()
@@ -108,7 +108,7 @@ class AuthController
         session_start();
         $_SESSION['user'] = [
             'id' => $usuario['id_usuario'],
-            'correo' => $usuario['correo'],
+            'usuario' => $usuario['usuario'],
             'rol' => 'Jurado'
         ];
 
@@ -200,13 +200,12 @@ class AuthController
                     exit;
                 }
 
-                // ✅ Guardar todos los datos necesarios en la sesión
+                // ✅ Guardar id_concurso en la sesión
                 $_SESSION['user'] = [
                     'id' => $datos['id_usuario'],
                     'usuario' => $usuario,
                     'rol' => 'Jurado',
-                    'id_concurso' => $datos['id_concurso'],
-                    'token' => $token  // ✅ ¡Este era el faltante!
+                    'id_concurso' => $datos['id_concurso'] // ✅ Añadido
                 ];
                 unset($_SESSION['pending_token']);
 
@@ -220,6 +219,39 @@ class AuthController
         }
     }
 
+    public function guardarCalificacion()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        redirect_if_not_jurado();
+        $user = $_SESSION['user'];
+
+        if ($_POST) {
+            $id_participacion = (int)$_POST['id_participacion'];
+            $id_concurso = (int)$_POST['id_concurso'];
+            $descalificado = isset($_POST['descalificar']) ? 1 : 0;
+
+            // Recoger puntajes
+            $datos = [];
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'puntaje_') === 0) {
+                    $datos[$key] = (float)$value;
+                }
+            }
+
+            require_once __DIR__ . '/../models/Calificacion.php';
+            if (Calificacion::guardar($id_participacion, $user['id'], $id_concurso, $datos, $descalificado)) {
+                header("Location: index.php?page=jurado_evaluar");
+                exit;
+            } else {
+                die("Error al guardar la calificación.");
+            }
+        }
+    }
+
+    // Cerrar sesión
     public function logout()
     {
         if (session_status() === PHP_SESSION_NONE) {
