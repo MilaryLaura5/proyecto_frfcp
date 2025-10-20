@@ -82,22 +82,10 @@ if ($page === 'login') {
             break;
 
         // CONCURSOS
-        case 'admin_gestion_concursos':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->mostrarFormularioCrearConcurso();
-            break;
-
         case 'admin_crear_concurso_submit':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->crearConcurso();
-            break;
-
-        case 'admin_editar_concurso':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->mostrarFormularioEditarConcurso();
             break;
 
         case 'admin_actualizar_concurso':
@@ -191,12 +179,6 @@ if ($page === 'login') {
             $controller->crearConjuntoGlobal();
             break;
 
-        case 'admin_editar_conjunto_global':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->mostrarFormularioEditarConjuntoGlobal();
-            break;
-
         case 'admin_actualizar_conjunto_global':
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
@@ -273,12 +255,6 @@ if ($page === 'login') {
             require_once __DIR__ . '/controllers/AdminController.php';
             $controller = new AdminController();
             $controller->gestionarJurados();
-            break;
-
-        case 'admin_crear_jurado':
-            require_once __DIR__ . '/controllers/AdminController.php';
-            $controller = new AdminController();
-            $controller->crearFormularioJurado();
             break;
 
         case 'admin_guardar_jurado':
@@ -364,12 +340,6 @@ if ($page === 'login') {
             require_once __DIR__ . '/views/admin/admin_ver_resultados.php';
             break;
         // --- PRESIDENTE ---
-
-        case 'presidente_dashboard':
-            require_once __DIR__ . '/controllers/PresidenteController.php';
-            $controller = new PresidenteController();
-            $controller->dashboard();
-            break;
 
         case 'presidente_seleccionar_concurso':
             require_once __DIR__ . '/controllers/PresidenteController.php';
