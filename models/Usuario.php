@@ -16,7 +16,7 @@ class Usuario
                 u.contraseña as hash_contraseña,
                 CASE 
                     WHEN u.rol = 'Administrador' THEN a.nombre
-                    WHEN u.rol = 'Jurado' THEN c.nombre  -- Nombre del criterio asignado
+                    WHEN u.rol = 'Jurado' THEN j.nombre  -- ✅ Nombre del jurado, no del criterio
                     WHEN u.rol = 'Presidente' THEN p.nombre
                     ELSE u.usuario
                 END AS nombre
@@ -24,18 +24,15 @@ class Usuario
             LEFT JOIN Administrador a ON u.id_usuario = a.id_admin
             LEFT JOIN Jurado j ON u.id_usuario = j.id_jurado
             LEFT JOIN Presidente p ON u.id_usuario = p.id_presidente
-            LEFT JOIN JuradoCriterioConcurso jcc ON j.id_jurado = jcc.id_jurado
-            LEFT JOIN CriterioConcurso cc ON jcc.id_criterio_concurso = cc.id_criterio_concurso
-            LEFT JOIN Criterio c ON cc.id_criterio = c.id_criterio
             WHERE u.usuario = ?
             LIMIT 1";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$usuario]);
-        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        $usuario_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($usuario && $usuario['estado'] == 1 && password_verify($contraseña, $usuario['hash_contraseña'])) {
-            return $usuario;
+        if ($usuario_data && $usuario_data['estado'] == 1 && password_verify($contraseña, $usuario_data['hash_contraseña'])) {
+            return $usuario_data;
         }
         return false;
     }

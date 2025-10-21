@@ -14,12 +14,23 @@ class Concurso
         return $stmt->execute([$nombre, $fecha_inicio, $fecha_fin]);
     }
 
+    // models/Concurso.php
     public static function listar()
     {
         global $pdo;
-        $stmt = $pdo->query("SELECT * FROM Concurso ORDER BY fecha_inicio DESC");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $pdo->query("
+        SELECT 
+            id_concurso,
+            nombre,
+            estado,
+            fecha_inicio,
+            fecha_fin
+        FROM concurso
+        ORDER BY nombre
+    ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
 
     public static function obtenerPorId($id)
     {

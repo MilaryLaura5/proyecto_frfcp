@@ -194,9 +194,43 @@ class AdminController
     }
     public function gestionarSeriesYTpos()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         redirect_if_not_admin();
-        global $pdo;
-        require_once __DIR__ . '/../views/admin/gestion_series.php';
+
+        // Inicializar variables para evitar "Undefined variable"
+        $error = $_GET['error'] ?? null;
+        $success = $_GET['success'] ?? null;
+        $editando_tipo = false;
+        $editando_serie = false;
+        $tipo_actual = null;
+        $serie_actual = null;
+
+        // Si se está editando un tipo
+        if (isset($_GET['editar_tipo'])) {
+            $id_tipo = (int)$_GET['editar_tipo'];
+            require_once __DIR__ . '/../models/TipoDanza.php';
+            $tipo_actual = TipoDanza::obtenerPorId($id_tipo);
+            $editando_tipo = $tipo_actual !== false;
+        }
+
+        // Si se está editando una serie
+        if (isset($_GET['editar_serie'])) {
+            $id_serie = (int)$_GET['editar_serie'];
+            require_once __DIR__ . '/../models/Serie.php';
+            $serie_actual = Serie::obtenerPorId($id_serie);
+            $editando_serie = $serie_actual !== false;
+        }
+
+        // Obtener listas
+        require_once __DIR__ . '/../models/TipoDanza.php';
+        require_once __DIR__ . '/../models/Serie.php';
+        $tipos = TipoDanza::listar();
+        $series = Serie::listarConTipo(); // Asegúrate de tener este método
+
+        // Cargar vista
+        require_once __DIR__ . '/../views/admin/gestionar_series.php';
     }
     public function crearTipoDanza()
     {
@@ -683,37 +717,31 @@ class AdminController
         }
         redirect_if_not_admin();
 
-        $user = auth();
-
-        // Detectar si estamos editando
+        // Inicializar variables para evitar "Undefined variable"
+        $error = $_GET['error'] ?? null;
+        $success = $_GET['success'] ?? null;
         $editando = false;
         $conjunto_edit = null;
 
-        if (isset($_GET['id']) && $_GET['page'] === 'admin_editar_conjunto_global') {
+        // Si se está editando
+        if (isset($_GET['editar']) && is_numeric($_GET['editar'])) {
+            $editando = true;
+            $id_conjunto = (int)$_GET['editar'];
             require_once __DIR__ . '/../models/Conjunto.php';
-            $id = (int)$_GET['id'];
-            $conjunto_edit = Conjunto::obtenerPorId($id);
-            if ($conjunto_edit) {
-                $editando = true;
-            } else {
-                header('Location: index.php?page=admin_gestionar_conjuntos_globales&error=no_existe');
+            $conjunto_edit = Conjunto::obtenerPorId($id_conjunto);
+            if (!$conjunto_edit) {
+                header("Location: index.php?page=admin_gestionar_conjuntos_globales&error=no_existe");
                 exit;
             }
         }
 
-        // Listar todos los conjuntos
-        require_once __DIR__ . '/../models/Conjunto.php';
-        $conjuntos = Conjunto::listar();
-
-        // Listar series para el select
+        // Obtener listas
         require_once __DIR__ . '/../models/Serie.php';
-        $series = Serie::listarConTipo();
+        require_once __DIR__ . '/../models/Conjunto.php';
+        $series = Serie::listar();
+        $conjuntos = Conjunto::listar(); // ← ¡Debe devolver un array, incluso si está vacío!
 
-        // Mensajes
-        $error = $_GET['error'] ?? null;
-        $success = $_GET['success'] ?? null;
-
-        // Pasar todo a la vista
+        // Cargar vista
         require_once __DIR__ . '/../views/admin/gestionar_conjuntos_globales.php';
     }
     public function seleccionarConcursoParaGestionarConjuntos()
@@ -1323,12 +1351,10 @@ class AdminController
         }
         redirect_if_not_admin();
 
+        $error = $_GET['error'] ?? null;
         require_once __DIR__ . '/../models/Concurso.php';
+        $concursos = Concurso::listar(); // Asegúrate de que esto devuelve un array
 
-        // Obtener todos los concursos
-        $concursos = Concurso::listar();
-
-        // Pasar a la vista
         require_once __DIR__ . '/../views/admin/seleccionar_concurso.php';
     }
     public function eliminarCriterioConcurso()

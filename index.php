@@ -112,6 +112,12 @@ if ($page === 'login') {
             $controller->cerrarConcurso();
             break;
 
+        case 'admin_gestion_concursos':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarConcursos();
+            break;
+
         // TIPOS DE DANZA Y SERIES (UNIFICADOS)
         case 'admin_gestion_series':
             require_once __DIR__ . '/controllers/AdminController.php';
@@ -170,7 +176,9 @@ if ($page === 'login') {
 
         // --- GESTIÓN GLOBAL DE CONJUNTOS ---
         case 'admin_gestionar_conjuntos_globales':
-            require_once __DIR__ . '/views/admin/gestion_conjuntos_globales.php';
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarConjuntosGlobales();
             break;
 
         case 'admin_crear_conjunto_global_submit':
@@ -203,7 +211,9 @@ if ($page === 'login') {
             $controller->gestionarConjuntos();
             break;
         case 'admin_seleccionar_concurso':
-            require_once __DIR__ . '/views/admin/seleccionar_concurso.php';
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->seleccionarConcurso();
             break;
 
         // Asignar un conjunto existente al concurso (con orden_presentacion)
@@ -291,7 +301,9 @@ if ($page === 'login') {
             break;
         // Gestionar criterios globales
         case 'admin_gestionar_criterios':
-            require_once __DIR__ . '/views/admin/gestion_criterios.php';
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->gestionarCriterios();
             break;
         //RESULTADOS PARA ADMIN RESULTADO EN VIVO
         case 'admin_resultados':
