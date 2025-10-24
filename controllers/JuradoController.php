@@ -29,8 +29,8 @@ class JuradoController
             die("Conjunto no encontrado en esta participación.");
         }
 
-        // Verificar si ya fue calificado
-        $calificacion = Calificacion::porJuradoYParticipacion($id_participacion, $user['id']);
+        // ✅ CORREGIDO: orden de parámetros
+        $calificacion = Calificacion::porJuradoYParticipacion($user['id_jurado'], $id_participacion);
 
         // Obtener criterios del concurso
         $criterios = CriterioConcurso::porConcurso($user['id_concurso']);
@@ -41,66 +41,43 @@ class JuradoController
         // Pasar todo a la vista
         require_once __DIR__ . '/../views/jurado/calificar.php';
     }
-
     public function evaluar()
     {
-        require_once __DIR__ . '/../helpers/auth.php';
-        redirect_if_not_jurado();
-
-        $user = $_SESSION['user'];
-        $id_concurso = $user['id_concurso'];
-        $id_jurado = $user['id'];
-
-        global $pdo;
-
-        // ✅ Obtener nombre del concurso
-        $stmt_concurso = $pdo->prepare("SELECT nombre FROM Concurso WHERE id_concurso = ?");
-        $stmt_concurso->execute([$id_concurso]);
-        $concurso = $stmt_concurso->fetch();
-        $nombre_concurso = $concurso ? $concurso['nombre'] : 'Concurso desconocido';
-
-        // Obtener conjuntos con estado
-        $stmt = $pdo->prepare("
-            SELECT 
-                p.id_participacion,
-                p.orden_presentacion,
-                c.nombre AS nombre_conjunto,
-                s.numero_serie,
-                COALESCE(cal.estado, 'pendiente') AS estado_calificacion
-            FROM ParticipacionConjunto p
-            JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
-            JOIN Serie s ON c.id_serie = s.id_serie
-            LEFT JOIN Calificacion cal ON p.id_participacion = cal.id_participacion AND cal.id_jurado = ?
-            WHERE p.id_concurso = ?
-            ORDER BY p.orden_presentacion
-        ");
-        $stmt->execute([$id_jurado, $id_concurso]);
-        $conjuntos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Cargar detalles de puntajes
-        foreach ($conjuntos as &$c) {
-            $c['detalles'] = [];
-
-            // Solo si ya fue calificado
-            if ($c['estado_calificacion'] === 'enviado' || $c['estado_calificacion'] === 'calificado') {
-                $stmt_det = $pdo->prepare("
-                    SELECT cr.nombre AS nombre_criterio, dc.puntaje
-                    FROM detallecalificacion dc
-                    JOIN CriterioConcurso cc ON dc.id_criterio_concurso = cc.id_criterio_concurso
-                    JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
-                    JOIN Calificacion cal ON dc.id_calificacion = cal.id_calificacion
-                    WHERE cal.id_jurado = ? AND cal.id_participacion = ?
-                    ORDER BY cr.nombre
-                ");
-                $stmt_det->execute([$id_jurado, $c['id_participacion']]);
-                $c['detalles'] = $stmt_det->fetchAll(PDO::FETCH_ASSOC);
-            }
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'Jurado') {
+            header('Location: index.php?page=login');
+            exit;
         }
 
-        // ✅ Pasar $nombre_concurso a la vista
+        require_once __DIR__ . '/../models/TokenAcceso.php';
+        require_once __DIR__ . '/../models/Concurso.php';
+        require_once __DIR__ . '/../models/ParticipacionConjunto.php';
+
+        $user = $_SESSION['user'];
+        $id_jurado = (int)($user['id_jurado'] ?? 0);
+        if (!$id_jurado) {
+            die("ID de jurado no válido.");
+        }
+
+        $token_info = TokenAcceso::obtenerPorJurado($id_jurado);
+        if (!$token_info) {
+            die("No tienes un concurso asignado.");
+        }
+
+        $id_concurso = (int)$token_info['id_concurso'];
+        $concurso = Concurso::obtenerPorId($id_concurso);
+        if (!$concurso) {
+            die("Concurso no encontrado.");
+        }
+
+        $nombre_concurso = $concurso['nombre'];
+        // ✅ Usa el método que incluye los detalles
+        $conjuntos = ParticipacionConjunto::porConcursoConDetalles($id_concurso, $id_jurado);
+
         require_once __DIR__ . '/../views/jurado/evaluar.php';
     }
-
     public function juradoGuardarCalificacion()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -124,7 +101,7 @@ class JuradoController
             SELECT token FROM TokenAcceso 
             WHERE id_jurado = ? AND id_concurso = ? AND fecha_expiracion > NOW()
         ");
-        $stmt_token->execute([$user['id'], $id_concurso]);
+        $stmt_token->execute([$user['id_jurado'], $id_concurso]);
         if (!$stmt_token->fetchColumn()) {
             header('Location: index.php?page=jurado_evaluar&error=no_permiso');
             exit;
@@ -152,7 +129,7 @@ class JuradoController
                 FROM Calificacion 
                 WHERE id_jurado = ? AND id_participacion = ?
             ");
-            $stmt_check->execute([$user['id'], $id_participacion]);
+            $stmt_check->execute([$user['id_jurado'], $id_participacion]); // ✅ Usa id_jurado
             $calif = $stmt_check->fetch();
 
             if ($descalificar) {
@@ -166,7 +143,7 @@ class JuradoController
                         INSERT INTO Calificacion (id_jurado, id_participacion, estado, id_concurso, fecha_hora)
                         VALUES (?, ?, 'descalificado', ?, NOW())
                     ");
-                    $stmt_ins->execute([$user['id'], $id_participacion, $id_concurso]);
+                    $stmt_ins->execute([$user['id_jurado'], $id_participacion, $id_concurso]);
                 }
             } else {
                 if (!$calif) {
@@ -174,7 +151,7 @@ class JuradoController
                         INSERT INTO Calificacion (id_jurado, id_participacion, estado, id_concurso, fecha_hora)
                         VALUES (?, ?, 'enviado', ?, NOW())
                     ");
-                    $stmt_ins->execute([$user['id'], $id_participacion, $id_concurso]);
+                    $stmt_ins->execute([$user['id_jurado'], $id_participacion, $id_concurso]);
                     $id_calificacion = $pdo->lastInsertId();
                 } else {
                     $id_calificacion = $calif['id_calificacion'];

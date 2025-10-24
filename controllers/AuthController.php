@@ -41,7 +41,7 @@ class AuthController
 
                 // Guardar datos del usuario
                 $_SESSION['user'] = [
-                    'id' => $usuario['id_usuario'],
+                    'id_jurado' => $usuario['id_usuario'], // ← Clave correcta para jurados
                     'usuario' => $usuario['usuario'],
                     'rol' => $usuario['rol'],
                     'nombre' => $usuario['nombre']
@@ -200,12 +200,11 @@ class AuthController
                     exit;
                 }
 
-                // ✅ Guardar id_concurso en la sesión
                 $_SESSION['user'] = [
-                    'id' => $datos['id_usuario'],
+                    'id_jurado' => $datos['id_usuario'], // ← Clave correcta
                     'usuario' => $usuario,
                     'rol' => 'Jurado',
-                    'id_concurso' => $datos['id_concurso'] // ✅ Añadido
+                    'id_concurso' => $datos['id_concurso']
                 ];
                 unset($_SESSION['pending_token']);
 
@@ -215,38 +214,6 @@ class AuthController
                 error_log("Error en loginConTokenSubmit: " . $e->getMessage());
                 require_once __DIR__ . '/../views/jurado/login_invalido.php';
                 exit;
-            }
-        }
-    }
-
-    public function guardarCalificacion()
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        redirect_if_not_jurado();
-        $user = $_SESSION['user'];
-
-        if ($_POST) {
-            $id_participacion = (int)$_POST['id_participacion'];
-            $id_concurso = (int)$_POST['id_concurso'];
-            $descalificado = isset($_POST['descalificar']) ? 1 : 0;
-
-            // Recoger puntajes
-            $datos = [];
-            foreach ($_POST as $key => $value) {
-                if (strpos($key, 'puntaje_') === 0) {
-                    $datos[$key] = (float)$value;
-                }
-            }
-
-            require_once __DIR__ . '/../models/Calificacion.php';
-            if (Calificacion::guardar($id_participacion, $user['id'], $id_concurso, $datos, $descalificado)) {
-                header("Location: index.php?page=jurado_evaluar");
-                exit;
-            } else {
-                die("Error al guardar la calificación.");
             }
         }
     }

@@ -5,7 +5,11 @@ class CriterioConcurso
     public static function porConcurso($id_concurso)
     {
         global $pdo;
-        $stmt = $pdo->prepare("SELECT cc.*, cr.nombre AS nombre_criterio, cr.id_criterio
+        $stmt = $pdo->prepare("
+            SELECT 
+                cc.id_criterio_concurso,
+                cr.nombre,
+                cc.puntaje_maximo
             FROM CriterioConcurso cc
             JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
             WHERE cc.id_concurso = ?
@@ -14,7 +18,6 @@ class CriterioConcurso
         $stmt->execute([$id_concurso]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
     public static function disponiblesParaAsignar($id_concurso)
     {
         global $pdo;

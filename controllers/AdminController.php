@@ -15,6 +15,17 @@ require_once __DIR__ . '/../models/Concurso.php';
 global $pdo;
 class AdminController
 {
+    public function algunaVista()
+    {
+        $user = auth(); // Asegúrate de que esta función exista y devuelva los datos del usuario
+        require_once __DIR__ . '/../views/admin/alguna_vista.php';
+    }
+
+    public function admin_dashboard()
+    {
+        $user = auth(); // Asegúrate de que esta función exista
+        require_once __DIR__ . '/../views/admin/dashboard.php';
+    }
     // =============================
     // CONCURSO
     // =============================
@@ -409,12 +420,9 @@ class AdminController
             session_start();
         }
         redirect_if_not_admin();
-
         $user = auth();
 
-        // Obtener id_concurso desde la URL
         $id_concurso = $_GET['id_concurso'] ?? null;
-
         if (!$id_concurso) {
             header('Location: index.php?page=admin_gestion_concursos&error=no_concurso');
             exit;
@@ -424,7 +432,6 @@ class AdminController
         $stmt = $pdo->prepare("SELECT * FROM Concurso WHERE id_concurso = ?");
         $stmt->execute([$id_concurso]);
         $concurso = $stmt->fetch();
-
         if (!$concurso || $concurso['estado'] === 'Cerrado') {
             header('Location: index.php?page=admin_gestion_concursos&error=invalido');
             exit;
@@ -436,25 +443,20 @@ class AdminController
         // Cargar conjuntos globales
         require_once __DIR__ . '/../models/Conjunto.php';
         require_once __DIR__ . '/../models/ParticipacionConjunto.php';
-
         $conjuntos_globales = Conjunto::listar();
 
-        // Ordenar alfabéticamente
         usort($conjuntos_globales, function ($a, $b) {
             return strcasecmp($a['nombre'], $b['nombre']);
         });
 
-        // Participaciones en este concurso
-        $participaciones = ParticipacionConjunto::listarPorConcurso($id_concurso);
-
-        // Normalizar nombres para búsqueda (opcional: hacerlo en JS)
+        // ✅ Usar el nuevo método que incluye serie y tipo
+        $participaciones = ParticipacionConjunto::listarPorConcursoAdmin($id_concurso);
         foreach ($conjuntos_globales as &$c) {
             $c['nombre_normalizado'] = strtolower(
                 preg_replace('/[\x{0300}-\x{036f}]/u', '', $c['nombre'])
             );
         }
 
-        // Pasar todo a la vista
         require_once __DIR__ . '/../views/admin/gestionar_conjuntos.php';
     }
     public function asignarConjuntoAConcurso()
@@ -771,6 +773,7 @@ class AdminController
     {
         return strtolower(trim(preg_replace('/[\x{0300}-\x{036f}]/u', '', $str)));
     }
+
 
     public function crearJurado()
     {

@@ -49,34 +49,67 @@ $user = auth();
         .badge {
             font-size: 0.8em;
         }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            width: 250px;
+            transition: width 0.3s ease;
+            padding: 0;
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .main-content {
+            transition: margin-left 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                margin-left: 250px;
+            }
+
+            .sidebar.collapsed {
+                width: 60px;
+            }
+
+            .sidebar.collapsed .nav-link,
+            .sidebar.collapsed h5,
+            .sidebar.collapsed p,
+            .sidebar.collapsed hr {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="container-fluid">
         <div class="row">
-            <!-- Barra lateral -->
-            <nav class="col-md-3 col-lg-2 sidebar">
-                <div class="p-3 text-center">
-                    <h5><i class="bi bi-shield-lock"></i> FRFCP Admin</h5>
-                    <small>¡Bienvenido, <?php echo htmlspecialchars($user['nombre'] ?? $user['usuario']); ?>!</small>
-                </div>
-                <hr>
-                <ul class="nav flex-column">
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_dashboard"><i class="bi bi-house"></i> Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_concursos"><i class="bi bi-trophy"></i> Gestionar Concursos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_series"><i class="bi bi-list-ul"></i> Tipos y Series</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestionar_conjuntos_globales"><i class="bi bi-collection"></i> Conjuntos Globales</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_seleccionar_concurso"><i class="bi bi-people"></i> Asignar a Concurso</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestion_jurados"><i class="bi bi-person-badge"></i> Gestionar Jurados</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_gestionar_criterios"><i class="bi bi-list-task"></i> Criterios Globales</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?page=admin_resultados"><i class="bi bi-graph-up"></i> Resultados en Vivo</a></li>
-                    <li class="nav-item mt-3"><a class="nav-link text-danger" href="index.php?page=logout"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a></li>
-                </ul>
-            </nav>
-
+            <!-- Sidebar reutilizable -->
+            <?php require_once __DIR__ . '/partials/sidebar.php'; ?>
             <!-- Contenido principal -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Centro de Control del Administrador</h2>
                     <span class="badge bg-primary fs-6">Rol: Administrador</span>
@@ -186,6 +219,37 @@ $user = auth();
 
     <!-- ✅ Corrección: espacio eliminado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggleSidebarBtn');
+            const mainContent = document.querySelector('.main-content'); // Asegúrate de que esta clase exista en tu contenedor principal
+            const icon = toggleBtn.querySelector('i');
+
+            let isExpanded = true;
+
+            toggleBtn.addEventListener('click', function() {
+                if (isExpanded) {
+                    // Colapsar
+                    sidebar.style.width = '60px';
+                    sidebar.querySelectorAll('.nav-link, h5, p, hr').forEach(el => el.style.display = 'none');
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
+                    // Cambiar el contenido principal a 12 columnas
+                    mainContent.className = mainContent.className.replace(/\bcol-md-\d+\b/g, 'col-md-12');
+                } else {
+                    // Expandir
+                    sidebar.style.width = '';
+                    sidebar.querySelectorAll('.nav-link, h5, p, hr').forEach(el => el.style.display = '');
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
+                    // Volver a 9 columnas
+                    mainContent.className = mainContent.className.replace(/\bcol-md-\d+\b/g, 'col-md-9');
+                }
+                isExpanded = !isExpanded;
+            });
+        });
+    </script>
 </body>
 
 </html>

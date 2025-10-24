@@ -113,12 +113,15 @@
         <input type="hidden" name="id_concurso" value="<?= $user['id_concurso'] ?>">
 
         <?php foreach ($criterios as $c):
-            $campo = strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú'], ['_', 'a', 'e', 'i', 'o', 'u'], $c['nombre_criterio']));
-            $valor_guardado = $calificacion ? number_format($calificacion["puntaje_$campo"], 2) : '';
+            $campo = strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú'], ['_', 'a', 'e', 'i', 'o', 'u'], $c['nombre']));
+            $valor_guardado = '';
+            if ($calificacion) {
+                $valor_guardado = ''; // o cargar desde DetalleCalificacion si implementas edición
+            }
         ?>
             <div class="mb-3">
                 <label for="puntaje_<?= $campo ?>">
-                    <?= htmlspecialchars($c['nombre_criterio']) ?>
+                    <?= htmlspecialchars($c['nombre']) ?> <!-- ✅ aquí también -->
                     <small class="text-muted">(0 - <?= $c['puntaje_maximo'] ?> puntos)</small>
                 </label>
                 <input type="number"

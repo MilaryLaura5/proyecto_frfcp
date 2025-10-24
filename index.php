@@ -283,6 +283,12 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->buscarJuradoPorDni();
             break;
+
+        case 'admin_crear_jurado':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->crearJurado(); // ← Usa el nombre correcto
+            break;
         // Criterios de evaluación
         case 'admin_agregar_criterios':
             require_once __DIR__ . '/views/admin/agregar_criterios.php';
@@ -335,17 +341,21 @@ if ($page === 'login') {
             break;
 
         case 'jurado_evaluar':
-            require_once __DIR__ . '/views/jurado/evaluar.php';
+            require_once __DIR__ . '/controllers/JuradoController.php';
+            $controller = new JuradoController();
+            $controller->evaluar();
             break;
 
         case 'jurado_calificar':
-            require_once __DIR__ . '/views/jurado/calificar.php';
+            require_once __DIR__ . '/controllers/JuradoController.php';
+            $controller = new JuradoController();
+            $controller->calificar();
             break;
 
         case 'jurado_guardar_calificacion':
-            require_once __DIR__ . '/controllers/AuthController.php';
-            $controller = new AuthController();
-            $controller->guardarCalificacion();
+            require_once __DIR__ . '/controllers/JuradoController.php';
+            $controller = new JuradoController();
+            $controller->juradoGuardarCalificacion();
             break;
         // RESULTADOS EN VIVO DE ADMIN
         case 'admin_ver_resultados':

@@ -107,7 +107,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <h6 class="mb-0">N° <?= $c['orden_presentacion'] ?> - <?= htmlspecialchars($c['nombre_conjunto']) ?></h6>
+                                <h6 class="mb-0">N° <?= $c['orden_presentacion'] ?? '—' ?> - <?= htmlspecialchars($c['nombre_conjunto']) ?></h6>
                                 <small class="text-muted">Serie <?= $c['numero_serie'] ?></small>
                             </div>
                             <?php if ($c['estado_calificacion'] === 'descalificado'): ?>

@@ -1,22 +1,25 @@
 <?php
 class ParticipacionConjunto
 {
-    public static function listarPorConcurso($id_concurso)
+    public static function listarPorConcurso($id_concurso, $id_jurado)
     {
         global $pdo;
-        $stmt = $pdo->prepare("SELECT pc.id_participacion, 
-                   pc.orden_presentacion,
-                   c.nombre AS nombre_conjunto,
-                   s.nombre_serie,
-                   td.nombre_tipo
-            FROM ParticipacionConjunto pc
-            JOIN Conjunto c ON pc.id_conjunto = c.id_conjunto
-            JOIN Serie s ON c.id_serie = s.id_serie
-            JOIN TipoDanza td ON s.id_tipo = td.id_tipo
-            WHERE pc.id_concurso = ?
-            ORDER BY pc.orden_presentacion
-        ");
-        $stmt->execute([$id_concurso]);
+        $stmt = $pdo->prepare("
+        SELECT 
+            pc.id_participacion,
+            pc.orden_presentacion,
+            c.nombre AS nombre_conjunto,
+            s.numero_serie,
+            COALESCE(cal.estado, 'pendiente') AS estado_calificacion
+        FROM ParticipacionConjunto pc
+        JOIN Conjunto c ON pc.id_conjunto = c.id_conjunto
+        LEFT JOIN Serie s ON c.id_serie = s.id_serie
+        LEFT JOIN Calificacion cal ON pc.id_participacion = cal.id_participacion 
+            AND cal.id_jurado = ?
+        WHERE pc.id_concurso = ?
+        ORDER BY pc.orden_presentacion
+    ");
+        $stmt->execute([$id_jurado, $id_concurso]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     public static function yaAsignado($id_conjunto, $id_concurso)
@@ -146,6 +149,27 @@ class ParticipacionConjunto
     ";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id_jurado, $id_concurso]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public static function listarPorConcursoAdmin($id_concurso)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+        SELECT 
+            pc.id_participacion,
+            pc.orden_presentacion,
+            c.nombre AS nombre_conjunto,
+            s.numero_serie,
+            s.nombre_serie,          -- ✅ EXISTE en tu BD
+            td.nombre_tipo AS nombre_tipo
+        FROM ParticipacionConjunto pc
+        JOIN Conjunto c ON pc.id_conjunto = c.id_conjunto
+        LEFT JOIN Serie s ON c.id_serie = s.id_serie
+        LEFT JOIN TipoDanza td ON s.id_tipo = td.id_tipo
+        WHERE pc.id_concurso = ?
+        ORDER BY pc.orden_presentacion
+    ");
+        $stmt->execute([$id_concurso]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
