@@ -270,9 +270,17 @@
                                             </td>
                                             <td>
                                                 <?php if (!empty($j['token'])): ?>
-                                                    <button class="btn btn-sm btn-outline-primary"
-                                                        onclick="mostrarEnlace('<?= addslashes($j['token']) ?>')">
-                                                        <i class="bi bi-link-45deg"></i> Ver enlace
+                                                    <!-- Botón Enlace -->
+                                                    <button class="btn btn-sm btn-outline-primary me-2"
+                                                        onclick="mostrarEnlace('<?= addslashes(htmlspecialchars($j['token'])) ?>')">
+                                                        <i class="bi bi-link-45deg"></i> Enlace
+                                                    </button>
+
+                                                    <!-- Botón QR -->
+                                                    <button type="button" class="btn btn-sm btn-outline-primary qr-btn"
+                                                        data-token="<?= htmlspecialchars($j['token']) ?>"
+                                                        data-nombre="<?= htmlspecialchars($j['nombre'] ?? 'Jurado') ?>">
+                                                        <i class="bi bi-qr-code"></i> QR
                                                     </button>
                                                 <?php endif; ?>
                                             </td>
@@ -353,6 +361,57 @@
         function cerrarModal() {
             document.getElementById('modalEnlace').style.display = 'none';
         }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Evento para los botones QR
+            document.querySelectorAll('.qr-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const token = this.getAttribute('data-token');
+                    const nombre = this.getAttribute('data-nombre');
+                    const url = `generar_qr.php?token=${encodeURIComponent(token)}`;
+
+                    // Crear ventana emergente
+                    const popup = window.open('', '_blank', 'width=400,height=450');
+                    popup.document.write(`
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>QR - ${nombre}</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            text-align: center; 
+                            padding: 20px; 
+                            background: #f8f9fa;
+                        }
+                        h4 { color: #333; }
+                        img { max-width: 100%; height: auto; margin: 20px 0; }
+                        .footer { 
+                            font-size: 0.8em; 
+                            color: #666; 
+                            margin-top: 20px; 
+                            padding-top: 10px; 
+                            border-top: 1px solid #ddd;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h4>QR para: ${nombre}</h4>
+                    <img src="${url}" alt="Código QR" />
+                    <div class="footer">
+                        Escanea este código para acceder como jurado.
+                    </div>
+                </body>
+                </html>
+            `);
+                    popup.document.close();
+                });
+            });
+        });
     </script>
 </body>
 
