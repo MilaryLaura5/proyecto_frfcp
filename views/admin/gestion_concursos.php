@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionar Concursos - FRFCP Admin</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #e9ecef;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave en tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -26,8 +28,9 @@
 
         .page-title {
             font-size: 1.75rem;
-            font-weight: 600;
-            color: #C1121F;
+            font-weight: 700;
+            color: #c9184a;
+            /* Rojo intenso */
             margin: 0;
         }
 
@@ -40,7 +43,7 @@
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #f1e0e0;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
@@ -49,7 +52,8 @@
         .table th {
             font-weight: 600;
             color: #495057;
-            background-color: #f8f9fa;
+            background-color: #fdf2f2;
+            /* Fondo claro rojizo */
         }
 
         .table td,
@@ -58,13 +62,54 @@
             white-space: nowrap;
         }
 
-        .badge {
+        /* Badges personalizados en rojo */
+        .badge-activo {
+            background: linear-gradient(to right, #c9184a, #800f2f);
+            color: white;
+            font-weight: 500;
+            padding: 0.5em 0.8em;
+        }
+
+        .badge-pendiente {
+            background-color: #ff9e9e;
+            color: #5a0000;
+            font-weight: 500;
+            padding: 0.5em 0.8em;
+        }
+
+        .badge-cerrado {
+            background-color: #e0e0e0;
+            color: #666;
             font-weight: 500;
             padding: 0.5em 0.8em;
         }
 
         .btn-group-actions {
             gap: 0.5rem;
+        }
+
+        /* Botones de acción en rojo */
+        .btn-primary-red {
+            background: linear-gradient(to right, #c9184a, #800f2f);
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-primary-red:hover {
+            background: linear-gradient(to right, #b01545, #6a0d25);
+            transform: translateY(-1px);
+        }
+
+        .btn-warning-red {
+            background-color: #ff9e9e;
+            color: #5a0000;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-warning-red:hover {
+            background-color: #ff7f7f;
+            color: #3a0000;
         }
 
         @media (max-width: 768px) {
@@ -89,7 +134,7 @@
 
 <body>
 
-    <!-- Encabezado fijo con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
@@ -101,59 +146,66 @@
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
         <!-- Mensajes de estado -->
         <?php if ($error === 'vacios'): ?>
-            <div class="alert alert-warning alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ⚠️ Todos los campos son obligatorios.
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 mt-3" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Todos los campos son obligatorios.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php elseif ($error === 'fechas'): ?>
             <div class="alert alert-danger alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ❌ La fecha de inicio debe ser anterior a la de fin.
+                <i class="bi bi-calendar-x me-2"></i>
+                La fecha de inicio debe ser anterior a la de fin.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php elseif ($error === 'tiene_evaluaciones'): ?>
             <div class="alert alert-danger alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ❌ No se puede eliminar: ya tiene evaluaciones registradas.
+                <i class="bi bi-x-circle me-2"></i>
+                No se puede eliminar: ya tiene evaluaciones registradas.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php elseif ($error === 'no_existe'): ?>
             <div class="alert alert-danger alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ❌ El concurso no existe.
+                <i class="bi bi-info-circle me-2"></i>
+                El concurso no existe.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
 
         <?php if ($success == '1'): ?>
-            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ✅ Concurso creado correctamente.
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert" style="background: linear-gradient(to right, #d4edda, #c3e6cb); border-color: #b8daff; color: #155724;">
+                <i class="bi bi-check-circle me-2"></i>
+                Concurso creado correctamente.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php elseif ($success == 'editado'): ?>
-            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ✅ Concurso actualizado exitosamente.
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert" style="background: linear-gradient(to right, #d4edda, #c3e6cb); border-color: #b8daff; color: #155724;">
+                <i class="bi bi-check-circle me-2"></i>
+                Concurso actualizado exitosamente.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php elseif ($success == 'eliminado'): ?>
-            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ✅ Concurso eliminado correctamente.
+            <div class="alert alert-success alert-dismissible fade show rounded-4 mt-3" role="alert" style="background: linear-gradient(to right, #d4edda, #c3e6cb); border-color: #b8daff; color: #155724;">
+                <i class="bi bi-check-circle me-2"></i>
+                Concurso eliminado correctamente.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php elseif ($success == 'activado'): ?>
-            <div class="alert alert-info alert-dismissible fade show rounded-4 mt-3" role="alert">
-                ▶️ Concurso activado y listo para evaluaciones.
+            <div class="alert alert-info alert-dismissible fade show rounded-4 mt-3" role="alert" style="background: linear-gradient(to right, #e7f1ff, #d0e6ff); border-color: #9fcdff; color: #0c5460;">
+                <i class="bi bi-play-circle me-2"></i>
+                Concurso activado y listo para evaluaciones.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
 
-        <!-- Formulario: Crear o Editar -->
+        <!-- Formulario -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi <?= $editando ? 'bi-pencil-fill text-warning' : 'bi-plus-circle-fill text-primary' ?>"></i>
+                    <i class="bi <?= $editando ? 'bi-pencil-fill' : 'bi-plus-circle-fill' ?>" style="color: #c9184a;"></i>
                     <?= $editando ? 'Editar Concurso' : 'Crear Nuevo Concurso' ?>
                 </h5>
             </div>
@@ -194,10 +246,10 @@
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-start">
                         <?php if ($editando): ?>
-                            <button type="submit" class="btn btn-warning btn-lg px-4">Actualizar Concurso</button>
-                            <a href="index.php?page=admin_gestion_concursos" class="btn btn-secondary btn-lg px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-warning-red btn-lg px-4">Actualizar Concurso</button>
+                            <a href="index.php?page=admin_gestion_concursos" class="btn btn-outline-secondary btn-lg px-4">Cancelar</a>
                         <?php else: ?>
-                            <button type="submit" class="btn btn-primary btn-lg px-4">Registrar Concurso</button>
+                            <button type="submit" class="btn btn-primary-red btn-lg px-4 text-white">Registrar Concurso</button>
                         <?php endif; ?>
                     </div>
                 </form>
@@ -207,7 +259,7 @@
         <!-- Listado de concursos -->
         <div class="card shadow-sm">
             <div class="card-header">
-                <h5><i class="bi bi-list-ul"></i> Concursos Registrados</h5>
+                <h5><i class="bi bi-list-ul" style="color: #c9184a;"></i> Concursos Registrados</h5>
             </div>
             <div class="card-body p-0">
                 <?php if (count($concursos) > 0): ?>
@@ -231,6 +283,7 @@
                                         <td><?= date('d/m/Y H:i', strtotime($c['fecha_inicio'])) ?></td>
                                         <td><?= date('d/m/Y H:i', strtotime($c['fecha_fin'])) ?></td>
                                         <td>
+                                            <!-- ✅ Se mantienen los colores originales -->
                                             <span class="badge bg-<?= $c['estado'] == 'Activo' ? 'success' : ($c['estado'] == 'Cerrado' ? 'danger' : 'warning') ?>">
                                                 <?= ucfirst($c['estado']) ?>
                                             </span>
@@ -240,13 +293,11 @@
                                                 <span class="text-muted small">Finalizado</span>
                                             <?php else: ?>
                                                 <div class="btn-group-actions d-flex flex-wrap">
-                                                    <!-- Conjuntos -->
                                                     <a href="index.php?page=admin_gestion_conjuntos&id_concurso=<?= $c['id_concurso'] ?>"
                                                         class="btn btn-sm btn-info" title="Conjuntos">
                                                         <i class="bi bi-people"></i>
                                                     </a>
 
-                                                    <!-- Editar/Eliminar/Activar -->
                                                     <?php if ($c['estado'] === 'Pendiente'): ?>
                                                         <a href="index.php?page=admin_editar_concurso&id=<?= $c['id_concurso'] ?>"
                                                             class="btn btn-sm btn-warning" title="Editar">
@@ -284,8 +335,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

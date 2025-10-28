@@ -173,7 +173,7 @@
                                 foreach ($criterios as $c):
                                 ?>
                                     <option value="<?= $c['id_criterio_concurso'] ?>">
-                                        <?= htmlspecialchars($c['nombre_criterio']) ?> (<?= $c['puntaje_maximo'] ?>%)
+                                        <?= htmlspecialchars($c['nombre']) ?> (<?= $c['puntaje_maximo'] ?>%)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
