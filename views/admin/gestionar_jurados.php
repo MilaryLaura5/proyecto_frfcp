@@ -5,14 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionar Jurados - FRFCP Admin</title>
-    <!-- Bootstrap CSS (corregido: sin espacios) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS (sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f0f0;
-            /* Fondo suave con tono rojizo */
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -28,8 +27,8 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #c9184a;
-            /* 🔴 Rojo FRFCP */
+            color: #0056b3;
+            /* ✅ Azul FRFCP coherente */
             margin: 0;
         }
 
@@ -42,21 +41,16 @@
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #f1e0e0;
+            border-bottom: 1px solid #e9ecef;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
         }
 
-        .card-header h5 i {
-            color: #c9184a;
-        }
-
         .table th {
             font-weight: 600;
             color: #495057;
-            background-color: #fdf2f2;
-            /* Fondo claro rojizo */
+            background-color: #f8f9fa;
         }
 
         .table td,
@@ -362,8 +356,6 @@
             document.getElementById('modalEnlace').style.display = 'none';
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Evento para los botones QR

@@ -45,10 +45,11 @@ if ($page === 'login') {
     // =============================
 
 } else {
-    if (!isset($_SESSION['user'])) {
+    if (!isset($_SESSION['user']) && !in_array($_GET['page'] ?? '', ['jurado_login', 'jurado_login_submit'])) {
         header('Location: index.php?page=login');
         exit;
     }
+
 
     $user = $_SESSION['user'];
     $rol = $user['rol'] ?? null;
