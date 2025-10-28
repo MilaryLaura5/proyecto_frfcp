@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seleccionar Concurso - FRFCP</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -26,7 +28,8 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #0056b3;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -36,6 +39,7 @@
             border: none;
             border-radius: 12px;
             overflow: hidden;
+            background: white;
         }
 
         .card-concurso:hover {
@@ -54,9 +58,30 @@
             padding-top: 0;
         }
 
-        .btn-primary {
-            border-radius: 8px;
+        /* Botones de acción en rojo */
+        .btn-primary-red {
+            background: linear-gradient(to right, #c9184a, #800f2f);
+            border: none;
+            font-weight: 600;
         }
+
+        .btn-primary-red:hover {
+            background: linear-gradient(to right, #b01545, #6a0d25);
+            transform: translateY(-1px);
+        }
+
+        .btn-warning-red {
+            background-color: #ff9e9e;
+            color: #5a0000;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-warning-red:hover {
+            background-color: #ff7f7f;
+            color: #3a0000;
+        }
+
 
         @media (max-width: 768px) {
             .header-container {
@@ -76,11 +101,11 @@
 
 <body>
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
-                <i class="bi bi-people me-2 text-primary"></i>
+                <i class="bi bi-people me-2"></i>
                 Gestionar Conjuntos
             </h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
@@ -89,7 +114,6 @@
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
         <?php if ($error === 'no_concurso'): ?>
@@ -121,7 +145,7 @@
                                 </p>
                                 <div class="mt-auto">
                                     <a href="index.php?page=admin_gestion_conjuntos&id_concurso=<?= $c['id_concurso'] ?>"
-                                        class="btn btn-primary w-100 py-2">
+                                        class="btn btn-primary-red btn-lg px-4 text-white mt-3 w-100">
                                         <i class="bi bi-people me-1"></i> Gestionar Conjuntos
                                     </a>
                                 </div>
@@ -143,7 +167,7 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionar Jurados - FRFCP Admin</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -26,7 +28,8 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #0056b3;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -39,16 +42,21 @@
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #f1e0e0;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
         }
 
+        .card-header h5 i {
+            color: #c9184a;
+        }
+
         .table th {
             font-weight: 600;
             color: #495057;
-            background-color: #f8f9fa;
+            background-color: #fdf2f2;
+            /* Fondo claro rojizo */
         }
 
         .table td,
@@ -112,11 +120,11 @@
 
 <body>
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
-                <i class="bi bi-person-badge me-2 text-primary"></i> Gestionar Jurados
+                <i class="bi bi-person-badge me-2"></i> Gestionar Jurados
             </h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
@@ -124,7 +132,6 @@
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
         <!-- Selección de concurso -->
@@ -149,11 +156,10 @@
             </div>
         </div>
 
-        <!-- ✅ Mensaje: Credenciales del jurado -->
+        <!-- Mensaje de credenciales (sin cambios de color) -->
         <?php if ($mostrarCredenciales): ?>
             <div class="alert alert-success alert-dismissible fade show rounded-4 mb-4" role="alert">
                 <h5><i class="bi bi-check-circle"></i> ¡Jurado creado con éxito!</h5>
-
                 <table class="table table-sm bg-light mb-3">
                     <tr>
                         <th>Usuario:</th>
@@ -164,7 +170,6 @@
                         <td><code><?= htmlspecialchars($credenciales['contrasena']) ?></code></td>
                     </tr>
                 </table>
-
                 <p><strong>Enlace de acceso para el jurado:</strong></p>
                 <?php
                 $link = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
@@ -176,7 +181,6 @@
                         <i class="bi bi-copy"></i> Copiar
                     </button>
                 </div>
-
                 <small class="text-muted">
                     Entrega este enlace junto con el usuario y contraseña. El acceso expira al finalizar el concurso.
                 </small>
@@ -184,7 +188,7 @@
             </div>
         <?php endif; ?>
 
-        <!-- Errores -->
+        <!-- Errores (sin cambios) -->
         <?php if ($error === 'dni'): ?>
             <div class="alert alert-danger alert-dismissible fade show rounded-4 mb-4" role="alert">❌ DNI inválido. Debe tener 8 dígitos.</div>
         <?php elseif ($error === 'datos'): ?>
@@ -289,7 +293,7 @@
             </div>
         </div>
 
-        <!-- Botón fijo: Nuevo Jurado + Token -->
+        <!-- Botón fijo -->
         <div id="boton-fijo" class="fixed-bottom bg-white p-3 shadow-sm" style="z-index: 1000;">
             <div class="container-fluid px-4 pb-5">
                 <div class="d-flex justify-content-end align-items-center">
@@ -312,7 +316,7 @@
         </div>
     </div>
 
-    <!-- Modal para mostrar enlaces existentes -->
+    <!-- Modal para enlaces existentes -->
     <div id="modalEnlace" class="alert alert-info">
         <strong>Enlace de acceso:</strong><br>
         <input type="text" id="enlaceInput" readonly class="form-control form-control-sm mb-2">
@@ -323,9 +327,8 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Para nuevo token generado
         function copiarNuevoEnlace() {
             const input = document.getElementById('linkToken');
             input.select();
@@ -333,7 +336,6 @@
             alert('✅ Enlace copiado al portapapeles');
         }
 
-        // Para ver enlace existente
         function mostrarEnlace(token) {
             const basePath = `<?= dirname($_SERVER['SCRIPT_NAME']) ?>`;
             const link = `${basePath}/index.php?page=jurado_login&token=${encodeURIComponent(token)}`;

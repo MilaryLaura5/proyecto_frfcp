@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionar Conjuntos Globales - FRFCP</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -26,7 +28,8 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #0056b3;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -39,16 +42,21 @@
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #f1e0e0;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
         }
 
+        .card-header h5 i {
+            color: #c9184a;
+        }
+
         .table th {
             font-weight: 600;
             color: #495057;
-            background-color: #f8f9fa;
+            background-color: #fdf2f2;
+            /* Fondo claro rojizo */
         }
 
         .table td,
@@ -56,7 +64,6 @@
             vertical-align: middle;
         }
 
-        /* Altura dinámica */
         .main-content {
             flex: 1;
             display: flex;
@@ -72,9 +79,34 @@
         .sticky-top th {
             position: sticky;
             top: 0;
-            background-color: #f8f9fa;
+            background-color: #fdf2f2;
             z-index: 10;
         }
+
+        /* Botones de acción en rojo */
+        .btn-primary-red {
+            background: linear-gradient(to right, #c9184a, #800f2f);
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-primary-red:hover {
+            background: linear-gradient(to right, #b01545, #6a0d25);
+            transform: translateY(-1px);
+        }
+
+        .btn-warning-red {
+            background-color: #ff9e9e;
+            color: #5a0000;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-warning-red:hover {
+            background-color: #ff7f7f;
+            color: #3a0000;
+        }
+
 
         @media (max-width: 768px) {
             .header-container {
@@ -90,11 +122,11 @@
 
 <body>
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
-                <i class="bi bi-collection me-2 text-primary"></i>
+                <i class="bi bi-collection me-2"></i>
                 Gestionar Conjuntos Globales
             </h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
@@ -103,10 +135,9 @@
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
-        <!-- Mensajes -->
+        <!-- Mensajes (sin cambios de color) -->
         <?php if ($error === 'vacios'): ?>
             <div class="alert alert-warning alert-dismissible fade show rounded-4 mt-3" role="alert">
                 ⚠️ Completa todos los campos.
@@ -141,10 +172,9 @@
             </div>
         <?php endif; ?>
 
-        <!-- Fila superior: Formulario izquierda + Importar derecha -->
+        <!-- Fila superior: Formulario e Importar -->
         <div class="row g-4 mb-4">
-
-            <!-- Columna izquierda: Nuevo/Editar Conjunto -->
+            <!-- Formulario -->
             <div class="col-md-5">
                 <div class="card shadow-sm h-100">
                     <div class="card-header">
@@ -187,7 +217,7 @@
                                         <button type="submit" class="btn btn-warning btn-lg">Actualizar</button>
                                         <a href="index.php?page=admin_gestionar_conjuntos_globales" class="btn btn-secondary btn-lg">Cancelar</a>
                                     <?php else: ?>
-                                        <button type="submit" class="btn btn-success btn-lg w-100">Registrar</button>
+                                        <button type="submit" class="btn btn-primary-red btn-lg px-4 text-white mt-3 w-100">Registrar</button>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -196,7 +226,7 @@
                 </div>
             </div>
 
-            <!-- Columna derecha: Importar CSV -->
+            <!-- Importar CSV -->
             <div class="col-md-7">
                 <div class="card shadow-sm h-100">
                     <div class="card-header">
@@ -213,15 +243,14 @@
                                 <label for="archivo_csv" class="form-label">Seleccionar archivo CSV</label>
                                 <input type="file" class="form-control form-control-lg" name="archivo_csv" accept=".csv" required>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-lg w-100">Importar Conjuntos</button>
+                            <button type="submit" class="btn btn-primary-red btn-lg px-4 text-white mt-3 w-100">Importar Conjuntos</button>
                         </form>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Fila inferior: Lista completa de conjuntos -->
+        <!-- Lista de conjuntos -->
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -231,7 +260,6 @@
                         </h5>
                         <span class="badge bg-secondary"><?= count($conjuntos) ?> encontrados</span>
                     </div>
-                    <!-- Tabla con scroll vertical -->
                     <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
                         <?php if (count($conjuntos) > 0): ?>
                             <table class="table table-hover mb-0">
@@ -285,7 +313,7 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

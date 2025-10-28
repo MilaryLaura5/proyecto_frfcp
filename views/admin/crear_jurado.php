@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo Jurado - FRFCP</title>
-    <!-- ✅ Bootstrap CSS (sin espacios) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -26,7 +28,8 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #0056b3;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -39,7 +42,7 @@
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #f1e0e0;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
@@ -76,11 +79,11 @@
 
 <body>
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
-                <i class="bi bi-person-badge me-2 text-success"></i> Nuevo Jurado
+                <i class="bi bi-person-badge me-2"></i> Nuevo Jurado
             </h2>
             <a href="index.php?page=admin_gestion_jurados&id_concurso=<?= $id_concurso ?>" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
@@ -88,7 +91,6 @@
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
         <!-- Búsqueda por DNI -->
@@ -155,8 +157,6 @@
                             id="contrasena"
                             placeholder="Ingresa una contraseña segura"
                             required>
-
-                        <!-- Mensaje dinámico -->
                         <div class="mt-2 small" id="mensaje-contrasena"></div>
                     </div>
 
@@ -166,10 +166,8 @@
                             <select class="form-control form-select-lg" name="id_criterio_concurso" id="criterio" required>
                                 <option value="">Selecciona un criterio...</option>
                                 <?php
-                                // Obtener criterios del concurso actual
                                 require_once __DIR__ . '/../../models/CriterioConcurso.php';
                                 $criterios = CriterioConcurso::porConcurso($id_concurso);
-
                                 foreach ($criterios as $c):
                                 ?>
                                     <option value="<?= $c['id_criterio_concurso'] ?>">
@@ -215,13 +213,12 @@
         </div>
     </div>
 
-    <!-- ✅ Bootstrap JS (sin espacios) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         function generarUsuario() {
             const nombre = document.getElementById('nombre').value.trim();
-
             if (!nombre || nombre.split(/\s+/).filter(p => p).length < 2) {
                 document.getElementById('usuario').value = '';
                 return;
@@ -303,13 +300,11 @@
                         document.getElementById('dni').value = dni;
                         document.getElementById('nombre').value = data.nombre;
                         document.getElementById('años_experiencia').value = data.años_experiencia;
-
                         if (data.usuario) {
                             document.getElementById('usuario').value = data.usuario;
                         } else {
                             generarUsuario();
                         }
-
                         resultDiv.innerHTML = `
                             <div class="alert alert-warning alert-search mt-2">
                                 ⚠️ Jurado encontrado. Puedes editarlo si es necesario.
@@ -320,7 +315,6 @@
                         document.getElementById('años_experiencia').value = '';
                         document.getElementById('usuario').value = '';
                         document.getElementById('nombre').focus();
-
                         resultDiv.innerHTML = `
                             <div class="alert alert-success alert-search mt-2">
                                 ✅ DNI disponible. Registra al nuevo jurado.
@@ -339,28 +333,22 @@
         function validarContrasena() {
             const contrasena = document.getElementById('contrasena').value;
             const mensajeDiv = document.getElementById('mensaje-contrasena');
-
-            // Reiniciar mensaje
             mensajeDiv.innerHTML = '';
-            mensajeDiv.style.color = '#dc3545'; // Rojo por defecto
+            mensajeDiv.style.color = '#dc3545';
 
-            // Criterios
             const tiene8chars = contrasena.length >= 8;
             const tieneMayuscula = /[A-Z]/.test(contrasena);
             const tieneMinuscula = /[a-z]/.test(contrasena);
             const tieneNumero = /[0-9]/.test(contrasena);
-            const tieneEspecial = /[!@#$%&*]/.test(contrasena); // Puedes ajustar estos caracteres
+            const tieneEspecial = /[!@#$%&*]/.test(contrasena);
 
-            // Lista de faltantes
             const faltantes = [];
-
             if (!tiene8chars) faltantes.push("mínimo 8 caracteres");
             if (!tieneMayuscula) faltantes.push("una letra mayúscula");
             if (!tieneMinuscula) faltantes.push("una letra minúscula");
             if (!tieneNumero) faltantes.push("un número");
             if (!tieneEspecial) faltantes.push("un carácter especial (!@#$%&*)");
 
-            // Mostrar mensaje según lo que falte
             if (faltantes.length === 0) {
                 mensajeDiv.innerHTML = '<strong style="color: #198754;">✅ Contraseña segura</strong>';
                 document.querySelector('[type="submit"]').disabled = false;
@@ -372,15 +360,6 @@
             }
         }
 
-        // Escuchar cambios en tiempo real
-        document.getElementById('contrasena').addEventListener('input', validarContrasena);
-
-        function actualizarBadge(id, esValido) {
-            const badge = document.getElementById(id);
-            badge.className = 'badge ' + (esValido ? 'bg-success' : 'bg-danger');
-        }
-
-        // Escuchar cambios en la contraseña
         document.getElementById('contrasena').addEventListener('input', validarContrasena);
     </script>
 </body>

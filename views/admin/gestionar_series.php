@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión Unificada: Tipos y Series - FRFCP</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -26,7 +28,8 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #C1121F;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -37,8 +40,23 @@
             overflow: hidden;
         }
 
+        .panel h4 {
+            color: #c9184a;
+            margin-bottom: 0.75rem;
+        }
+
+        .panel h4 i {
+            color: #c9184a;
+        }
+
         .accordion-button {
             font-weight: 600;
+            color: #c9184a;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #fdf2f2;
+            color: #c9184a;
         }
 
         .list-group-item {
@@ -53,6 +71,31 @@
         .list-group-item:last-child {
             border-bottom: none;
         }
+
+        /* Botones de acción en rojo */
+        .btn-primary-red {
+            background: linear-gradient(to right, #c9184a, #800f2f);
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-primary-red:hover {
+            background: linear-gradient(to right, #b01545, #6a0d25);
+            transform: translateY(-1px);
+        }
+
+        .btn-warning-red {
+            background-color: #ff9e9e;
+            color: #5a0000;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-warning-red:hover {
+            background-color: #ff7f7f;
+            color: #3a0000;
+        }
+
 
         @media (max-width: 768px) {
             .header-container {
@@ -72,7 +115,7 @@
 
 <body>
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
@@ -84,10 +127,9 @@
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
-        <!-- Mensajes -->
+        <!-- Mensajes (sin cambios de color) -->
         <?php if ($error === 'vacios'): ?>
             <div class="alert alert-warning alert-dismissible fade show rounded-4 mt-3" role="alert">
                 ⚠️ Completa todos los campos.
@@ -171,12 +213,12 @@
                                     placeholder="Ej: Traje Originario"
                                     required>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-lg">Agregar Tipo</button>
+                            <button type="submit" class="btn btn-primary-red btn-lg px-4 text-white mt-3 w-100">Agregar Tipo</button>
                         </form>
                     <?php endif; ?>
 
                     <!-- Listado de tipos -->
-                    <ul class="list-group">
+                    <ul class=" list-group">
                         <?php foreach ($tipos as $t): ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <strong><?= htmlspecialchars($t['nombre_tipo']) ?></strong>
@@ -271,7 +313,7 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-lg mt-3 w-100">Crear Serie</button>
+                            <button type="submit" class="btn btn-primary-red btn-lg px-4 text-white mt-3 w-100">Crear Serie</button>
                         </form>
                     <?php endif; ?>
 
@@ -325,7 +367,7 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

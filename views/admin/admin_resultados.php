@@ -19,13 +19,14 @@ $concursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seleccionar Concurso - Admin</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -41,7 +42,8 @@ $concursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #0056b3;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -54,16 +56,21 @@ $concursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #f1e0e0;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
         }
 
+        .card-header h5 i {
+            color: #c9184a;
+        }
+
         .table th {
             font-weight: 600;
             color: #495057;
-            background-color: #f8f9fa;
+            background-color: #fdf2f2;
+            /* Fondo claro rojizo */
         }
 
         .table td,
@@ -81,11 +88,11 @@ $concursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <body class="p-3">
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
-                <i class="bi bi-trophy me-2 text-primary"></i> Seleccionar Concurso
+                <i class="bi bi-trophy me-2"></i> Seleccionar Concurso
             </h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Volver
@@ -93,10 +100,9 @@ $concursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
-        <!-- Mensajes de error -->
+        <!-- Mensajes de error (sin cambios de color) -->
         <?php if (isset($_GET['error'])): ?>
             <div class="alert alert-danger alert-dismissible fade show rounded-4 mt-3" role="alert">
                 <i class="bi bi-exclamation-triangle"></i>
@@ -182,7 +188,7 @@ $concursos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

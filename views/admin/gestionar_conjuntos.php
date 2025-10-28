@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionar Conjuntos - <?= htmlspecialchars($concurso['nombre'], ENT_QUOTES, 'UTF-8') ?></title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -26,7 +28,8 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #0056b3;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -39,27 +42,27 @@
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #f1e0e0;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
         }
 
+        .card-header h5 i {
+            color: #c9184a;
+        }
+
         .search-box {
-            border: 1px solid #ddd;
+            border: 1px solid #eee;
             border-radius: 8px;
             padding: 10px;
             max-height: 200px;
             overflow-y: auto;
         }
 
-        .search-box .list-group {
-            border: none;
-        }
-
         .search-box .list-group-item {
             border: none;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f5eaea;
         }
 
         .search-box .list-group-item:last-child {
@@ -68,7 +71,6 @@
 
         .item-conjunto {
             display: none;
-            /* Oculto por defecto */
         }
 
         .item-conjunto.visible {
@@ -77,7 +79,6 @@
             pointer-events: auto;
         }
 
-        /* Asegurar que los no visibles no tengan bordes ni padding */
         .item-conjunto:not(.visible) {
             padding: 0 !important;
             margin: 0 !important;
@@ -85,22 +86,27 @@
             height: 0 !important;
             overflow: hidden !important;
             border-bottom: none !important;
-
         }
 
         #mensajeNoResultados {
             display: none;
+        }
+
+        .table thead th {
+            background-color: #fdf2f2;
+            color: #495057;
+            font-weight: 600;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
-                <i class="bi bi-people me-2 text-primary"></i>
+                <i class="bi bi-people me-2"></i>
                 Gestionar Conjuntos - <?= htmlspecialchars($concurso['nombre'], ENT_QUOTES, 'UTF-8') ?>
             </h2>
             <a href="index.php?page=admin_dashboard" class="btn btn-outline-secondary btn-sm">
@@ -109,10 +115,9 @@
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
-        <!-- Mensajes -->
+        <!-- Mensajes (sin cambios de color) -->
         <?php if ($error === 'vacios'): ?>
             <div class="alert alert-warning">⚠️ Completa todos los campos.</div>
         <?php elseif ($error === 'duplicado'): ?>
@@ -131,7 +136,7 @@
             <div class="alert alert-success">✅ Número de orden actualizado correctamente.</div>
         <?php endif; ?>
 
-        <!-- Fila 1: Buscar Conjunto (ancho completo) -->
+        <!-- Buscar Conjunto -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -170,7 +175,7 @@
             </div>
         </div>
 
-        <!-- Formulario: Asignar a concurso (ancho completo) -->
+        <!-- Formulario de asignación -->
         <div class="row mb-4">
             <div class="col-12">
                 <div id="formularioAsignacion" class="card shadow-sm" style="display: none;">
@@ -209,7 +214,7 @@
             </div>
         </div>
 
-        <!-- Fila 2: Listado de conjuntos asignados (ancho completo) -->
+        <!-- Listado de conjuntos asignados -->
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -221,10 +226,9 @@
                     </div>
                     <div class="card-body p-0">
                         <?php if (count($participaciones) > 0): ?>
-                            <!-- Tabla con scroll vertical independiente -->
                             <div class="table-responsive" style="max-height: 50vh; overflow-y: auto;">
                                 <table class="table table-hover mb-0">
-                                    <thead class="table-light sticky-top" style="top: 0; z-index: 10; background-color: #f8f9fa;">
+                                    <thead class="table-light sticky-top" style="top: 0; z-index: 10; background-color: #fdf2f2;">
                                         <tr>
                                             <th class="text-center" style="width: 10%;">N°</th>
                                             <th style="width: 40%;">Nombre</th>
@@ -282,7 +286,7 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function seleccionarConjunto(id, nombre, serie) {
             document.getElementById('id_conjunto_input').value = id;
@@ -326,7 +330,6 @@
             document.getElementById('mensajeNoResultados').style.display = algunoVisible ? 'none' : 'block';
         }
 
-        // Ejecutar al cargar
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById('buscadorConjuntos');
             if (input) input.focus();

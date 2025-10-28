@@ -11,20 +11,27 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body {
-            /* Fondo degradado en tonos rojos suaves */
-            background: linear-gradient(135deg, #f8f0f0 0%, #ffeaea 100%);
+            /* Imagen de fondo con degradado blanco semitransparente */
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.65), rgba(245, 245, 245, 0.65)),
+                url('https://cdn-blog.superprof.com/blog_pe/wp-content/uploads/2025/02/candelaria-puno-fetividad-peru-baile.png') center/cover no-repeat;
             min-height: 100vh;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            padding: 1rem;
         }
+
 
         .login-card {
             border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
             overflow: hidden;
+            background: white;
+            /* Fondo blanco para el formulario */
         }
 
         .card-header {
-            /* Degradado rojo profesional (Material Red 600 → Red 800) */
             background: linear-gradient(to right, #d32f2f, #b71c1c);
             color: white;
             padding: 1.25rem;
@@ -35,10 +42,6 @@
             font-size: 1.5rem;
             font-weight: 600;
             letter-spacing: 0.3px;
-        }
-
-        .logo {
-            margin-bottom: 20px;
         }
 
         .logo img {
@@ -62,7 +65,6 @@
         }
 
         .btn-primary {
-            /* Botón en tono rojo que combina */
             background: linear-gradient(to right, #d32f2f, #b71c1c);
             border: none;
             padding: 0.65rem;
@@ -76,21 +78,22 @@
 
         .footer-note {
             font-size: 0.85rem;
-            color: #6c757d;
+            color: white;
+            /* Ahora blanco para contraste sobre fondo oscuro */
             text-align: center;
             margin-top: 1.5rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 
-<body class="d-flex align-items-center py-4">
+<body>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-4">
                 <div class="card login-card">
                     <div class="card-header">
                         <div class="logo mx-auto">
-                            <!-- Reemplaza con tu logo real -->
                             <img src="https://iconape.com/wp-content/files/gw/144111/png/144111.png" alt="Logo FRFCP">
                         </div>
                         <h1>FRFCP Calificaciones</h1>
@@ -143,7 +146,6 @@
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar sesión
                             </button>
                         </form>
-
                     </div>
                 </div>
 

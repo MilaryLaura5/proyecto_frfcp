@@ -87,13 +87,14 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados del Concurso - Admin</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f0f0;
+            /* Fondo suave con tono rojizo */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
         }
@@ -109,7 +110,8 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
-            color: #0056b3;
+            color: #c9184a;
+            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -122,16 +124,22 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 
         .card-header {
             background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #f1e0e0;
             padding: 1rem 1.5rem;
             font-weight: 600;
             color: #333;
         }
 
+        .card-header h6 i,
+        .card-header h5 i {
+            color: #c9184a;
+        }
+
         .table th {
             font-weight: 600;
             color: #495057;
-            background-color: #f8f9fa;
+            background-color: #fdf2f2;
+            /* Fondo claro rojizo */
         }
 
         .table td,
@@ -151,7 +159,7 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .info-box {
-            background: #f8f9fa;
+            background: #fdf2f2;
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
@@ -166,11 +174,11 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 
 <body class="p-3">
 
-    <!-- Encabezado con ancho completo -->
+    <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
-                <i class="bi bi-trophy me-2 text-primary"></i> Resultados del Concurso
+                <i class="bi bi-trophy me-2"></i> Resultados del Concurso
             </h2>
 
             <div class="d-flex align-items-center gap-3">
@@ -187,7 +195,6 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <!-- Contenido principal con ancho completo -->
     <div class="container-fluid px-4">
 
         <!-- Layout compacto: 3 columnas -->
@@ -420,7 +427,7 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
