@@ -478,6 +478,9 @@ class AdminController
             exit;
         }
 
+        // ✅ Añadir esta línea para acceder a la conexión global
+        global $pdo;
+
         $id_conjunto = (int)$_POST['id_conjunto'];
         $id_concurso = (int)$_POST['id_concurso'];
         $orden = (int)$_POST['orden_presentacion'];
