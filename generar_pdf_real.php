@@ -307,7 +307,7 @@ $html .= '
     
     <div class="firma">
         <div class="firma-linea"></div>
-        <p style="font-size: 11px; margin: 5px 0;"><strong>DOC. ALEXANDER QUISPE HUARACHA</strong></p>
+        <p style="font-size: 11px; margin: 5px 0;"><strong>DR. ALEXANDER QUISPE HUARACHA</strong></p>
         <p style="font-size: 10px; margin: 3px 0;">PRESIDENTE</p>
         <p style="font-size: 9px; margin: 3px 0;">Federación Regional del Folclore y Cultura de Puno</p>
     </div>

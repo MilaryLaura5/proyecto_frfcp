@@ -25,11 +25,13 @@ class ParticipacionConjunto
     public static function yaAsignado($id_conjunto, $id_concurso)
     {
         global $pdo;
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM ParticipacionConjunto WHERE id_conjunto = ? AND id_concurso = ?");
+        $stmt = $pdo->prepare("SELECT COUNT(*) 
+        FROM ParticipacionConjunto 
+        WHERE id_conjunto = ? AND id_concurso = ?
+    ");
         $stmt->execute([$id_conjunto, $id_concurso]);
         return $stmt->fetchColumn() > 0;
     }
-
     public static function agregar($id_conjunto, $id_concurso, $orden_presentacion)
     {
         global $pdo;
@@ -171,5 +173,26 @@ class ParticipacionConjunto
     ");
         $stmt->execute([$id_concurso]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public static function actualizarOrden($id_participacion, $nuevo_orden, $id_concurso)
+    {
+        global $pdo;
+        // Verificar que no exista otro con el mismo orden en el mismo concurso
+        $stmt = $pdo->prepare("
+        SELECT COUNT(*) FROM ParticipacionConjunto 
+        WHERE id_concurso = ? AND orden_presentacion = ? AND id_participacion != ?
+    ");
+        $stmt->execute([$id_concurso, $nuevo_orden, $id_participacion]);
+        if ($stmt->fetchColumn() > 0) {
+            return false; // Ya existe ese orden
+        }
+
+        // Actualizar
+        $stmt = $pdo->prepare("
+        UPDATE ParticipacionConjunto 
+        SET orden_presentacion = ? 
+        WHERE id_participacion = ?
+    ");
+        return $stmt->execute([$nuevo_orden, $id_participacion]);
     }
 }

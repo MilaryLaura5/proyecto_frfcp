@@ -6,15 +6,16 @@ class CriterioConcurso
     {
         global $pdo;
         $stmt = $pdo->prepare("
-            SELECT 
-                cc.id_criterio_concurso,
-                cr.nombre,
-                cc.puntaje_maximo
-            FROM CriterioConcurso cc
-            JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
-            WHERE cc.id_concurso = ?
-            ORDER BY cc.puntaje_maximo DESC
-        ");
+        SELECT 
+            cc.id_criterio_concurso,
+            cc.id_criterio,          -- ✅ Agregado
+            cr.nombre,
+            cc.puntaje_maximo
+        FROM CriterioConcurso cc
+        JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
+        WHERE cc.id_concurso = ?
+        ORDER BY cc.puntaje_maximo DESC
+    ");
         $stmt->execute([$id_concurso]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

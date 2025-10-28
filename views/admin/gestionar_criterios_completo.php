@@ -225,12 +225,11 @@
                                         <?php foreach ($criterios_asignados as $ca): ?>
                                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <strong><?= htmlspecialchars($ca['nombre_criterio']) ?></strong><br>
+                                                    <strong><?= htmlspecialchars($ca['nombre']) ?></strong><br>
                                                     <small>Puntaje máximo: <strong><?= number_format($ca['puntaje_maximo'], 2) ?></strong> puntos</small>
                                                 </div>
                                                 <a href="#" class="btn btn-sm btn-danger"
-                                                    onclick="eliminarCriterio(<?= $ca['id_criterio'] ?>, <?= $id_concurso ?>)">
-                                                    <i class="bi bi-trash"></i>
+                                                    onclick="eliminarCriterio(<?= $ca['id_criterio'] ?>, <?= $id_concurso ?>)" <i class="bi bi-trash"></i>
                                                 </a>
                                             </li>
                                         <?php endforeach; ?>

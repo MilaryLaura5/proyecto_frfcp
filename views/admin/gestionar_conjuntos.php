@@ -127,6 +127,10 @@
             <div class="alert alert-success">✅ Conjunto eliminado del concurso.</div>
         <?php endif; ?>
 
+        <?php if ($success == 'orden_editado'): ?>
+            <div class="alert alert-success">✅ Número de orden actualizado correctamente.</div>
+        <?php endif; ?>
+
         <!-- Fila 1: Buscar Conjunto (ancho completo) -->
         <div class="row mb-4">
             <div class="col-12">
@@ -232,7 +236,23 @@
                                     <tbody>
                                         <?php foreach ($participaciones as $p): ?>
                                             <tr>
-                                                <td class="text-center"><strong><?= $p['orden_presentacion'] ?></strong></td>
+                                                <td class="text-center">
+                                                    <form method="POST" action="index.php?page=admin_editar_orden_participacion" style="display:inline;">
+                                                        <input type="hidden" name="id_participacion" value="<?= $p['id_participacion'] ?>">
+                                                        <input type="hidden" name="id_concurso" value="<?= $id_concurso ?>">
+                                                        <input
+                                                            type="number"
+                                                            name="orden_presentacion"
+                                                            value="<?= $p['orden_presentacion'] ?>"
+                                                            min="1"
+                                                            class="form-control form-control-sm d-inline"
+                                                            style="width: 70px;"
+                                                            required>
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary ms-1" title="Guardar nuevo orden">
+                                                            <i class="bi bi-check"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
                                                 <td><?= htmlspecialchars($p['nombre_conjunto'], ENT_QUOTES, 'UTF-8') ?></td>
                                                 <td><?= htmlspecialchars($p['nombre_serie'], ENT_QUOTES, 'UTF-8') ?></td>
                                                 <td><?= htmlspecialchars($p['nombre_tipo'], ENT_QUOTES, 'UTF-8') ?></td>

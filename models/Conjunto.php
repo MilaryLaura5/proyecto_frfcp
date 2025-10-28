@@ -5,10 +5,11 @@ class Conjunto
     public static function listar()
     {
         global $pdo;
-        $stmt = $pdo->prepare("SELECT c.*, s.numero_serie, s.nombre_serie, td.nombre_tipo 
+        $stmt = $pdo->prepare("
+        SELECT c.*, s.numero_serie, s.nombre_serie, td.nombre_tipo 
         FROM Conjunto c
         JOIN Serie s ON c.id_serie = s.id_serie
-        JOIN TipoDanza td ON s.id_tipo = td.id_tipo
+        JOIN tipodanza td ON s.id_tipo = td.id_tipo   -- ✅ minúsculas
         WHERE c.estado_activo = 1
         ORDER BY c.nombre
     ");
@@ -71,14 +72,16 @@ class Conjunto
     public static function obtenerPorId($id)
     {
         global $pdo;
-        $sql = "SELECT c.*, 
-                   s.numero_serie,
-                   s.nombre_serie,
-                   td.nombre_tipo 
-            FROM Conjunto c
-            JOIN Serie s ON c.id_serie = s.id_serie
-            JOIN TipoDanza td ON s.id_tipo = td.id_tipo
-            WHERE c.id_conjunto = ?";
+        $sql = "
+        SELECT c.*, 
+               s.numero_serie,
+               s.nombre_serie,
+               td.nombre_tipo 
+        FROM Conjunto c
+        JOIN Serie s ON c.id_serie = s.id_serie
+        JOIN tipodanza td ON s.id_tipo = td.id_tipo   -- ✅ minúsculas
+        WHERE c.id_conjunto = ?
+    ";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
