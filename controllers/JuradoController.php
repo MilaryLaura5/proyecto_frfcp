@@ -11,10 +11,8 @@ class JuradoController
     public function calificar()
     {
         redirect_if_not_jurado();
-
         $user = $_SESSION['user'];
         $id_participacion = $_GET['id'] ?? null;
-
         if (!$id_participacion || !is_numeric($id_participacion)) {
             die("Conjunto no especificado o inválido.");
         }
@@ -22,6 +20,7 @@ class JuradoController
         // Cargar modelos
         require_once __DIR__ . '/../models/ParticipacionConjunto.php';
         require_once __DIR__ . '/../models/CriterioConcurso.php';
+        require_once __DIR__ . '/../models/JuradoCriterioConcurso.php';
 
         // Obtener datos del conjunto
         $conjunto = ParticipacionConjunto::obtenerPorId($id_participacion);
@@ -29,14 +28,21 @@ class JuradoController
             die("Conjunto no encontrado en esta participación.");
         }
 
-        // ✅ CORREGIDO: orden de parámetros
-        $calificacion = Calificacion::porJuradoYParticipacion($user['id_jurado'], $id_participacion);
+        // Verificar si ya fue calificado
+        $calificacion = Calificacion::porJuradoYParticipacion($id_participacion, $user['id_jurado']);
 
-        // Obtener criterios del concurso
-        $criterios = CriterioConcurso::porConcurso($user['id_concurso']);
-        if (empty($criterios)) {
-            die("No hay criterios definidos para este concurso.");
+        // ✅ Obtener SOLO el criterio asignado a este jurado en este concurso
+        $criterio_asignado = JuradoCriterioConcurso::getCriterioCompletoPorJuradoYConcurso(
+            $user['id_jurado'],
+            $user['id_concurso']
+        );
+
+        if (!$criterio_asignado) {
+            die("No tienes un criterio asignado para este concurso.");
         }
+
+        // Convertir a array para mantener compatibilidad con la vista
+        $criterios = [$criterio_asignado];
 
         // Pasar todo a la vista
         require_once __DIR__ . '/../views/jurado/calificar.php';

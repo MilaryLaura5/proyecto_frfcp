@@ -45,14 +45,21 @@ if ($page === 'login') {
     // =============================
 
 } else {
+    // Asegurar que la sesión esté iniciada
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Si no hay usuario logueado y la página no es de jurado, redirigir
     if (!isset($_SESSION['user']) && !in_array($_GET['page'] ?? '', ['jurado_login', 'jurado_login_submit'])) {
         header('Location: index.php?page=login');
         exit;
     }
 
-
-    $user = $_SESSION['user'];
+    // Solo asignar $user si existe
+    $user = $_SESSION['user'] ?? null;
     $rol = $user['rol'] ?? null;
+
 
     // Redirigir según rol si intenta acceder a ruta no permitida
     function redirigir_no_autorizado()

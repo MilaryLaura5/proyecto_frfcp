@@ -83,4 +83,24 @@ class JuradoCriterioConcurso
         $stmt->execute([$id_jurado, $id_criterio_concurso]);
         return $stmt->fetch() !== false;
     }
+    /**
+     * Obtiene el criterio completo (con puntaje_maximo) que califica un jurado en un concurso
+     */
+    public static function getCriterioCompletoPorJuradoYConcurso($id_jurado, $id_concurso)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+        SELECT 
+            cc.id_criterio_concurso,
+            c.nombre AS nombre_criterio,
+            cc.puntaje_maximo
+        FROM JuradoCriterioConcurso jcc
+        JOIN CriterioConcurso cc ON jcc.id_criterio_concurso = cc.id_criterio_concurso
+        JOIN Criterio c ON cc.id_criterio = c.id_criterio
+        WHERE jcc.id_jurado = ? AND cc.id_concurso = ?
+        LIMIT 1
+    ");
+        $stmt->execute([$id_jurado, $id_concurso]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

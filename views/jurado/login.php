@@ -9,9 +9,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <style>
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+            /* Fondo con imagen y degradado blanco translúcido */
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+                url('https://www.shutterstock.com/image-photo/image-virgin-la-candelaria-paraded-600w-1300574818.jpg') no-repeat center center fixed;
+            background-size: cover;
             min-height: 100vh;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
@@ -20,6 +25,8 @@
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
             overflow: hidden;
+            backdrop-filter: blur(6px);
+            background-color: rgba(255, 255, 255, 0.95);
         }
 
         .login-header {
@@ -118,7 +125,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS (opcional, solo si usas componentes interactivos) -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
