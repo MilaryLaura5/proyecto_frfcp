@@ -103,4 +103,17 @@ class JuradoCriterioConcurso
         $stmt->execute([$id_jurado, $id_concurso]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+    public static function getCriterioConcursoPorJuradoYConcurso($id_jurado, $id_concurso)
+    {
+        global $pdo;
+        $stmt = $pdo->prepare("
+        SELECT jcc.id_criterio_concurso
+        FROM JuradoCriterioConcurso jcc
+        JOIN CriterioConcurso cc ON jcc.id_criterio_concurso = cc.id_criterio_concurso
+        WHERE jcc.id_jurado = ? AND cc.id_concurso = ?
+        LIMIT 1
+    ");
+        $stmt->execute([$id_jurado, $id_concurso]);
+        return $stmt->fetchColumn(); // Devuelve el ID o false
+    }
 }

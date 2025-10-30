@@ -86,7 +86,37 @@ class ParticipacionConjunto
     public static function porConcursoConDetalles($id_concurso, $id_jurado)
     {
         global $pdo;
-        $sql = "SELECT 
+
+        // ✅ Obtener el criterio asignado al jurado
+        require_once __DIR__ . '/JuradoCriterioConcurso.php';
+        $id_criterio_concurso = JuradoCriterioConcurso::getCriterioConcursoPorJuradoYConcurso($id_jurado, $id_concurso);
+
+        if (!$id_criterio_concurso) {
+            // Si no tiene criterio asignado, devolver conjuntos sin detalles
+            $stmt = $pdo->prepare("
+            SELECT 
+                p.id_participacion,
+                p.orden_presentacion,
+                c.nombre AS nombre_conjunto,
+                s.numero_serie,
+                'pendiente' AS estado_calificacion
+            FROM ParticipacionConjunto p
+            JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
+            JOIN Serie s ON c.id_serie = s.id_serie
+            WHERE p.id_concurso = ?
+            ORDER BY p.orden_presentacion
+        ");
+            $stmt->execute([$id_concurso]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return array_map(function ($r) {
+                $r['detalles'] = [];
+                return $r;
+            }, $rows);
+        }
+
+        // ✅ Solo traer el criterio asignado
+        $sql = "
+        SELECT 
             p.id_participacion,
             p.orden_presentacion,
             c.nombre AS nombre_conjunto,
@@ -97,18 +127,25 @@ class ParticipacionConjunto
         FROM ParticipacionConjunto p
         JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
         JOIN Serie s ON c.id_serie = s.id_serie
-        LEFT JOIN Calificacion cal ON p.id_participacion = cal.id_participacion AND cal.id_jurado = ?
+        LEFT JOIN Calificacion cal ON p.id_participacion = cal.id_participacion 
+            AND cal.id_jurado = :id_jurado
         LEFT JOIN detallecalificacion dc ON cal.id_calificacion = dc.id_calificacion
+            AND dc.id_criterio_concurso = :id_criterio_concurso  -- ✅ Filtrar por criterio asignado
         LEFT JOIN CriterioConcurso cc ON dc.id_criterio_concurso = cc.id_criterio_concurso
         LEFT JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
-        WHERE p.id_concurso = ?
-        ORDER BY p.orden_presentacion, cr.nombre
+        WHERE p.id_concurso = :id_concurso
+        ORDER BY p.orden_presentacion
     ";
+
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id_jurado, $id_concurso]);
+        $stmt->execute([
+            ':id_concurso' => $id_concurso,
+            ':id_jurado' => $id_jurado,
+            ':id_criterio_concurso' => $id_criterio_concurso
+        ]);
         $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Agrupar resultados por conjunto
+        // Agrupar
         $conjuntos = [];
         foreach ($resultados as $row) {
             $id = $row['id_participacion'];
@@ -129,7 +166,6 @@ class ParticipacionConjunto
                 ];
             }
         }
-
         return array_values($conjuntos);
     }
     public static function porConcursoConEstado($id_concurso, $id_jurado)

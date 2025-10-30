@@ -10,7 +10,7 @@ if (!$token) {
 }
 
 // En lugar de 'localhost' o 'proyecto_frfcp', usa tu IP local
-$baseUrl = "http://192.168.1.8/FRFCP";
+$baseUrl = "http://192.168.43.81/FRFCP";
 $url = "$baseUrl/index.php?page=jurado_login&token=" . urlencode($token);
 // Redirigir a un servicio QR público
 $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($url);
