@@ -16,32 +16,23 @@ $stmt->execute([$id_concurso]);
 $concurso_actual = $stmt->fetch();
 if (!$concurso_actual) die("Concurso no encontrado");
 
-// === OBTENER RESULTADOS CON SUMA CORRECTA POR CRITERIO ===
+// === OBTENER RESULTADOS SUMANDO LOS PUNTAJES REALES POR CRITERIO ===
 $sql = "
     SELECT 
         c.nombre AS conjunto,
         pc.orden_presentacion,
         s.nombre_serie AS categoria,
-        COALESCE(ROUND(SUM(promedios_criterio.promedio_criterio), 2), 0) AS promedio_final,
-        COUNT(promedios_criterio.id_criterio_concurso) AS calificaciones_count
+        COALESCE(ROUND(SUM(dc.puntaje), 2), 0) AS promedio_final,
+        COUNT(dc.id_detalle) AS calificaciones_count
     FROM participacionconjunto pc
     JOIN conjunto c ON pc.id_conjunto = c.id_conjunto
     JOIN serie s ON c.id_serie = s.id_serie
-    LEFT JOIN (
-        SELECT 
-            ca.id_participacion,
-            dc.id_criterio_concurso,
-            AVG(dc.puntaje) AS promedio_criterio
-        FROM calificacion ca
-        JOIN detallecalificacion dc ON ca.id_calificacion = dc.id_calificacion
-        WHERE ca.estado = 'enviado'
-        GROUP BY ca.id_participacion, dc.id_criterio_concurso
-    ) AS promedios_criterio ON pc.id_participacion = promedios_criterio.id_participacion
+    LEFT JOIN calificacion ca ON pc.id_participacion = ca.id_participacion AND ca.estado = 'enviado'
+    LEFT JOIN detallecalificacion dc ON ca.id_calificacion = dc.id_calificacion
     WHERE pc.id_concurso = ?
     GROUP BY c.id_conjunto, c.nombre, pc.orden_presentacion, s.nombre_serie
     ORDER BY promedio_final DESC
 ";
-
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$id_concurso]);
@@ -86,7 +77,7 @@ $estadisticas = [
 $tiene_calificaciones = $calificados > 0;
 
 // Criterios
-$stmt_c = $pdo->prepare("SELECT cr.nombre, cc.puntaje_maximo FROM criterioconcurso cc JOIN criterio cr ON cc.id_criterio = cr.id_criterio WHERE cc.id_concurso = ?");
+$stmt_c = $pdo->prepare("SELECT cr.nombre , cc.puntaje_maximo FROM criterioconcurso cc JOIN criterio cr ON cc.id_criterio = cr.id_criterio WHERE cc.id_concurso = ?");
 $stmt_c->execute([$id_concurso]);
 $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 ?>
