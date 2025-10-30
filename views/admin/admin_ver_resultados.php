@@ -16,39 +16,50 @@ $stmt->execute([$id_concurso]);
 $concurso_actual = $stmt->fetch();
 if (!$concurso_actual) die("Concurso no encontrado");
 
-// === OBTENER RESULTADOS USANDO id_participacion ===
-$sql = "SELECT 
-            c.nombre AS conjunto,
-            pc.orden_presentacion,
-            s.nombre_serie AS categoria,
-            ROUND(AVG(dc.puntaje), 2) AS promedio_final,
-            COUNT(dc.id_detalle) AS calificaciones_count
-        FROM participacionconjunto pc
-        JOIN conjunto c ON pc.id_conjunto = c.id_conjunto
-        JOIN serie s ON c.id_serie = s.id_serie
-        LEFT JOIN calificacion ca ON pc.id_participacion = ca.id_participacion AND ca.estado = 'enviado'
-        LEFT JOIN detallecalificacion dc ON ca.id_calificacion = dc.id_calificacion
-        WHERE pc.id_concurso = ?
-        GROUP BY c.id_conjunto, c.nombre, pc.orden_presentacion, s.nombre_serie
-        ORDER BY promedio_final DESC";
+// === OBTENER RESULTADOS CON SUMA CORRECTA POR CRITERIO ===
+$sql = "
+    SELECT 
+        c.nombre AS conjunto,
+        pc.orden_presentacion,
+        s.nombre_serie AS categoria,
+        COALESCE(ROUND(SUM(promedios_criterio.promedio_criterio), 2), 0) AS promedio_final,
+        COUNT(promedios_criterio.id_criterio_concurso) AS calificaciones_count
+    FROM participacionconjunto pc
+    JOIN conjunto c ON pc.id_conjunto = c.id_conjunto
+    JOIN serie s ON c.id_serie = s.id_serie
+    LEFT JOIN (
+        SELECT 
+            ca.id_participacion,
+            dc.id_criterio_concurso,
+            AVG(dc.puntaje) AS promedio_criterio
+        FROM calificacion ca
+        JOIN detallecalificacion dc ON ca.id_calificacion = dc.id_calificacion
+        WHERE ca.estado = 'enviado'
+        GROUP BY ca.id_participacion, dc.id_criterio_concurso
+    ) AS promedios_criterio ON pc.id_participacion = promedios_criterio.id_participacion
+    WHERE pc.id_concurso = ?
+    GROUP BY c.id_conjunto, c.nombre, pc.orden_presentacion, s.nombre_serie
+    ORDER BY promedio_final DESC
+";
+
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$id_concurso]);
 $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Calcular posiciones con manejo de empates
-$posicion = 1;
+// Calcular posiciones con manejo de empates correcto
+$posicion_actual = 1;
+$contador = 1;
 $ultimo_puntaje = null;
-foreach ($resultados as $index => &$r) {
-    if ($index === 0) {
-        $r['posicion'] = 1;
-    } else {
-        if ($r['promedio_final'] < $ultimo_puntaje) {
-            $posicion = $index + 1;
-        }
-        $r['posicion'] = $posicion;
+
+foreach ($resultados as &$r) {
+    if ($ultimo_puntaje === null || $r['promedio_final'] < $ultimo_puntaje) {
+        $posicion_actual = $contador;
     }
+    $r['posicion'] = $posicion_actual;
+
     $ultimo_puntaje = $r['promedio_final'];
+    $contador++;
 }
 unset($r);
 
@@ -370,7 +381,8 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
                                         <td class="categoria-nombre"><?= htmlspecialchars($r['categoria'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td>
                                             <strong class="<?= $r['promedio_final'] > 0 ? 'text-primary' : 'text-muted' ?>">
-                                                <?= $r['promedio_final'] > 0 ? number_format($r['promedio_final'], 2) : 'Sin calificar' ?>
+                                                <?= !empty($r['promedio_final']) ? number_format($r['promedio_final'], 2) : 'Sin calificar' ?>
+
                                             </strong>
                                         </td>
                                         <td>
