@@ -86,35 +86,10 @@ class ParticipacionConjunto
     public static function porConcursoConDetalles($id_concurso, $id_jurado)
     {
         global $pdo;
-
-        // ✅ Obtener el criterio asignado al jurado
         require_once __DIR__ . '/JuradoCriterioConcurso.php';
         $id_criterio_concurso = JuradoCriterioConcurso::getCriterioConcursoPorJuradoYConcurso($id_jurado, $id_concurso);
 
-        if (!$id_criterio_concurso) {
-            // Si no tiene criterio asignado, devolver conjuntos sin detalles
-            $stmt = $pdo->prepare("
-            SELECT 
-                p.id_participacion,
-                p.orden_presentacion,
-                c.nombre AS nombre_conjunto,
-                s.numero_serie,
-                'pendiente' AS estado_calificacion
-            FROM ParticipacionConjunto p
-            JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
-            JOIN Serie s ON c.id_serie = s.id_serie
-            WHERE p.id_concurso = ?
-            ORDER BY p.orden_presentacion
-        ");
-            $stmt->execute([$id_concurso]);
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return array_map(function ($r) {
-                $r['detalles'] = [];
-                return $r;
-            }, $rows);
-        }
-
-        // ✅ Solo traer el criterio asignado
+        // Consulta que SIEMPRE trae el estado, y los detalles solo si existen
         $sql = "
         SELECT 
             p.id_participacion,
@@ -123,29 +98,27 @@ class ParticipacionConjunto
             s.numero_serie,
             COALESCE(cal.estado, 'pendiente') AS estado_calificacion,
             dc.puntaje,
-            cr.nombre AS nombre_criterio
+            cr.nombre AS nombre_criterio,
+            cc.id_criterio_concurso  -- ✅ Añadido: necesario para comparar
         FROM ParticipacionConjunto p
         JOIN Conjunto c ON p.id_conjunto = c.id_conjunto
         JOIN Serie s ON c.id_serie = s.id_serie
         LEFT JOIN Calificacion cal ON p.id_participacion = cal.id_participacion 
             AND cal.id_jurado = :id_jurado
         LEFT JOIN detallecalificacion dc ON cal.id_calificacion = dc.id_calificacion
-            AND dc.id_criterio_concurso = :id_criterio_concurso  -- ✅ Filtrar por criterio asignado
         LEFT JOIN CriterioConcurso cc ON dc.id_criterio_concurso = cc.id_criterio_concurso
         LEFT JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
         WHERE p.id_concurso = :id_concurso
-        ORDER BY p.orden_presentacion
+        ORDER BY p.orden_presentacion, cr.nombre
     ";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             ':id_concurso' => $id_concurso,
-            ':id_jurado' => $id_jurado,
-            ':id_criterio_concurso' => $id_criterio_concurso
+            ':id_jurado' => $id_jurado
         ]);
         $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Agrupar
         $conjuntos = [];
         foreach ($resultados as $row) {
             $id = $row['id_participacion'];
@@ -155,17 +128,23 @@ class ParticipacionConjunto
                     'orden_presentacion' => $row['orden_presentacion'],
                     'nombre_conjunto' => $row['nombre_conjunto'],
                     'numero_serie' => $row['numero_serie'],
-                    'estado_calificacion' => $row['estado_calificacion'],
+                    'estado_calificacion' => $row['estado_calificacion'] ?? 'pendiente',
                     'detalles' => []
                 ];
             }
-            if ($row['puntaje'] !== null) {
-                $conjuntos[$id]['detalles'][] = [
-                    'nombre_criterio' => $row['nombre_criterio'],
-                    'puntaje' => $row['puntaje']
-                ];
+
+            // Solo agregar detalles si hay puntaje y si hay criterio asignado
+            if ($row['puntaje'] !== null && $id_criterio_concurso) {
+                // ✅ Ahora sí existe $row['id_criterio_concurso']
+                if ($row['id_criterio_concurso'] == $id_criterio_concurso) {
+                    $conjuntos[$id]['detalles'][] = [
+                        'nombre_criterio' => $row['nombre_criterio'],
+                        'puntaje' => $row['puntaje']
+                    ];
+                }
             }
         }
+
         return array_values($conjuntos);
     }
     public static function porConcursoConEstado($id_concurso, $id_jurado)

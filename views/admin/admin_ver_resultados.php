@@ -1,5 +1,5 @@
 <?php
-// views/admin/admin_ver_resultados.php - Versión CORREGIDA usando id_participacion
+// views/admin/admin_ver_resultados.php - Versión CORREGIDA y funcional
 require_once __DIR__ . '/../../helpers/auth.php';
 redirect_if_not_admin();
 global $pdo;
@@ -16,68 +16,95 @@ $stmt->execute([$id_concurso]);
 $concurso_actual = $stmt->fetch();
 if (!$concurso_actual) die("Concurso no encontrado");
 
-// === OBTENER RESULTADOS SUMANDO LOS PUNTAJES REALES POR CRITERIO ===
+// === OBTENER RESULTADOS CON MANEJO CORRECTO DE DESCALIFICADOS ===
 $sql = "
     SELECT 
         c.nombre AS conjunto,
         pc.orden_presentacion,
         s.nombre_serie AS categoria,
-        COALESCE(ROUND(SUM(dc.puntaje), 2), 0) AS promedio_final,
+        COALESCE(ROUND(SUM(dc.puntaje), 2), 0) AS puntaje_suma,
+        MAX(CASE WHEN ca.estado = 'descalificado' THEN 1 ELSE 0 END) AS es_descalificado,
         COUNT(dc.id_detalle) AS calificaciones_count
     FROM participacionconjunto pc
     JOIN conjunto c ON pc.id_conjunto = c.id_conjunto
     JOIN serie s ON c.id_serie = s.id_serie
-    LEFT JOIN calificacion ca ON pc.id_participacion = ca.id_participacion AND ca.estado = 'enviado'
+    LEFT JOIN calificacion ca ON pc.id_participacion = ca.id_participacion
     LEFT JOIN detallecalificacion dc ON ca.id_calificacion = dc.id_calificacion
     WHERE pc.id_concurso = ?
     GROUP BY c.id_conjunto, c.nombre, pc.orden_presentacion, s.nombre_serie
-    ORDER BY promedio_final DESC
+    ORDER BY 
+        es_descalificado ASC,
+        puntaje_suma DESC
 ";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$id_concurso]);
 $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Calcular posiciones con manejo de empates correcto
+// Procesar resultados: asignar estado y puntaje final
+foreach ($resultados as &$r) {
+    $es_descalificado = (bool)$r['es_descalificado'];
+    $tiene_calificaciones = $r['calificaciones_count'] > 0;
+
+    if ($es_descalificado) {
+        $r['estado_admin'] = 'descalificado';
+        $r['puntaje_final'] = 0.00;
+    } elseif ($tiene_calificaciones) {
+        $r['estado_admin'] = 'calificado';
+        $r['puntaje_final'] = (float)$r['puntaje_suma'];
+    } else {
+        $r['estado_admin'] = 'pendiente';
+        $r['puntaje_final'] = null;
+    }
+}
+unset($r);
+
+// Separar calificados (para posiciones) y otros
+$calificados = [];
+$otros = [];
+foreach ($resultados as $r) {
+    if ($r['estado_admin'] === 'calificado') {
+        $calificados[] = $r;
+    } else {
+        $otros[] = $r;
+    }
+}
+
+// Calcular posiciones solo para calificados
 $posicion_actual = 1;
 $contador = 1;
 $ultimo_puntaje = null;
-
-foreach ($resultados as &$r) {
-    if ($ultimo_puntaje === null || $r['promedio_final'] < $ultimo_puntaje) {
+foreach ($calificados as &$r) {
+    if ($ultimo_puntaje === null || $r['puntaje_final'] < $ultimo_puntaje) {
         $posicion_actual = $contador;
     }
     $r['posicion'] = $posicion_actual;
-
-    $ultimo_puntaje = $r['promedio_final'];
+    $ultimo_puntaje = $r['puntaje_final'];
     $contador++;
 }
 unset($r);
 
+// Combinar: primero calificados, luego otros (descalificados + pendientes)
+$resultados_finales = array_merge($calificados, $otros);
+
 // Estadísticas
-$total = count($resultados);
-$calificados = 0;
-$suma = 0;
-foreach ($resultados as $r) {
-    if ($r['calificaciones_count'] > 0 && $r['promedio_final'] > 0) {
-        $calificados++;
-        $suma += $r['promedio_final'];
-    }
-}
-$pendientes = $total - $calificados;
-$promedio_general = $calificados > 0 ? round($suma / $calificados, 2) : 0;
+$total = count($resultados_finales);
+$calificados_count = count($calificados);
+$descalificados_count = count(array_filter($otros, fn($r) => $r['estado_admin'] === 'descalificado'));
+$pendientes_count = $total - $calificados_count - $descalificados_count;
 
 $estadisticas = [
     'total_conjuntos' => $total,
-    'calificados' => $calificados,
-    'pendientes' => $pendientes,
-    'promedio_general' => $promedio_general
+    'calificados' => $calificados_count,
+    'descalificados' => $descalificados_count,
+    'pendientes' => $pendientes_count,
+    'porcentaje_calificados' => $total > 0 ? round(($calificados_count / $total) * 100, 1) : 0
 ];
 
-$tiene_calificaciones = $calificados > 0;
+$tiene_calificaciones = $calificados_count > 0;
 
 // Criterios
-$stmt_c = $pdo->prepare("SELECT cr.nombre , cc.puntaje_maximo FROM criterioconcurso cc JOIN criterio cr ON cc.id_criterio = cr.id_criterio WHERE cc.id_concurso = ?");
+$stmt_c = $pdo->prepare("SELECT cr.nombre, cc.puntaje_maximo FROM criterioconcurso cc JOIN criterio cr ON cc.id_criterio = cr.id_criterio WHERE cc.id_concurso = ?");
 $stmt_c->execute([$id_concurso]);
 $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -89,13 +116,12 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados del Concurso - Admin</title>
-    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <!-- Bootstrap CSS (sin espacios al final) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f8f0f0;
-            /* Fondo suave con tono rojizo */
             font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
@@ -113,7 +139,6 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
             font-size: 1.75rem;
             font-weight: 600;
             color: #c9184a;
-            /* 🔴 Rojo FRFCP */
             margin: 0;
         }
 
@@ -132,21 +157,10 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
             color: #333;
         }
 
-        .card-header h6 i,
-        .card-header h5 i {
-            color: #c9184a;
-        }
-
         .table th {
             font-weight: 600;
             color: #495057;
             background-color: #fdf2f2;
-            /* Fondo claro rojizo */
-        }
-
-        .table td,
-        .table th {
-            vertical-align: middle;
         }
 
         .badge-status {
@@ -175,21 +189,18 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 </head>
 
 <body class="p-3">
-
     <!-- Encabezado -->
     <div class="header-container">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title">
                 <i class="bi bi-trophy me-2"></i> Resultados del Concurso
             </h2>
-
             <div class="d-flex align-items-center gap-3">
                 <?php if ($tiene_calificaciones): ?>
                     <span class="badge bg-success badge-status">✅ Con calificaciones</span>
                 <?php else: ?>
                     <span class="badge bg-warning text-dark badge-status">⏳ Esperando calificaciones</span>
                 <?php endif; ?>
-
                 <a href="index.php?page=admin_resultados" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left"></i> Volver a Resultados en Vivo
                 </a>
@@ -198,7 +209,6 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <div class="container-fluid px-4">
-
         <!-- Layout compacto: 3 columnas -->
         <div class="row mb-4">
             <!-- Información del concurso -->
@@ -338,10 +348,10 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
         <div class="card shadow-sm mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-list-ul"></i> Resultados Finales</h5>
-                <span class="badge bg-secondary"><?= count($resultados) ?> encontrados</span>
+                <span class="badge bg-secondary"><?= count($resultados_finales) ?> encontrados</span>
             </div>
             <div class="card-body p-0">
-                <?php if (!empty($resultados)): ?>
+                <?php if (!empty($resultados_finales)): ?>
                     <div class="table-responsive table-container">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
@@ -349,37 +359,45 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
                                     <th>Posición</th>
                                     <th>N° Orden</th>
                                     <th>Conjunto Folklórico</th>
-                                    <th>Categoría</th>
+                                    <th>Serie</th>
                                     <th>Puntaje Final</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($resultados as $r): ?>
-                                    <tr class="<?= ($r['posicion'] <= 3 && $r['promedio_final'] > 0) ? 'table-success' : '' ?>">
+                                <?php foreach ($resultados_finales as $r): ?>
+                                    <tr class="<?= ($r['estado_admin'] === 'calificado' && isset($r['posicion']) && $r['posicion'] <= 3) ? 'table-success' : '' ?>">
                                         <td>
-                                            <strong><?= $r['posicion'] ?>°</strong>
-                                            <?php if ($r['posicion'] == 1 && $r['promedio_final'] > 0): ?>
-                                                🥇
-                                            <?php elseif ($r['posicion'] == 2 && $r['promedio_final'] > 0): ?>
-                                                🥈
-                                            <?php elseif ($r['posicion'] == 3 && $r['promedio_final'] > 0): ?>
-                                                🥉
+                                            <?php if ($r['estado_admin'] === 'calificado'): ?>
+                                                <strong><?= $r['posicion'] ?>°</strong>
+                                                <?php if ($r['posicion'] == 1): ?>🥇
+                                                <?php elseif ($r['posicion'] == 2): ?>🥈
+                                                <?php elseif ($r['posicion'] == 3): ?>🥉
                                             <?php endif; ?>
+                                        <?php else: ?>
+                                            —
+                                        <?php endif; ?>
                                         </td>
                                         <td class="fw-bold"><?= $r['orden_presentacion'] ?></td>
                                         <td class="conjunto-nombre"><?= htmlspecialchars($r['conjunto'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td class="categoria-nombre"><?= htmlspecialchars($r['categoria'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td>
-                                            <strong class="<?= $r['promedio_final'] > 0 ? 'text-primary' : 'text-muted' ?>">
-                                                <?= !empty($r['promedio_final']) ? number_format($r['promedio_final'], 2) : 'Sin calificar' ?>
-
-                                            </strong>
+                                            <?php if ($r['estado_admin'] === 'descalificado'): ?>
+                                                <strong class="text-muted">0.00</strong>
+                                            <?php elseif ($r['estado_admin'] === 'calificado'): ?>
+                                                <strong class="text-primary"><?= number_format($r['puntaje_final'], 2) ?></strong>
+                                            <?php else: ?>
+                                                <span class="text-muted">Sin calificar</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
-                                            <span class="badge <?= $r['calificaciones_count'] > 0 ? 'bg-success' : 'bg-warning' ?>">
-                                                <?= $r['calificaciones_count'] > 0 ? 'Calificado' : 'Pendiente' ?>
-                                            </span>
+                                            <?php if ($r['estado_admin'] === 'descalificado'): ?>
+                                                <span class="badge bg-danger">Descalificado</span>
+                                            <?php elseif ($r['estado_admin'] === 'calificado'): ?>
+                                                <span class="badge bg-success">Calificado</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -392,12 +410,11 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
                         <h6><i class="bi bi-graph-up"></i> Resumen Detallado:</h6>
                         <div class="row">
                             <div class="col-md-3"><strong>Total conjuntos:</strong> <?= $estadisticas['total_conjuntos'] ?></div>
-                            <div class="col-md-3"><strong>Con calificaciones:</strong> <?= $estadisticas['calificados'] ?></div>
+                            <div class="col-md-3"><strong>Calificados:</strong> <?= $estadisticas['calificados'] ?></div>
+                            <div class="col-md-3"><strong>Descalificados:</strong> <?= $estadisticas['descalificados'] ?></div>
                             <div class="col-md-3"><strong>Pendientes:</strong> <?= $estadisticas['pendientes'] ?></div>
-                            <div class="col-md-3"><strong>Porcentaje:</strong> <?= $estadisticas['total_conjuntos'] > 0 ? round(($estadisticas['calificados'] / $estadisticas['total_conjuntos']) * 100, 1) : 0 ?>%</div>
                         </div>
                     </div>
-
                 <?php else: ?>
                     <div class="text-center py-5">
                         <i class="bi bi-inbox display-4 text-muted"></i>
@@ -429,7 +446,7 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
     </div>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS (sin espacios al final) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
