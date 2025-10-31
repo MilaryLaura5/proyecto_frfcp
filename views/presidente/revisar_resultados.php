@@ -28,24 +28,31 @@ if (!empty($resultados)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados - Presidente</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS (corregido: sin espacios) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
+        body {
+            background-color: #f8f0f0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #f8f9fa;
-            border-radius: 10px;
+            background: white;
+            border-radius: 12px;
             padding: 15px 20px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
         }
 
         .page-header h2 {
             margin: 0;
             font-weight: 700;
-            color: #0d6efd;
+            color: #c9184a;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -58,14 +65,14 @@ if (!empty($resultados)) {
         }
 
         .info-card {
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             height: 100%;
         }
 
         .stat-card {
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             transition: transform 0.2s;
             height: 100%;
         }
@@ -88,24 +95,35 @@ if (!empty($resultados)) {
 
         .sidebar {
             min-height: 100vh;
+            background: linear-gradient(to bottom, #800f2f, #c9184a);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link {
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .info-box {
-            background: #f8f9fa;
+            background: #fdf2f2;
             border-radius: 8px;
             padding: 12px;
-            border-left: 4px solid #0d6efd;
+            border-left: 4px solid #c9184a;
             margin-bottom: 10px;
         }
 
         .pdf-card {
             background: linear-gradient(135deg, #198754, #157347);
             color: white;
-            border-radius: 10px;
+            border-radius: 12px;
             height: 100%;
         }
 
-        /* SCROLL PARA LA TABLA */
         .table-container {
             max-height: 500px;
             overflow-y: auto;
@@ -120,7 +138,7 @@ if (!empty($resultados)) {
         .table-container thead th {
             position: sticky;
             top: 0;
-            background-color: #212529;
+            background-color: #f8f9fa;
             z-index: 10;
         }
 
@@ -151,6 +169,21 @@ if (!empty($resultados)) {
             border-width: 1.5px;
             padding: 8px 16px;
         }
+
+        #showSidebarBtn {
+            position: fixed;
+            top: 20px;
+            left: 10px;
+            z-index: 1000;
+        }
+
+        #toggleSidebarBtn i {
+            transition: transform 0.3s ease;
+        }
+
+        #toggleSidebarBtn:hover i {
+            transform: translateX(-2px);
+        }
     </style>
 </head>
 
@@ -168,8 +201,8 @@ if (!empty($resultados)) {
 
                 <div class="p-3 pt-0">
                     <p class="text-muted mb-1">Sesión activa</p>
-                    <p class="fw-bold text-warning"><?php echo htmlspecialchars($_SESSION['user']['nombre']); ?></p>
-                    <hr class="bg-light">
+                    <p class="fw-bold" style="color: #ffccd5;"><?php echo htmlspecialchars($_SESSION['user']['nombre']); ?></p>
+                    <hr class="opacity-50">
                     <ul class="nav nav-pills flex-column">
                         <li class="nav-item">
                             <a href="index.php?page=presidente_seleccionar_concurso" class="nav-link text-white">
@@ -212,8 +245,8 @@ if (!empty($resultados)) {
                     <div class="row mb-4">
                         <!-- COLUMNA 1: INFORMACIÓN DEL CONCURSO -->
                         <div class="col-md-4 mb-3">
-                            <div class="card info-card border-primary h-100">
-                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
+                            <div class="card info-card border-0 h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: linear-gradient(to right, #c9184a, #800f2f); color: white;">
                                     <h6 class="mb-0">📋 Información del Concurso</h6>
                                     <span class="badge estado-badge 
                     <?php
@@ -247,7 +280,7 @@ if (!empty($resultados)) {
 
                         <!-- COLUMNA 2: ESTADÍSTICAS -->
                         <div class="col-md-4 mb-3">
-                            <div class="card info-card border-info h-100">
+                            <div class="card info-card border-0 h-100">
                                 <div class="card-header bg-info text-white text-center py-2">
                                     <h6 class="mb-0">📊 Estadísticas</h6>
                                 </div>
@@ -285,7 +318,7 @@ if (!empty($resultados)) {
                         <!-- COLUMNA 3: PDF -->
                         <div class="col-md-4 mb-3">
                             <?php if (!empty($resultados)): ?>
-                                <div class="card info-card border-success h-100">
+                                <div class="card info-card border-0 h-100">
                                     <div class="card-header bg-success text-white text-center py-2">
                                         <h6 class="mb-0">📄 Exportar Resultados</h6>
                                     </div>
@@ -303,7 +336,7 @@ if (!empty($resultados)) {
                                     </div>
                                 </div>
                             <?php else: ?>
-                                <div class="card info-card border-secondary h-100">
+                                <div class="card info-card border-0 h-100">
                                     <div class="card-header bg-secondary text-white text-center py-2">
                                         <h6 class="mb-0">📄 Exportar Resultados</h6>
                                     </div>
@@ -350,7 +383,7 @@ if (!empty($resultados)) {
 
                     <!-- TABLA DE RESULTADOS CON SCROLL -->
                     <div class="card mb-4">
-                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(to right, #c9184a, #800f2f); color: white;">
                             <h5 class="mb-0">📊 Resultados Finales</h5>
                             <span class="badge bg-light text-dark"><?php echo count($resultados); ?> conjuntos</span>
                         </div>
@@ -358,7 +391,7 @@ if (!empty($resultados)) {
                             <?php if (!empty($resultados)): ?>
                                 <div class="table-container">
                                     <table class="table table-striped table-hover mb-0">
-                                        <thead class="table-dark">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th>Posición</th>
                                                 <th>N° Orden</th>
@@ -445,10 +478,9 @@ if (!empty($resultados)) {
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Filtros dinámicos
         document.addEventListener('DOMContentLoaded', function() {
             const buscar = document.getElementById('buscarConjunto');
             const filtro = document.getElementById('filtroCategoria');
@@ -475,52 +507,26 @@ if (!empty($resultados)) {
             buscar.addEventListener('input', filtrar);
             filtro.addEventListener('change', filtrar);
         });
+
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        const showBtn = document.getElementById('showSidebarBtn');
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.style.display = 'none';
+            mainContent.classList.remove('col-md-9');
+            mainContent.classList.add('col-md-12');
+            showBtn.classList.remove('d-none');
+        });
+
+        showBtn.addEventListener('click', () => {
+            sidebar.style.display = 'block';
+            mainContent.classList.remove('col-md-12');
+            mainContent.classList.add('col-md-9');
+            showBtn.classList.add('d-none');
+        });
     </script>
 </body>
-<!-- Bootstrap Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-<script>
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    const toggleBtn = document.getElementById('toggleSidebarBtn');
-    const showBtn = document.getElementById('showSidebarBtn');
-
-    toggleBtn.addEventListener('click', () => {
-        sidebar.style.display = 'none';
-        mainContent.classList.remove('col-md-9');
-        mainContent.classList.add('col-md-12');
-        showBtn.classList.remove('d-none');
-    });
-
-    showBtn.addEventListener('click', () => {
-        sidebar.style.display = 'block';
-        mainContent.classList.remove('col-md-12');
-        mainContent.classList.add('col-md-9');
-        showBtn.classList.add('d-none');
-    });
-</script>
-
-<style>
-    .sidebar {
-        min-height: 100vh;
-        transition: all 0.3s ease;
-    }
-
-    #showSidebarBtn {
-        position: fixed;
-        top: 20px;
-        left: 10px;
-        z-index: 1000;
-    }
-
-    #toggleSidebarBtn i {
-        transition: transform 0.3s ease;
-    }
-
-    #toggleSidebarBtn:hover i {
-        transform: translateX(-2px);
-    }
-</style>
 
 </html>

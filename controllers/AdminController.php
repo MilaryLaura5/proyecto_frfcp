@@ -454,8 +454,20 @@ class AdminController
         // Cargar conjuntos globales
         require_once __DIR__ . '/../models/Conjunto.php';
         require_once __DIR__ . '/../models/ParticipacionConjunto.php';
-        $conjuntos_globales = Conjunto::listar();
-
+        // Obtener conjuntos NO asignados al concurso actual
+        $stmt = $pdo->prepare("
+    SELECT c.*, s.numero_serie, s.nombre_serie, td.nombre_tipo 
+    FROM Conjunto c
+    JOIN Serie s ON c.id_serie = s.id_serie
+    JOIN tipodanza td ON s.id_tipo = td.id_tipo
+    WHERE c.estado_activo = 1
+      AND c.id_conjunto NOT IN (
+          SELECT id_conjunto FROM ParticipacionConjunto WHERE id_concurso = ?
+      )
+    ORDER BY c.nombre
+");
+        $stmt->execute([$id_concurso]);
+        $conjuntos_globales = $stmt->fetchAll(PDO::FETCH_ASSOC);
         usort($conjuntos_globales, function ($a, $b) {
             return strcasecmp($a['nombre'], $b['nombre']);
         });
@@ -853,12 +865,6 @@ class AdminController
     // =============================
     // JURADOS
     // =============================
-
-    private function normalizarTexto($str)
-    {
-        return strtolower(trim(preg_replace('/[\x{0300}-\x{036f}]/u', '', $str)));
-    }
-
 
     public function crearJurado()
     {

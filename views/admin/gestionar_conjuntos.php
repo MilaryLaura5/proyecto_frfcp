@@ -1,3 +1,4 @@
+<!-- views/admin/gestionar_conjuntos.php -->
 <!DOCTYPE html>
 <html lang="es">
 
@@ -154,8 +155,9 @@
                             <ul id="listaConjuntos" class="list-group">
                                 <?php foreach ($conjuntos_globales as $c): ?>
                                     <li class="list-group-item d-flex justify-content-between align-items-center item-conjunto"
-                                        data-nombre="<?= strtolower(normalizarTexto($c['nombre'])) ?>"
-                                        onclick="seleccionarConjunto(
+                                        data-nombre="<?= strtolower(
+                                                            preg_replace('/[\x{0300}-\x{036f}]/u', '', $c['nombre'])
+                                                        ) ?>" onclick="seleccionarConjunto(
                                             <?= $c['id_conjunto'] ?>,
                                             '<?= addslashes(htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8')) ?>',
                                             'SERIE <?= $c['numero_serie'] ?> - <?= addslashes(htmlspecialchars($c['nombre_serie'], ENT_QUOTES, 'UTF-8')) ?>'
