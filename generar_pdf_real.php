@@ -1,5 +1,5 @@
 <?php
-// generar_pdf_real.php - PDF con suma correcta de criterios (igual que la vista web)
+// generar_pdf_real.php - Versión limpia sin logo ni GD
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/vendor/autoload.php';
@@ -26,7 +26,7 @@ $stmt->execute([$id_concurso]);
 $concurso = $stmt->fetch();
 if (!$concurso) die("Concurso no encontrado");
 
-// === OBTENER RESULTADOS CON SUMA CORRECTA DE CRITERIOS (igual que la vista web) ===
+// === OBTENER RESULTADOS CON SUMA CORRECTA DE CRITERIOS ===
 $sql = "
     SELECT 
         c.nombre AS conjunto,
@@ -86,7 +86,6 @@ foreach ($calificados as &$r) {
 }
 unset($r);
 
-// Combinar resultados
 $resultados_pdf = array_merge($calificados, $otros);
 
 // Estadísticas
@@ -101,21 +100,14 @@ $stmt_c = $pdo->prepare("SELECT cr.nombre, cc.puntaje_maximo FROM criterioconcur
 $stmt_c->execute([$id_concurso]);
 $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 
-// DomPDF
+// DomPDF (sin imágenes → no necesita GD)
 $options = new Options();
-$options->set('isRemoteEnabled', true);
+$options->set('isRemoteEnabled', false);
 $options->set('isPhpEnabled', false);
 $options->set('defaultFont', 'Arial');
 $dompdf = new Dompdf($options);
 
-// Logo
-$logoPath = __DIR__ . '/logos/logo_frfcp.png';
-$logoBase64 = '';
-if (file_exists($logoPath)) {
-    $logoBase64 = 'image/png;base64,' . base64_encode(file_get_contents($logoPath));
-}
-
-// HTML
+// HTML sin logo ni medallas
 $html = '
 <!DOCTYPE html>
 <html>
@@ -124,33 +116,26 @@ $html = '
     <title>Informe Oficial - ' . htmlspecialchars($concurso['nombre']) . '</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; color: #000; font-size: 11px; line-height: 1.4; }
-        .header { text-align: center; border-bottom: 3px double #8B0000; padding-bottom: 15px; margin-bottom: 25px; }
-        .logo { height: 60px; margin-bottom: 10px; }
-        .federacion { font-size: 18px; font-weight: bold; text-transform: uppercase; margin: 0; color: #8B0000; }
-        .titulo { font-size: 16px; font-weight: bold; margin: 8px 0; color: #2F4F4F; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
+        .federacion { font-size: 18px; font-weight: bold; text-transform: uppercase; margin: 0; color: #000; }
+        .titulo { font-size: 16px; font-weight: bold; margin: 8px 0; color: #000; }
         .subtitulo { font-size: 13px; margin: 5px 0; font-style: italic; color: #555; }
-        .info-concurso { background-color: #f8f8f8; padding: 10px; border-radius: 5px; margin: 15px 0; font-size: 11px; text-align: center; }
+        .info-concurso { background-color: #f8f8f8; padding: 10px; border-radius: 4px; margin: 15px 0; font-size: 11px; text-align: center; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 11px; }
-        th { background-color: #2F4F4F; color: white; padding: 8px; text-align: center; border: 1px solid #000; font-weight: bold; }
+        th { background-color: #333; color: white; padding: 8px; text-align: center; border: 1px solid #000; font-weight: bold; }
         td { padding: 7px; border: 1px solid #000; text-align: center; }
         .text-left { text-align: left; padding-left: 8px; }
-        .posicion-1 { background-color: #FFF9C4; font-weight: bold; }
-        .posicion-2 { background-color: #E0E0E0; font-weight: bold; }
-        .posicion-3 { background-color: #D7CCC8; font-weight: bold; }
-        .sin-calificar { color: #777; font-style: italic; }
-        .section-title { font-size: 13px; font-weight: bold; margin: 25px 0 12px 0; padding-bottom: 5px; border-bottom: 1px solid #ccc; color: #2F4F4F; text-align: center; }
+        .section-title { font-size: 13px; font-weight: bold; margin: 25px 0 12px 0; padding-bottom: 5px; border-bottom: 1px solid #ccc; color: #000; text-align: center; }
         .resumen-table { width: 70%; margin: 15px auto; }
         .resumen-table td { padding: 6px 10px; }
         .footer { margin-top: 40px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ccc; padding-top: 12px; }
         .firma { margin-top: 60px; text-align: center; }
         .firma-linea { border-top: 1px solid #000; width: 250px; margin: 0 auto 8px; }
-        .medal { font-weight: bold; color: #8B0000; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        ' . ($logoBase64 ? '<img src="' . $logoBase64 . '" alt="Logo FRFCP" class="logo">' : '') . '
         <div class="federacion">FEDERACIÓN REGIONAL DEL FOLCLORE Y CULTURA DE PUNO</div>
         <div class="titulo">INFORME OFICIAL DE RESULTADOS</div>
         <div class="subtitulo">Concurso: "' . htmlspecialchars($concurso['nombre']) . '"</div>
@@ -161,45 +146,41 @@ $html = '
         </div>
     </div>
 
-    <div class="section-title">📊 RESULTADOS FINALES</div>
+    <div class="section-title">RESULTADOS FINALES</div>
     <table>
         <thead>
             <tr>
-                <th width="8%">Posición</th>
-                <th width="8%">Orden</th>
-                <th width="38%">Conjunto Folklórico</th>
-                <th width="16%">Categoría</th>
-                <th width="15%">Puntaje Final</th>
-                <th width="15%">Estado</th>
+                <th>Posición</th>
+                <th>Orden</th>
+                <th>Conjunto Folklórico</th>
+                <th>Categoría</th>
+                <th>Puntaje Final</th>
+                <th>Estado</th>
             </tr>
         </thead>
         <tbody>';
 
 foreach ($resultados_pdf as $r) {
     $posicion_texto = '—';
-    $medal = '';
     if ($r['estado_pdf'] === 'calificado') {
         $posicion_texto = $r['posicion'] . '°';
-        if ($r['posicion'] == 1) $medal = ' ';
-        elseif ($r['posicion'] == 2) $medal = ' ';
-        elseif ($r['posicion'] == 3) $medal = ' ';
     }
 
     $puntaje = match ($r['estado_pdf']) {
         'descalificado' => '<strong class="text-muted">0.00</strong>',
-        'calificado' => '<strong class="text-primary">' . number_format($r['puntaje_final'], 2) . '</strong>',
-        default => '<span class="sin-calificar">N/C</span>'
+        'calificado' => '<strong>' . number_format($r['puntaje_final'], 2) . '</strong>',
+        default => '<span class="text-muted">N/C</span>'
     };
 
     $estado = match ($r['estado_pdf']) {
-        'descalificado' => '<span class="badge bg-danger">Descalificado</span>',
-        'calificado' => '<span class="badge bg-success">Calificado</span>',
-        default => '<span class="badge bg-warning">Pendiente</span>'
+        'descalificado' => '<span style="color:#d32f2f;">Descalificado</span>',
+        'calificado' => '<span style="color:#2e7d32;">Calificado</span>',
+        default => '<span style="color:#ed6c02;">Pendiente</span>'
     };
 
     $html .= '
-        <tr class="' . ($r['estado_pdf'] === 'calificado' && $r['posicion'] <= 3 ? 'posicion-' . $r['posicion'] : '') . '">
-            <td><strong>' . $posicion_texto . '</strong>' . $medal . '</td>
+        <tr>
+            <td><strong>' . $posicion_texto . '</strong></td>
             <td><strong>' . $r['orden_presentacion'] . '</strong></td>
             <td class="text-left">' . htmlspecialchars($r['conjunto']) . '</td>
             <td>' . htmlspecialchars($r['categoria']) . '</td>
@@ -212,12 +193,12 @@ $html .= '
         </tbody>
     </table>
 
-    <div class="section-title">📝 CRITERIOS DE EVALUACIÓN</div>
+    <div class="section-title">CRITERIOS DE EVALUACIÓN</div>
     <table style="width: 70%; margin: 0 auto;">
         <thead>
             <tr>
-                <th width="70%">Criterio</th>
-                <th width="30%">Puntaje Máximo</th>
+                <th>Criterio</th>
+                <th>Puntaje Máximo</th>
             </tr>
         </thead>
         <tbody>';
@@ -234,7 +215,7 @@ $html .= '
         </tbody>
     </table>
 
-    <div class="section-title">📈 RESUMEN ESTADÍSTICO</div>
+    <div class="section-title">RESUMEN ESTADÍSTICO</div>
     <table class="resumen-table">
         <tbody>
             <tr><td class="text-left"><strong>Total de Conjuntos:</strong></td><td><strong>' . $total . '</strong></td></tr>
@@ -246,7 +227,7 @@ $html .= '
     </table>
 
     <div class="footer">
-        <p><em>Documento generado automáticamente por el Sistema de Calificación de la Federación Regional del Folclore y Cultura de Puno</em></p>
+        <p>Documento generado automáticamente por el Sistema de Calificación de la Federación Regional del Folclore y Cultura de Puno</p>
         <p>Fecha de emisión: ' . date('d/m/Y H:i:s') . '</p>
     </div>
     
