@@ -17,14 +17,17 @@ class Conjunto
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Crear nuevo conjunto
     public static function crear($nombre, $id_serie)
     {
         global $pdo;
 
-        // Verificar si ya existe un conjunto con ese nombre (ignorando mayúsculas)
-        $check = $pdo->prepare("SELECT COUNT(*) FROM Conjunto WHERE LOWER(nombre) = LOWER(?)");
-        $check->execute([$nombre]);
+        // Verificar si ya existe un conjunto con ese nombre Y serie (ignorando mayúsculas)
+        $check = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM Conjunto 
+        WHERE LOWER(nombre) = LOWER(?) AND id_serie = ?
+    ");
+        $check->execute([$nombre, $id_serie]);
 
         if ($check->fetchColumn() > 0) {
             return false; // Ya existe
