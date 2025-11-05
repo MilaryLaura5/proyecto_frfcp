@@ -1,5 +1,5 @@
 <?php
-// generar_excel.php - Exportar resultados a Excel (formato profesional)
+// generar_excel.php - Exportar resultados a Excel (formato FORMAL profesional)
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/vendor/autoload.php';
@@ -10,6 +10,8 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Font;
+use PhpOffice\PhpSpreadsheet\Style\Color;
 
 session_start();
 if (!isset($_SESSION['user'])) {
@@ -29,7 +31,7 @@ $stmt->execute([$id_concurso]);
 $concurso = $stmt->fetch();
 if (!$concurso) die("Concurso no encontrado");
 
-// === OBTENER RESULTADOS CON SUMA CORRECTA POR CRITERIO ===
+// === OBTENER RESULTADOS ===
 $sql = "
     SELECT 
         c.nombre AS conjunto,
@@ -91,50 +93,101 @@ unset($r);
 
 $resultados_excel = array_merge($calificados, $otros);
 
-// === CREAR ARCHIVO EXCEL ===
+// === CREAR ARCHIVO EXCEL FORMAL ===
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
-// Título
-$sheet->setCellValue('A1', 'FEDERACIÓN REGIONAL DEL FOLCLORE Y CULTURA DE PUNO');
-$sheet->setCellValue('A2', 'INFORME OFICIAL DE RESULTADOS');
-$sheet->setCellValue('A3', 'Concurso: "' . $concurso['nombre'] . '"');
-$sheet->setCellValue('A4', 'Fecha del Evento: ' . date('d/m/Y', strtotime($concurso['fecha_inicio'])));
-$sheet->setCellValue('A5', 'Estado: ' . $concurso['estado']);
-$sheet->setCellValue('A6', 'Fecha de Emisión: ' . date('d/m/Y H:i'));
+// Configuración inicial
+$sheet->setTitle('Resultados Oficiales');
+$sheet->getDefaultRowDimension()->setRowHeight(20);
 
-// Estilo: negrita en título
-$styleTitle = ['font' => ['bold' => true], 'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT]];
-$sheet->getStyle('A1:A6')->applyFromArray($styleTitle);
+// ========== ENCABEZADO FORMAL ==========
+// Título principal
+$sheet->mergeCells('A1:F1');
+$sheet->setCellValue('A1', 'FEDERACIÓN REGIONAL DEL FOLCLORE Y CULTURA DE PUNO');
+$sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+$sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+// Subtítulo
+$sheet->mergeCells('A2:F2');
+$sheet->setCellValue('A2', 'RESULTADOS OFICIALES DE CONCURSO');
+$sheet->getStyle('A2')->getFont()->setBold(true)->setSize(12);
+$sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+// Información del concurso
+$sheet->mergeCells('A3:F3');
+$sheet->setCellValue('A3', 'Concurso: "' . $concurso['nombre'] . '"');
+$sheet->getStyle('A3')->getFont()->setSize(11);
+$sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+// Detalles del evento
+$sheet->setCellValue('A4', 'Fecha de Inicio:');
+$sheet->setCellValue('B4', date('d/m/Y H:i', strtotime($concurso['fecha_inicio'])));
+$sheet->setCellValue('D4', 'Fecha de Fin:');
+$sheet->setCellValue('E4', date('d/m/Y H:i', strtotime($concurso['fecha_fin'])));
+
+$sheet->setCellValue('A5', 'Estado del Concurso:');
+$sheet->setCellValue('B5', $concurso['estado']);
+$sheet->setCellValue('D5', 'Fecha de Emisión:');
+$sheet->setCellValue('E5', date('d/m/Y H:i'));
+
+// Espacio antes de la tabla
+$sheet->getRowDimension(7)->setRowHeight(10);
+
+// ========== TABLA DE RESULTADOS ==========
+$headerRow = 8;
 
 // Encabezados de la tabla
-$sheet->setCellValue('A8', 'Posición');
-$sheet->setCellValue('B8', 'N° Orden');
-$sheet->setCellValue('C8', 'Conjunto Folklórico');
-$sheet->setCellValue('D8', 'Categoría');
-$sheet->setCellValue('E8', 'Puntaje Final');
-$sheet->setCellValue('F8', 'Estado');
+$sheet->setCellValue('A' . $headerRow, 'POSICIÓN');
+$sheet->setCellValue('B' . $headerRow, 'N° ORDEN');
+$sheet->setCellValue('C' . $headerRow, 'CONJUNTO FOLKLÓRICO');
+$sheet->setCellValue('D' . $headerRow, 'CATEGORÍA');
+$sheet->setCellValue('E' . $headerRow, 'PUNTAJE FINAL');
+$sheet->setCellValue('F' . $headerRow, 'ESTADO');
 
-// Estilo: negrita + centrado + fondo gris claro
-$styleHeader = [
-    'font' => ['bold' => true],
-    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFEEEEEE']],
-    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+// Estilo encabezado formal - MEJORADO
+$headerStyle = [
+    'font' => [
+        'bold' => true,
+        'color' => ['argb' => Color::COLOR_WHITE],
+        'size' => 10
+    ],
+    'fill' => [
+        'fillType' => Fill::FILL_SOLID,
+        'startColor' => ['argb' => 'FF34495E'] // Azul más oscuro y elegante
+    ],
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER
+    ],
+    'borders' => [
+        'outline' => [
+            'borderStyle' => Border::BORDER_MEDIUM,
+            'color' => ['argb' => 'FF2C3E50']
+        ],
+        'inside' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['argb' => 'FF2C3E50']
+        ]
+    ]
 ];
-$sheet->getStyle('A8:F8')->applyFromArray($styleHeader);
+$sheet->getStyle('A' . $headerRow . ':F' . $headerRow)->applyFromArray($headerStyle);
+$sheet->getRowDimension($headerRow)->setRowHeight(25);
 
 // Llenar datos
-$fila = 9;
+$fila = $headerRow + 1;
 foreach ($resultados_excel as $r) {
     $posicion_texto = '—';
+    $posicion_num = '';
+
     if ($r['estado_excel'] === 'Calificado') {
         $posicion_texto = $r['posicion'] . '°';
+        $posicion_num = $r['posicion'];
     }
 
     $puntaje = match ($r['estado_excel']) {
-        'Descalificado' => 0.00,
-        'Calificado' => $r['puntaje_final'],
+        'Descalificado' => '0.00',
+        'Calificado' => number_format($r['puntaje_final'], 2),
         default => 'N/C'
     };
 
@@ -145,36 +198,103 @@ foreach ($resultados_excel as $r) {
     $sheet->setCellValue('E' . $fila, $puntaje);
     $sheet->setCellValue('F' . $fila, $r['estado_excel']);
 
-    // Estilo: centrado + bordes
-    $styleCell = [
-        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+    // Estilo base para todas las filas - MEJORADO
+    $rowStyle = [
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER
+        ],
+        'borders' => [
+            'outline' => [
+                'borderStyle' => Border::BORDER_MEDIUM,
+                'color' => ['argb' => 'FFBDC3C7']
+            ],
+            'inside' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FFECF0F1']
+            ]
+        ]
     ];
-    $sheet->getStyle('A' . $fila . ':F' . $fila)->applyFromArray($styleCell);
 
-    // Alternar color de fondo para filas pares
-    if ($fila % 2 == 0) {
-        $sheet->getStyle('A' . $fila . ':F' . $fila)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF2F2F2');
+    // Destacar top 3 con colores elegantes
+    if ($posicion_num <= 3 && $posicion_num != '') {
+        $rowStyle['font'] = ['bold' => true];
+        switch ($posicion_num) {
+            case 1:
+                $rowStyle['fill'] = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFFFE0']]; // Amarillo muy suave
+                break;
+            case 2:
+                $rowStyle['fill'] = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF5F5F5']]; // Blanco humo
+                break;
+            case 3:
+                $rowStyle['fill'] = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F8FF']]; // Azul muy claro
+                break;
+        }
     }
+    // Estilo para descalificados
+    elseif ($r['estado_excel'] === 'Descalificado') {
+        $rowStyle['font'] = ['color' => ['argb' => 'FFC0392B']]; // Rojo elegante
+        $rowStyle['fill'] = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFF5F5']]; // Fondo rojo muy claro
+    }
+    // Estilo para pendientes
+    elseif ($r['estado_excel'] === 'Pendiente') {
+        $rowStyle['font'] = ['color' => ['argb' => 'FF7F8C8D']]; // Gris elegante
+        $rowStyle['fill'] = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF9F9F9']]; // Fondo gris muy claro
+    }
+    // Efecto zebra para filas normales
+    elseif ($fila % 2 == 0) {
+        $rowStyle['fill'] = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9F9']]; // Gris muy claro
+    } else {
+        $rowStyle['fill'] = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFFFFF']]; // Blanco puro
+    }
+
+    $sheet->getStyle('A' . $fila . ':F' . $fila)->applyFromArray($rowStyle);
+    $sheet->getRowDimension($fila)->setRowHeight(22);
 
     $fila++;
 }
 
-// Ajustar ancho de columnas
-$sheet->getColumnDimension('A')->setAutoSize(true);
-$sheet->getColumnDimension('B')->setAutoSize(true);
-$sheet->getColumnDimension('C')->setAutoSize(true);
-$sheet->getColumnDimension('D')->setAutoSize(true);
-$sheet->getColumnDimension('E')->setAutoSize(true);
-$sheet->getColumnDimension('F')->setAutoSize(true);
+// Aplicar borde exterior completo a toda la tabla
+$lastDataRow = $fila - 1;
+$tableRange = 'A' . $headerRow . ':F' . $lastDataRow;
+$sheet->getStyle($tableRange)->getBorders()->getOutline()->setBorderStyle(Border::BORDER_MEDIUM)->setColor(new Color('FF2C3E50'));
 
-// Centrar contenido en todas las celdas de la tabla
-$sheet->getStyle('A8:F' . ($fila - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+// ========== PIE DE PÁGINA DISCRETO ==========
+$footerRow = $fila + 2;
 
-// Descargar
+$sheet->setCellValue('A' . $footerRow, 'Sistema de Gestión de Concursos Folklóricos - ' . date('Y'));
+$sheet->getStyle('A' . $footerRow)->getFont()->setSize(9)->setItalic(true)->setColor(new Color('FF7F8C8D'));
+$sheet->mergeCells('A' . $footerRow . ':F' . $footerRow);
+$sheet->getStyle('A' . $footerRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+// ========== AJUSTES FINALES PERFECTOS ==========
+// Ajustar ancho de columnas optimizado
+$sheet->getColumnDimension('A')->setWidth(12);  // Posición
+$sheet->getColumnDimension('B')->setWidth(12);  // Orden
+$sheet->getColumnDimension('C')->setWidth(40);  // Conjunto
+$sheet->getColumnDimension('D')->setWidth(25);  // Categoría
+$sheet->getColumnDimension('E')->setWidth(15);  // Puntaje
+$sheet->getColumnDimension('F')->setWidth(15);  // Estado
+
+// Centrar todo el contenido de la tabla perfectamente
+$sheet->getStyle('A' . $headerRow . ':F' . $lastDataRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+
+// Congelar encabezados para mejor navegación
+$sheet->freezePane('A' . ($headerRow + 1));
+
+// Autoajustar alturas de fila del encabezado
+$sheet->getRowDimension(1)->setRowHeight(25);
+$sheet->getRowDimension(2)->setRowHeight(22);
+$sheet->getRowDimension(3)->setRowHeight(20);
+
+// ========== DESCARGAR ARCHIVO ==========
+$filename = "Resultados_" . preg_replace('/[^a-zA-Z0-9_-]/', '_', $concurso['nombre']) . "_" . date('Y-m-d') . ".xlsx";
+
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment;filename="Resultados_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $concurso['nombre']) . '_' . date('Y-m-d') . '.xlsx"');
+header('Content-Disposition: attachment;filename="' . $filename . '"');
 header('Cache-Control: max-age=0');
+header('Expires: 0');
+header('Pragma: public');
 
 $writer = new Xlsx($spreadsheet);
 $writer->save('php://output');
