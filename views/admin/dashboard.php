@@ -29,73 +29,68 @@ $user = auth();
             bottom: 0;
             z-index: 100;
             width: 250px;
-            background-color: #2c3e50;
+            background: linear-gradient(to bottom, #c9184a, #800f2f);
+            /* ROJO DEL CÓDIGO QUE ME PASASTE */
             color: white;
             transition: all 0.3s ease;
             padding: 0;
-            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 3px 0 15px rgba(201, 24, 74, 0.3);
         }
 
-        /* ESTADO COLAPSADO - SE OCULTA TODO */
-        .sidebar-collapsed {
-            width: 60px !important;
+        /* ESTADO COMPLETAMENTE OCULTO */
+        .sidebar-hidden {
+            transform: translateX(-100%) !important;
+            width: 250px !important;
         }
 
-        .sidebar-collapsed .nav-link span,
-        .sidebar-collapsed h5,
-        .sidebar-collapsed p,
-        .sidebar-collapsed hr,
-        .sidebar-collapsed .d-flex>div:not(:has(i)),
-        .sidebar-collapsed .bg-light {
-            display: none !important;
-        }
-
-        .sidebar-collapsed .nav-link {
-            justify-content: center !important;
-            padding: 12px 5px !important;
-        }
-
-        .sidebar-collapsed .nav-link i {
-            margin-right: 0 !important;
-            font-size: 1.2rem;
-        }
-
-        .sidebar-collapsed .d-flex {
-            justify-content: center !important;
+        .sidebar-hidden * {
+            visibility: hidden;
         }
 
         .sidebar a {
             color: #ecf0f1;
+            /* COLOR DEL TEXTO COMO EN EL CÓDIGO EJEMPLO */
             transition: background-color 0.2s;
         }
 
         .sidebar a:hover {
             background-color: #34495e;
+            /* AZUL OSCURO COMO EN EL CÓDIGO EJEMPLO */
+            color: #ffffff;
         }
 
+        /* COMPORTAMIENTO EN MÓVIL */
         @media (max-width: 767.98px) {
             .sidebar {
                 transform: translateX(-100%);
+                width: 280px !important;
             }
 
             .sidebar.show {
                 transform: translateX(0);
             }
+
+            .sidebar-hidden {
+                transform: translateX(-100%) !important;
+            }
         }
 
         .main-content {
-            transition: margin-left 0.3s ease;
+            transition: all 0.3s ease;
             padding: 20px;
             min-height: 100vh;
+            width: 100%;
         }
 
         @media (min-width: 768px) {
             .main-content {
                 margin-left: 250px;
+                width: calc(100% - 250px);
             }
 
-            .main-content-expanded {
-                margin-left: 60px !important;
+            .main-content-full {
+                margin-left: 0 !important;
+                width: 100% !important;
             }
         }
 
@@ -122,45 +117,101 @@ $user = auth();
             font-weight: 600;
         }
 
-        /* Botón mostrar sidebar en móvil */
+        /* Botón mostrar sidebar - SIEMPRE VISIBLE CUANDO SEA NECESARIO */
         #showSidebarBtn {
             position: fixed;
             top: 20px;
             left: 20px;
-            z-index: 1000;
-            background: #2c3e50;
+            z-index: 99;
+            background: #c9184a;
+            /* MISMO ROJO DEL SIDEBAR */
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             width: 45px;
             height: 45px;
-            display: none;
             align-items: center;
             justify-content: center;
             color: white;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 10px rgba(201, 24, 74, 0.3);
             transition: all 0.3s ease;
+            display: none;
         }
 
         #showSidebarBtn:hover {
             background: #34495e;
+            /* AZUL OSCURO COMO EN EL HOVER DEL SIDEBAR */
             transform: scale(1.1);
+        }
+
+        #showSidebarBtn.show {
+            display: flex !important;
+        }
+
+        /* Botón toggle dentro del sidebar - SIEMPRE VISIBLE */
+        #toggleSidebarBtn {
+            display: flex !important;
+            visibility: visible !important;
+            transition: all 0.3s ease;
+        }
+
+        #toggleSidebarBtn:hover {
+            background: #34495e;
+            /* AZUL OSCURO COMO EN EL HOVER DEL SIDEBAR */
+        }
+
+        /* Estilos adicionales para el sidebar rojo */
+        .sidebar hr {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar .bg-light {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar .text-warning {
+            color: #ffd166 !important;
+        }
+
+        /* Overlay para móvil */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
         }
 
         @media (max-width: 767.98px) {
             .main-content {
                 margin-left: 0 !important;
-                width: 100%;
+                width: 100% !important;
+                padding: 15px;
             }
 
             #showSidebarBtn {
-                display: flex;
+                display: flex !important;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Botón para mostrar sidebar en móvil -->
+    <!-- Overlay para móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Botón para mostrar sidebar cuando está oculto -->
     <button class="btn" id="showSidebarBtn" title="Mostrar menú">
         <i class="bi bi-list"></i>
     </button>
@@ -355,83 +406,128 @@ $user = auth();
             const mainContent = document.getElementById('mainContent');
             const toggleBtn = document.getElementById('toggleSidebarBtn');
             const showBtn = document.getElementById('showSidebarBtn');
+            const overlay = document.getElementById('sidebarOverlay');
             const toggleIcon = toggleBtn?.querySelector('i');
 
-            let sidebarExpanded = true;
+            let sidebarVisible = true;
 
-            // Función para expandir sidebar
-            function expandSidebar() {
-                sidebar.classList.remove('sidebar-collapsed');
-                mainContent.classList.remove('main-content-expanded');
-                if (toggleIcon) {
-                    toggleIcon.classList.remove('bi-chevron-right');
-                    toggleIcon.classList.add('bi-chevron-left');
+            // Función para actualizar visibilidad del botón show
+            function updateShowButton() {
+                if (window.innerWidth < 768) {
+                    // En móvil, mostrar botón siempre
+                    showBtn.classList.add('show');
+                    if (!sidebar.classList.contains('show')) {
+                        showBtn.innerHTML = '<i class="bi bi-list"></i>';
+                    } else {
+                        showBtn.innerHTML = '<i class="bi bi-x"></i>';
+                    }
+                } else {
+                    // En escritorio, mostrar botón solo si sidebar está oculto
+                    if (sidebarVisible) {
+                        showBtn.classList.remove('show');
+                    } else {
+                        showBtn.classList.add('show');
+                        showBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+                    }
                 }
-                sidebarExpanded = true;
             }
 
-            // Función para colapsar sidebar
-            function collapseSidebar() {
-                sidebar.classList.add('sidebar-collapsed');
-                mainContent.classList.add('main-content-expanded');
-                if (toggleIcon) {
-                    toggleIcon.classList.remove('bi-chevron-left');
-                    toggleIcon.classList.add('bi-chevron-right');
+            // Función para ocultar sidebar
+            function hideSidebar() {
+                sidebar.classList.add('sidebar-hidden');
+                mainContent.classList.add('main-content-full');
+                sidebarVisible = false;
+                overlay.classList.remove('show');
+                updateShowButton();
+            }
+
+            // Función para mostrar sidebar
+            function showSidebar() {
+                sidebar.classList.remove('sidebar-hidden');
+                mainContent.classList.remove('main-content-full');
+                sidebarVisible = true;
+
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('show');
+                    overlay.classList.add('show');
                 }
-                sidebarExpanded = false;
+                updateShowButton();
             }
 
             // Toggle sidebar en escritorio
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', function() {
-                    if (sidebarExpanded) {
-                        collapseSidebar();
+                    if (sidebarVisible) {
+                        hideSidebar();
                     } else {
-                        expandSidebar();
+                        showSidebar();
                     }
                 });
             }
 
-            // Sidebar móvil
+            // Mostrar/ocultar sidebar cuando se hace clic en el botón show
             if (showBtn) {
                 showBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                });
-
-                // Cerrar sidebar al hacer clic fuera en móvil
-                document.addEventListener('click', function(event) {
-                    if (window.innerWidth < 768 &&
-                        !sidebar.contains(event.target) &&
-                        !showBtn.contains(event.target) &&
-                        sidebar.classList.contains('show')) {
-                        sidebar.classList.remove('show');
+                    if (window.innerWidth < 768) {
+                        // En móvil, toggle del overlay
+                        if (sidebar.classList.contains('show')) {
+                            hideSidebar();
+                        } else {
+                            showSidebar();
+                        }
+                    } else {
+                        // En escritorio, mostrar sidebar
+                        showSidebar();
                     }
+                });
+            }
+
+            // Cerrar sidebar al hacer clic en el overlay (móvil)
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    hideSidebar();
                 });
             }
 
             // Manejo responsive
             function handleResize() {
                 if (window.innerWidth < 768) {
-                    // En móvil
-                    sidebar.classList.remove('sidebar-collapsed');
-                    mainContent.classList.remove('main-content-expanded');
-                    showBtn.style.display = 'flex';
-                } else {
-                    // En escritorio
-                    showBtn.style.display = 'none';
-                    sidebar.classList.remove('show');
-                    // Restaurar estado del toggle
-                    if (!sidebarExpanded) {
-                        collapseSidebar();
+                    // En móvil, comportamiento overlay
+                    sidebar.classList.remove('sidebar-hidden');
+                    mainContent.classList.remove('main-content-full');
+                    if (!sidebarVisible) {
+                        hideSidebar();
                     } else {
-                        expandSidebar();
+                        showBtn.classList.add('show');
+                        showBtn.innerHTML = '<i class="bi bi-list"></i>';
+                    }
+                } else {
+                    // En escritorio, comportamiento normal
+                    overlay.classList.remove('show');
+                    sidebar.classList.remove('show');
+                    if (sidebarVisible) {
+                        showSidebar();
+                    } else {
+                        hideSidebar();
                     }
                 }
+                updateShowButton();
             }
 
             // Inicializar
+            updateShowButton();
             handleResize();
             window.addEventListener('resize', handleResize);
+
+            // Cerrar sidebar al hacer clic en un link (móvil)
+            const sidebarLinks = sidebar.querySelectorAll('a');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 768) {
+                        hideSidebar();
+                    }
+                });
+            });
         });
     </script>
 </body>
