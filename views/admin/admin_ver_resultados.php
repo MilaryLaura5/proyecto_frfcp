@@ -353,9 +353,15 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 
             <!-- Tabla de resultados -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Resultados Finales</h5>
-                    <span class="badge bg-secondary"><?= count($resultados_finales) ?> encontrados</span>
+                <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                    <div>
+                        <h5 class="mb-1 mb-md-0"><i class="bi bi-list-ul"></i> Resultados Finales</h5>
+                        <span class="badge bg-secondary mt-1"><?= count($resultados_finales) ?> encontrados</span>
+                    </div>
+                    <a href="index.php?page=admin_ver_detalles_calificaciones&id_concurso=<?= $id_concurso ?>"
+                        class="btn btn-sm btn-info">
+                        <i class="bi bi-eye"></i> Ver calificaciones por jurado
+                    </a>
                 </div>
                 <div class="card-body p-0">
                     <?php if (!empty($resultados_finales)): ?>

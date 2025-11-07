@@ -90,16 +90,17 @@ class JuradoCriterioConcurso
     {
         global $pdo;
         $stmt = $pdo->prepare("
-        SELECT 
-            cc.id_criterio_concurso,
-            c.nombre AS nombre_criterio,
-            cc.puntaje_maximo
-        FROM JuradoCriterioConcurso jcc
-        JOIN CriterioConcurso cc ON jcc.id_criterio_concurso = cc.id_criterio_concurso
-        JOIN Criterio c ON cc.id_criterio = c.id_criterio
-        WHERE jcc.id_jurado = ? AND cc.id_concurso = ?
-        LIMIT 1
-    ");
+    SELECT 
+        cr.nombre AS nombre_criterio,  -- ✅ Añadido alias
+        cr.id_criterio,
+        cc.puntaje_maximo,
+        cc.id_criterio_concurso
+    FROM JuradoCriterioConcurso jcc
+    JOIN CriterioConcurso cc ON jcc.id_criterio_concurso = cc.id_criterio_concurso
+    JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
+    WHERE jcc.id_jurado = ? AND cc.id_concurso = ?
+    LIMIT 1
+");
         $stmt->execute([$id_jurado, $id_concurso]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

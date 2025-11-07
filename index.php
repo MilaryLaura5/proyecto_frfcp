@@ -518,7 +518,12 @@ if ($page === 'login') {
             }
             require_once __DIR__ . '/views/admin/admin_ver_resultados.php';
             break;
-
+        // En index.php
+        case 'admin_ver_detalles_calificaciones':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->verDetallesCalificaciones();
+            break;
         // --- DEFAULT ---
         default:
             header('Location: index.php?page=admin_dashboard');
