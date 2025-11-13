@@ -424,6 +424,11 @@ if ($page === 'login') {
             $controller = new AdminController();
             $controller->crearJurado();
             break;
+        case 'admin_eliminar_jurado':
+            require_once __DIR__ . '/controllers/AdminController.php';
+            $controller = new AdminController();
+            $controller->eliminarJurado();
+            break;
 
         // CRITERIOS
         case 'admin_agregar_criterios':

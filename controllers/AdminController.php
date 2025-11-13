@@ -1199,6 +1199,25 @@ class AdminController
         }
         exit;
     }
+    public function eliminarJurado()
+    {
+        redirect_if_not_admin();
+        $id_jurado = (int)($_GET['id'] ?? 0);
+        $id_concurso = (int)($_GET['id_concurso'] ?? 0);
+
+        if (!$id_jurado) {
+            header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso&error=no_id");
+            exit;
+        }
+
+        require_once __DIR__ . '/../models/Jurado.php';
+        if (Jurado::eliminar($id_jurado)) {
+            header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso&success=jurado_eliminado");
+        } else {
+            header("Location: index.php?page=admin_gestion_jurados&id_concurso=$id_concurso&error=no_eliminado");
+        }
+        exit;
+    }
 
     // =============================
     // CRITERIOS

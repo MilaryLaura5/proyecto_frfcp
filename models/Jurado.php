@@ -45,6 +45,38 @@ class Jurado
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function eliminar($id_jurado)
+    {
+        global $pdo;
+        try {
+            // 1. Eliminar token de acceso
+            $pdo->prepare("DELETE FROM TokenAcceso WHERE id_jurado = ?")->execute([$id_jurado]);
+
+            // 2. Eliminar asignación de criterios
+            $pdo->prepare("DELETE FROM JuradoCriterioConcurso WHERE id_jurado = ?")->execute([$id_jurado]);
+
+            // 3. Eliminar calificaciones del jurado (y detalles)
+            $stmt_cal = $pdo->prepare("SELECT id_calificacion FROM Calificacion WHERE id_jurado = ?");
+            $stmt_cal->execute([$id_jurado]);
+            $calificaciones = $stmt_cal->fetchAll(PDO::FETCH_COLUMN);
+
+            if (!empty($calificaciones)) {
+                $placeholders = str_repeat('?,', count($calificaciones) - 1) . '?';
+                $pdo->prepare("DELETE FROM detallecalificacion WHERE id_calificacion IN ($placeholders)")
+                    ->execute($calificaciones);
+                $pdo->prepare("DELETE FROM Calificacion WHERE id_jurado = ?")->execute([$id_jurado]);
+            }
+
+            // 4. Eliminar usuario
+            $pdo->prepare("DELETE FROM Usuario WHERE id_usuario = ?")->execute([$id_jurado]);
+
+            // 5. Eliminar jurado
+            return $pdo->prepare("DELETE FROM Jurado WHERE id_jurado = ?")->execute([$id_jurado]);
+        } catch (Exception $e) {
+            error_log("Error al eliminar jurado: " . $e->getMessage());
+            return false;
+        }
+    }
     public static function porConcurso($id_concurso)
     {
         global $pdo;
