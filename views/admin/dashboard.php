@@ -135,6 +135,7 @@ $user = auth();
                 </div>
 
                 <div class="row g-4">
+                    
                     <!-- Gestionar Concursos -->
                     <div class="col-xl-3 col-md-6">
                         <a href="index.php?page=admin_gestion_concursos" class="text-decoration-none">

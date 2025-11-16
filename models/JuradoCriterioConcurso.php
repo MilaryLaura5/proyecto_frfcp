@@ -55,6 +55,7 @@ class JuradoCriterioConcurso
             j.años_experiencia,
             j.id_jurado,
             c.nombre AS criterio_calificado,
+            cc.puntaje_maximo,
             t.token,
             t.fecha_expiracion
         FROM Jurado j

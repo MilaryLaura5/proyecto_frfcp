@@ -286,6 +286,11 @@
 
             <ul class="nav nav-pills flex-column">
                 <li class="nav-item">
+                    <a href="index.php?page=admin_dashboard" class="nav-link text-white d-flex align-items-center">
+                        <i class="bi bi-person-badge me-2"></i> Panel de Control
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="index.php?page=admin_gestion_concursos" class="nav-link text-white d-flex align-items-center">
                         <i class="bi bi-trophy me-2"></i> Gestionar Concursos
                     </a>
