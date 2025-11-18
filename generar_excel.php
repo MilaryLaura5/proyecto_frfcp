@@ -140,7 +140,7 @@ $headerRow = 8;
 // Encabezados de la tabla
 $sheet->setCellValue('A' . $headerRow, 'POSICIÓN');
 $sheet->setCellValue('B' . $headerRow, 'N° ORDEN');
-$sheet->setCellValue('C' . $headerRow, 'CONJUNTO FOLKLÓRICO');
+$sheet->setCellValue('C' . $headerRow, 'CONJUNTO FOLCLÓRICO');
 $sheet->setCellValue('D' . $headerRow, 'CATEGORÍA');
 $sheet->setCellValue('E' . $headerRow, 'PUNTAJE FINAL');
 $sheet->setCellValue('F' . $headerRow, 'ESTADO');
@@ -262,7 +262,7 @@ $sheet->getStyle($tableRange)->getBorders()->getOutline()->setBorderStyle(Border
 // ========== PIE DE PÁGINA DISCRETO ==========
 $footerRow = $fila + 2;
 
-$sheet->setCellValue('A' . $footerRow, 'Sistema de Gestión de Concursos Folklóricos - ' . date('Y'));
+$sheet->setCellValue('A' . $footerRow, 'Sistema de Gestión de Concursos Folclóricos - ' . date('Y'));
 $sheet->getStyle('A' . $footerRow)->getFont()->setSize(9)->setItalic(true)->setColor(new Color('FF7F8C8D'));
 $sheet->mergeCells('A' . $footerRow . ':F' . $footerRow);
 $sheet->getStyle('A' . $footerRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);

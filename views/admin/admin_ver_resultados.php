@@ -371,7 +371,7 @@ $criterios = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
                                     <tr>
                                         <th>Posición</th>
                                         <th>N° Orden</th>
-                                        <th>Conjunto Folklórico</th>
+                                        <th>Conjunto Folclórico</th>
                                         <th>Serie</th>
                                         <th>Puntaje Final</th>
                                         <th>Estado</th>
