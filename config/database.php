@@ -1,7 +1,7 @@
 <?php
 // config/database.php
 $host = 'localhost';
-$dbname = 'sistema_frfcp';
+$dbname = 'calificacion_frfcp';
 $username = 'root';
 $password = '';
 

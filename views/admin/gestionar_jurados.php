@@ -323,6 +323,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="index.php?page=admin_gestion_series" class="nav-link text-white d-flex align-items-center">
+                        <i class="bi bi-collection me-2"></i>Gestionar Series
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="index.php?page=admin_gestion_jurados" class="nav-link text-white d-flex align-items-center active">
                         <i class="bi bi-person-badge me-2"></i> Gestión de Jurados
                     </a>

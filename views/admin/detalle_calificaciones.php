@@ -217,8 +217,19 @@
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <span class="badge <?= $d['estado'] === 'enviado' ? 'bg-success' : 'bg-warning' ?> estado-badge">
-                                                <?= ucfirst($d['estado']) ?>
+                                            <?php
+                                            $badgeClass = 'bg-secondary';
+                                            $estadoTexto = ucfirst($d['estado'] ?? 'pendiente');
+
+                                            if ($d['estado'] === 'enviado') {
+                                                $badgeClass = 'bg-success';
+                                            } elseif ($d['estado'] === 'descalificado') {
+                                                $badgeClass = 'bg-danger';
+                                                $estadoTexto = 'Descalificado';
+                                            }
+                                            ?>
+                                            <span class="badge <?= $badgeClass ?> estado-badge">
+                                                <?= htmlspecialchars($estadoTexto) ?>
                                             </span>
                                         </td>
                                     </tr>
@@ -237,7 +248,7 @@
         </div>
     <?php endif; ?>
 
-    <!-- <script>
+    <script>
         let timeLeft = 10;
         const timerElement = document.getElementById('refreshTimer');
 
@@ -268,7 +279,7 @@
         setTimeout(function() {
             location.reload();
         }, 10000);
-    </script>-->
+    </script>
 </body>
 
 </html>

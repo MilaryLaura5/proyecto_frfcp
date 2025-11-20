@@ -1508,8 +1508,9 @@ class AdminController
             header('Location: index.php?page=admin_resultados&error=no_concurso');
             exit;
         }
-
         global $pdo;
+
+        // ✅ Consulta corregida: incluye calificaciones con estado 'descalificado'
         $sql = "
         SELECT 
             c.nombre AS conjunto,
@@ -1521,14 +1522,15 @@ class AdminController
         FROM ParticipacionConjunto pc
         JOIN Conjunto c ON pc.id_conjunto = c.id_conjunto
         JOIN Serie s ON c.id_serie = s.id_serie
-        JOIN Calificacion ca ON pc.id_participacion = ca.id_participacion AND ca.estado = 'enviado'
-        JOIN detallecalificacion dc ON ca.id_calificacion = dc.id_calificacion
+        JOIN Calificacion ca ON pc.id_participacion = ca.id_participacion
+        LEFT JOIN detallecalificacion dc ON ca.id_calificacion = dc.id_calificacion
         JOIN Jurado j ON ca.id_jurado = j.id_jurado
-        JOIN CriterioConcurso cc ON dc.id_criterio_concurso = cc.id_criterio_concurso
-        JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
+        LEFT JOIN CriterioConcurso cc ON dc.id_criterio_concurso = cc.id_criterio_concurso
+        LEFT JOIN Criterio cr ON cc.id_criterio = cr.id_criterio
         WHERE pc.id_concurso = ?
         ORDER BY c.nombre, j.nombre, cr.nombre
     ";
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id_concurso]);
         $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
